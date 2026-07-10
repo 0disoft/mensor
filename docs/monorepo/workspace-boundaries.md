@@ -3,22 +3,20 @@
 - Status: Proposed
 - Owner: Maintainer
 
-## Initial Workspace
+## Workspace Sequence
 
 ```text
 packages/
   contract/
-  compiler/
-  cli/
-internal/
-  fixture-kit/
 fixtures/
   valid/
   invalid/
   compound/
 ```
 
-Do not create a package until it contains a complete vertical-slice
+The contract package is the only current package. `packages/compiler`,
+`packages/cli`, and `internal/fixture-kit` are added with the first complete
+compiler vertical slice. Do not create a package until it contains a complete
 responsibility. Empty packages reserved for a possible runtime, adapter, SDK,
 or formatter are forbidden.
 

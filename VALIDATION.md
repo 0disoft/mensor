@@ -1,6 +1,6 @@
 # Validation
 
-- Status: Draft
+- Status: Active
 
 ## Validation Source of Truth
 
@@ -27,6 +27,10 @@ Final responses must list executed validations, passed validations, skipped vali
 Task runner files are optional. Runner `none` means no executable task runner is generated.
 If a runner is generated, runner command names must match this document.
 Unconfigured runner commands must fail, not pass with a fake success.
+
+The root `package.json` currently configures every standard validation name.
+`pnpm run check` is the aggregate local gate. Individual names remain runnable
+for narrower evidence.
 
 ## Hygiene Validation
 

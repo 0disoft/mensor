@@ -10,9 +10,10 @@
 - Non-negotiable engineering rules: `docs/engineering/00-project-invariants.md`
 - Operational and release expectations: `docs/ops/00-operational-contract.md`
 - Package ownership and dependency direction: `docs/monorepo/workspace-boundaries.md`
+- Accepted architecture decisions: `docs/adr/`
 - CLI behavior: `docs/cli/command-contract.md`
 - Library exports and compatibility: `docs/library/public-api.md`
-- Machine-readable contract schemas: `spec/README.md`
+- Machine-readable contract schemas: `packages/contract/spec/README.md`
 - Executable behavior examples: `fixtures/README.md`
 - Validation names and reporting: `VALIDATION.md`
 

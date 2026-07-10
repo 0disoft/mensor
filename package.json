@@ -1,13 +1,25 @@
 {
+  "name": "mensor-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.11.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "format": "node -e \"console.error('format is not configured. Configure this validation before relying on pnpm run format.'); process.exit(1)\"",
-    "lint": "node -e \"console.error('lint is not configured. Configure this validation before relying on pnpm run lint.'); process.exit(1)\"",
-    "typecheck": "node -e \"console.error('typecheck is not configured. Configure this validation before relying on pnpm run typecheck.'); process.exit(1)\"",
-    "test": "node -e \"console.error('test is not configured. Configure this validation before relying on pnpm run test.'); process.exit(1)\"",
-    "contract": "node -e \"console.error('contract is not configured. Configure this validation before relying on pnpm run contract.'); process.exit(1)\"",
-    "migration-check": "node -e \"console.error('migration-check is not configured. Configure this validation before relying on pnpm run migration-check.'); process.exit(1)\"",
-    "smoke": "node -e \"console.error('smoke is not configured. Configure this validation before relying on pnpm run smoke.'); process.exit(1)\"",
-    "docs": "node -e \"console.error('docs is not configured. Configure this validation before relying on pnpm run docs.'); process.exit(1)\"",
-    "check": "node -e \"console.error('check is not configured. Configure this validation before relying on pnpm run check.'); process.exit(1)\""
+    "format": "node scripts/check-text-format.mjs",
+    "lint": "node scripts/check-workspace-structure.mjs",
+    "typecheck": "tsc6 -b --pretty false",
+    "build": "tsc6 -b --pretty false",
+    "test": "pnpm run build && node --test packages/contract/test/*.test.mjs",
+    "contract": "pnpm run build && node scripts/validate-contract-fixtures.mjs",
+    "migration-check": "pnpm run build && node scripts/check-schema-revisions.mjs",
+    "smoke": "pnpm run build && node scripts/smoke-contract.mjs",
+    "docs": "node scripts/check-docs.mjs",
+    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run docs"
+  },
+  "devDependencies": {
+    "@typescript/typescript6": "6.0.2"
   }
 }

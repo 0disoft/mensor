@@ -1,0 +1,26 @@
+{
+  "name": "@mensor/contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    },
+    "./schemas/project-contract-v1.schema.json": "./dist/spec/project-contract-v1.schema.json",
+    "./schemas/feature-contract-v1.schema.json": "./dist/spec/feature-contract-v1.schema.json",
+    "./schemas/diagnostic-report-v1.schema.json": "./dist/spec/diagnostic-report-v1.schema.json"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "jsonc-parser": "3.3.1"
+  }
+}

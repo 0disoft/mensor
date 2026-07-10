@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../spec/feature-contract-v1.schema.json",
+  "$schema": "../../../../../../packages/contract/spec/feature-contract-v1.schema.json",
   "version": 1,
   "feature": {
     "id": "tasks"

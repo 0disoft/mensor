@@ -10,7 +10,7 @@
 - Product scope route: docs/product/02-spec.md
 - Architecture route: docs/architecture/00-system-boundary.md
 - Documentation update route: docs/README.md
-- Contract schema route: spec/README.md
+- Contract schema route: packages/contract/spec/README.md
 - Fixture route: fixtures/README.md
 - Monorepo route: .agents/skills/monorepo/SKILL.md
 - CLI tool route: .agents/skills/cli-tool/SKILL.md

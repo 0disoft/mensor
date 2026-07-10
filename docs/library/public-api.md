@@ -3,17 +3,27 @@
 - Status: Proposed
 - Owner: Maintainer
 
-## Package Surface
+## Current Package Surface
 
-### `@mensor/contract`
+`@mensor/contract` is the only implemented package. It is private until the
+first preview release and exports:
 
-May export serializable project-contract, schema, diagnostic, source-location,
-and report types; pure validators; and canonicalization helpers. It does not
-export classes, parser objects, filesystem helpers, or mutable registries.
+- `parseJsonc(text)` for strict JSONC parsing with duplicate-key detection;
+- `parseProjectContract(text)`;
+- `parseFeatureContract(text)`;
+- `parseDiagnosticReport(text)`;
+- `isJsonValue(value)`; and
+- serializable contract, diagnostic, issue, and result types.
 
-### `@mensor/compiler`
+Each parser returns `ContractResult<T>`. Syntax, duplicate-key, and schema
+failures are values with deterministic issues; they are not thrown exceptions.
+The parser does not read files, execute configuration, mutate input, inject
+schema defaults, or access the network.
 
-The initial library surface is one operation:
+## Planned Compiler Surface
+
+The compiler package is not created until its first vertical slice exists. Its
+planned entry point remains:
 
 ```ts
 export interface CheckProjectOptions {
@@ -21,41 +31,41 @@ export interface CheckProjectOptions {
   readonly configFile?: string;
 }
 
-export interface CheckResult {
-  readonly ok: boolean;
-  readonly report: DiagnosticReport;
-}
-
 export function checkProject(
   options: CheckProjectOptions,
 ): Promise<CheckResult>;
 ```
 
-The final implementation may refine the success and failure union before the
-first preview, but contract violations remain values rather than thrown
-exceptions. Unexpected I/O and internal defects may reject the promise with a
-documented error type.
+The final success and failure union will be defined with the compiler fixture,
+not guessed in advance.
 
 ## Export Policy
 
 - Only paths declared in package `exports` are public.
-- Internal parser, graph, rule-runner, and cache modules are not deep-import
-  contracts.
+- Internal parser, Ajv, schema compilation, and issue-normalization modules are
+  not deep-import contracts.
 - Public values crossing package boundaries are immutable and serializable.
-- Raw TypeScript AST, HTML parser trees, and third-party schema objects are
-  never public API.
+- Raw JSONC trees, Ajv errors, TypeScript AST, and HTML parser trees are never
+  public API.
 - Database models and framework runtime objects are outside this product.
+
+## Schema Ownership
+
+The package-local `packages/contract/spec` directory is the schema source of
+truth. TypeScript interfaces are derived public surfaces and must remain aligned
+through fixture and negative validation tests. The build copies the exact schema
+files into `dist/spec`; package exports expose only those copied artifacts. A
+second hand-maintained schema copy is forbidden.
 
 ## Compatibility
 
 All packages use a shared `0.x` version initially. Breaking changes are allowed
-during pre-release development but require release notes once packages are
-published. A public diagnostic code cannot silently change meaning, even while
-the TypeScript type surface remains source-compatible.
+during private pre-release development. Once packages are published, every
+breaking public change requires release notes and migration guidance.
 
 Serialized contracts carry their own schema version. Package version and
 schema version do not advance together unless both implementation and wire
-format change.
+format change. A public diagnostic code cannot silently change meaning.
 
 ## Deprecation
 

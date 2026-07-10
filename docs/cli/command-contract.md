@@ -5,11 +5,11 @@
 
 ## Runtime Target
 
-The initial implementation targets Node.js 22 or newer and ESM. This is a
-selected compatibility floor, not a claim about the current Node.js release or
-LTS schedule. Before package metadata or CI is added, the floor must be checked
-against current official runtime support and recorded in the implementation
-decision.
+The initial implementation targets Node.js 22 or newer and ESM. The runtime
+floor was checked against the official Node.js release schedule when the
+toolchain decision was recorded. Future CI must test the minimum supported
+major and one newer supported major; package metadata alone is not compatibility
+evidence.
 
 ## MVP Command
 

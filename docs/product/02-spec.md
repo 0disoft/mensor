@@ -32,9 +32,9 @@ that source alone cannot prove, including feature identity, architectural role,
 form-to-action linkage, field decoding, and enforced boundaries.
 
 The current machine-readable contract is defined by
-`spec/project-contract-v1.schema.json`,
-`spec/feature-contract-v1.schema.json`, and
-`spec/diagnostic-report-v1.schema.json`. The valid and invalid reference inputs
+`packages/contract/spec/project-contract-v1.schema.json`,
+`packages/contract/spec/feature-contract-v1.schema.json`, and
+`packages/contract/spec/diagnostic-report-v1.schema.json`. The valid and invalid reference inputs
 live under `fixtures/`.
 
 ## First Vertical Slice
