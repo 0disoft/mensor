@@ -6,6 +6,7 @@ export interface CheckProjectOptions {
   readonly producerVersion?: string;
   readonly limits?: {
     readonly maxFiles?: number;
+    readonly maxFileBytes?: number;
   };
 }
 

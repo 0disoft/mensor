@@ -15,6 +15,7 @@ import {
   discoverProjectFiles,
   readProjectFile,
 } from "./filesystem.js";
+import { checkFeatureForms } from "./form-rule.js";
 import { handlerFileRange } from "./locations.js";
 import {
   assertRelativePosixPath,
@@ -30,6 +31,7 @@ import type {
 
 const defaultConfigFile = "mensor.project.jsonc";
 const defaultMaxFiles = 10_000;
+const defaultMaxFileBytes = 1_048_576;
 const defaultProducerVersion = "0.0.0";
 
 export async function checkProject(
@@ -44,24 +46,31 @@ export async function checkProject(
         message: "producerVersion must not be empty.",
       });
     }
-    const root = await assertProjectRoot(options.root);
-    const configFile = assertRelativePosixPath(
-      options.configFile ?? defaultConfigFile,
-      "configFile",
-    );
-    const projectText = await readProjectFile(root, configFile);
-    const projectResult = parseProjectContract(projectText);
-    if (!projectResult.ok) {
-      return contractFailure(configFile, projectResult.issues);
-    }
-
     const maxFiles = options.limits?.maxFiles ?? defaultMaxFiles;
+    const maxFileBytes = options.limits?.maxFileBytes ?? defaultMaxFileBytes;
     if (!Number.isSafeInteger(maxFiles) || maxFiles < 1) {
       return failure({
         kind: "configuration",
         code: "limits.max_files_invalid",
         message: "limits.maxFiles must be a positive safe integer.",
       });
+    }
+    if (!Number.isSafeInteger(maxFileBytes) || maxFileBytes < 1) {
+      return failure({
+        kind: "configuration",
+        code: "limits.max_file_bytes_invalid",
+        message: "limits.maxFileBytes must be a positive safe integer.",
+      });
+    }
+    const root = await assertProjectRoot(options.root);
+    const configFile = assertRelativePosixPath(
+      options.configFile ?? defaultConfigFile,
+      "configFile",
+    );
+    const projectText = await readProjectFile(root, configFile, maxFileBytes);
+    const projectResult = parseProjectContract(projectText);
+    if (!projectResult.ok) {
+      return contractFailure(configFile, projectResult.issues);
     }
 
     const project = projectResult.value;
@@ -87,7 +96,11 @@ export async function checkProject(
           safeFeatureContractPath,
         );
       }
-      const featureText = await readProjectFile(root, safeFeatureContractPath);
+      const featureText = await readProjectFile(
+        root,
+        safeFeatureContractPath,
+        maxFileBytes,
+      );
       const featureResult = parseFeatureContract(featureText);
       if (!featureResult.ok) {
         return contractFailure(safeFeatureContractPath, featureResult.issues);
@@ -100,6 +113,16 @@ export async function checkProject(
           project.fileRoles,
           discovered,
         ),
+      );
+      diagnostics.push(
+        ...(await checkFeatureForms({
+          root,
+          featureContractPath: safeFeatureContractPath,
+          featureText,
+          feature: featureResult.value,
+          discovered,
+          maxFileBytes,
+        })),
       );
     }
 

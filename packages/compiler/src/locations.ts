@@ -23,6 +23,34 @@ export function handlerFileRange(
   return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
+export function actionSchemaPropertyRange(
+  contractText: string,
+  actionIndex: number,
+  propertyName: string,
+): SourceRange {
+  const root = parseTree(contractText);
+  if (root === undefined) {
+    return zeroRange;
+  }
+  const properties = findNodeAtLocation(root, [
+    "actions",
+    actionIndex,
+    "input",
+    "schema",
+    "properties",
+  ]);
+  if (properties?.type !== "object") {
+    return zeroRange;
+  }
+  for (const property of properties.children ?? []) {
+    const key = property.children?.[0];
+    if (key?.type === "string" && key.value === propertyName) {
+      return nodeRange(contractText, key);
+    }
+  }
+  return zeroRange;
+}
+
 function nodeRange(text: string, node: Node): SourceRange {
   return {
     start: positionAt(text, node.offset),

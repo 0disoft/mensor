@@ -20,6 +20,7 @@ surface would split the build tool from the compiler API needed by the product.
   floor instead of allowing newer runtime APIs accidentally.
 - Use `jsonc-parser` 3.3.1 for JSONC text, offsets, and duplicate-key evidence.
 - Use Ajv 8.20.0 in strict Draft 2020-12 mode for runtime schema validation.
+- Use parse5 8.0.1 with source locations for static HTML form extraction.
 - Keep schemas in `packages/contract/spec` and copy those exact files into the
   package build. Do not keep a second root schema copy.
 - Pin direct toolchain and runtime dependency versions and commit the pnpm

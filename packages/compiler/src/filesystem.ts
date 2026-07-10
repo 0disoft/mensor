@@ -32,12 +32,25 @@ export async function assertProjectRoot(root: string): Promise<string> {
 export async function readProjectFile(
   root: string,
   relativePath: string,
+  maxFileBytes: number,
 ): Promise<string> {
   const safePath = assertRelativePosixPath(relativePath, "File path");
   await assertPathHasNoSymlink(root, safePath, false);
   try {
+    const stats = await lstat(fromProjectPath(root, safePath));
+    if (stats.size > maxFileBytes) {
+      throw new InputFailure(
+        "filesystem",
+        "file.size_limit_exceeded",
+        `Project file ${JSON.stringify(safePath)} exceeds the configured limit of ${maxFileBytes} bytes.`,
+        safePath,
+      );
+    }
     return await readFile(fromProjectPath(root, safePath), "utf8");
   } catch (error) {
+    if (error instanceof InputFailure) {
+      throw error;
+    }
     throw filesystemFailure(
       error,
       "file.unreadable",

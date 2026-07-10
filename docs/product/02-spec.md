@@ -58,10 +58,14 @@ and expected role. The compiler reports a placement error when the discovered
 file belongs to another role or no role. The compiler does not inspect or
 execute the handler body in this slice.
 
-The next form-contract slice connects one HTML form to one action contract and
-must detect:
+The second vertical slice connects one static HTML form to one action contract.
+It extracts form identity, method, action, source range, and named field
+candidates, then detects:
 
 - a required action field has no matching form control;
+
+The following form-contract rules remain separate slices:
+
 - a named form control is neither bound nor explicitly ignored;
 - a control shape and its decoder disagree; and
 - form method or action does not match the linked action.
@@ -134,7 +138,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 4. Directory entries are sorted before recursive discovery.
 5. A source module with an import-time sentinel is never executed.
 6. Discovery fails closed at its configured file-count limit.
-7. A repair benchmark requires both a passing check and an unchanged semantic
+7. Contract and template reads fail closed at the configured byte limit.
+8. A missing required form field emits the exact canonical
+   `form.field_missing` diagnostic from different absolute roots.
+9. A repair benchmark requires both a passing check and an unchanged semantic
    application test; contract weakening is a failed repair.
 
 ## Deferred Decisions

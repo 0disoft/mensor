@@ -37,5 +37,15 @@ The first revision intentionally does not define glob precedence. Directory
 slots keep classification deterministic while real projects prove whether a
 more expressive matcher is needed.
 
+## Form Slice
+
+An action links to static HTML through its feature-relative template path and
+exact form id. The compiler uses the action schema and form codec to identify
+required wire fields. When a required binding has no named field candidate in
+the linked form, the diagnostic report contains `form.field_missing`.
+
+HTML parser nodes are not contract values. Source ranges, field names, method,
+and action are normalized compiler facts before any rule runs.
+
 Version `1` is an internal design revision until the first preview release. It
 may change while fixtures are still being reviewed.

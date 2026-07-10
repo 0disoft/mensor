@@ -34,26 +34,41 @@ test("reports a stable handler placement diagnostic without executing source", a
   await assertMissing(sentinel);
 });
 
+test("reports the canonical missing form field diagnostic", async () => {
+  const fixture = "invalid/form-field-missing";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
 test("produces byte-identical reports from different absolute roots", async () => {
-  const temporaryRoots = await Promise.all([
-    copyFixture("invalid/file-role-mismatch"),
-    copyFixture("invalid/file-role-mismatch"),
-  ]);
-  try {
-    const reports = await Promise.all(
-      temporaryRoots.map((root) =>
-        checkProject({ root, producerVersion: "0.0.0-fixture" }),
-      ),
-    );
-    assert.ok(reports.every((result) => result.ok));
-    const serialized = reports.map((result) =>
-      result.ok ? `${JSON.stringify(result.report, null, 2)}\n` : "failed",
-    );
-    assert.equal(serialized[0], serialized[1]);
-  } finally {
-    await Promise.all(
-      temporaryRoots.map((root) => rm(root, { recursive: true, force: true })),
-    );
+  for (const fixture of [
+    "invalid/file-role-mismatch",
+    "invalid/form-field-missing",
+  ]) {
+    const temporaryRoots = await Promise.all([
+      copyFixture(fixture),
+      copyFixture(fixture),
+    ]);
+    try {
+      const reports = await Promise.all(
+        temporaryRoots.map((root) =>
+          checkProject({ root, producerVersion: "0.0.0-fixture" }),
+        ),
+      );
+      assert.ok(reports.every((result) => result.ok));
+      const serialized = reports.map((result) =>
+        result.ok ? `${JSON.stringify(result.report, null, 2)}\n` : "failed",
+      );
+      assert.equal(serialized[0], serialized[1], fixture);
+    } finally {
+      await Promise.all(
+        temporaryRoots.map((root) => rm(root, { recursive: true, force: true })),
+      );
+    }
   }
 });
 
@@ -81,6 +96,20 @@ test("rejects an empty producer version before creating an invalid report", asyn
   if (!result.ok) {
     assert.equal(result.failure.kind, "configuration");
     assert.equal(result.failure.code, "producer.version_invalid");
+  }
+});
+
+test("fails closed before reading a source file above the byte limit", async () => {
+  const result = await checkProject({
+    root: path.join(fixtureRoot, "valid/tiny-tasks"),
+    limits: { maxFileBytes: 1 },
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.failure.kind, "filesystem");
+    assert.equal(result.failure.code, "file.size_limit_exceeded");
+    assert.equal(result.failure.file, "mensor.project.jsonc");
   }
 });
 

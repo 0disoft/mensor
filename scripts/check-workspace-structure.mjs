@@ -28,6 +28,9 @@ if (compiler.dependencies?.["@mensor/contract"] !== "workspace:*") {
 if (compiler.dependencies?.["jsonc-parser"] !== "3.3.1") {
   failures.push("@mensor/compiler must declare its direct jsonc-parser dependency.");
 }
+if (compiler.dependencies?.["parse5"] !== "8.0.1") {
+  failures.push("@mensor/compiler must declare its direct parse5 dependency.");
+}
 for (const forbidden of ["preinstall", "install", "postinstall", "prepare"]) {
   if (
     workspace.scripts?.[forbidden] !== undefined ||

@@ -36,11 +36,11 @@
           "file": "src/features/tasks/feature.mensor.jsonc",
           "range": {
             "start": {
-              "line": 21,
+              "line": 26,
               "character": 12
             },
             "end": {
-              "line": 21,
+              "line": 26,
               "character": 19
             }
           }
