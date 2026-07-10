@@ -5,6 +5,8 @@ self-contained and contains the project contract, feature contract, source
 files, and canonical expected report needed for one behavior.
 
 - `valid/tiny-tasks`: one valid form-backed action
+- `invalid/file-role-mismatch`: an action handler discovered in the route slot
+  while its contract requires the server role
 - `invalid/form-field-missing`: the same action with its required `title`
   control removed
 

@@ -39,26 +39,34 @@ live under `fixtures/`.
 
 ## First Vertical Slice
 
-The first implementation connects one HTML form to one action contract:
+The first implementation proves the project-structure pipeline before template
+parsing is introduced:
 
 ```text
 project contract
   -> deterministic discovery
-  -> HTML form facts
-  -> action schema and form codec
-  -> semantic linking
-  -> field or codec diagnostic
-  -> canonical JSON and CLI exit status
+  -> feature contract
+  -> action handler linkage
+  -> file-role classification
+  -> file.role_mismatch diagnostic
+  -> deterministic diagnostic report
 ```
 
-Required failures are:
+The project contract declares non-overlapping feature-relative directories for
+architectural roles. An action handler declares its source file, export name,
+and expected role. The compiler reports a placement error when the discovered
+file belongs to another role or no role. The compiler does not inspect or
+execute the handler body in this slice.
+
+The next form-contract slice connects one HTML form to one action contract and
+must detect:
 
 - a required action field has no matching form control;
 - a named form control is neither bound nor explicitly ignored;
 - a control shape and its decoder disagree; and
 - form method or action does not match the linked action.
 
-For comparison, the compiler normalizes an HTML form method to ASCII uppercase
+For form comparison, the compiler normalizes an HTML form method to ASCII uppercase
 and treats an omitted method as `GET`. The first schema accepts only a static,
 root-relative action path without a query or fragment. URL resolution, route
 parameters, named submitters, and per-button method or action overrides are
@@ -66,10 +74,8 @@ unsupported and must produce an explicit diagnostic when encountered.
 
 ## MVP Rule Families
 
-After the first vertical slice is stable, the same normalized-fact pipeline may
-add:
+After the placement slice is stable, the same normalized-fact pipeline may add:
 
-- file-role placement checks;
 - browser-reachable imports of server, database, or internal modules;
 - direct route imports of infrastructure when that policy is enabled; and
 - test or translation files outside their declared feature owner.
@@ -122,12 +128,12 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 
 ## MVP Acceptance
 
-1. A valid fixture exits successfully and emits no error diagnostic.
-2. Each invalid form fixture emits exactly the expected canonical diagnostic.
+1. A valid placement fixture returns no error diagnostic.
+2. A misplaced handler emits exactly the expected `file.role_mismatch` diagnostic.
 3. Running a fixture from different absolute roots produces identical JSON.
-4. Randomized file discovery order does not change output.
+4. Directory entries are sorted before recursive discovery.
 5. A source module with an import-time sentinel is never executed.
-6. A failing check never writes or replaces a compiled artifact.
+6. Discovery fails closed at its configured file-count limit.
 7. A repair benchmark requires both a passing check and an unchanged semantic
    application test; contract weakening is a failed repair.
 

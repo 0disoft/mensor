@@ -15,6 +15,11 @@
         "template": "views/index.html",
         "id": "create-task"
       },
+      "handler": {
+        "file": "server/create-task.ts",
+        "export": "createTask",
+        "role": "server"
+      },
       "input": {
         "schema": {
           "kind": "object",

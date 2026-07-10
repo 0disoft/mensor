@@ -4,7 +4,7 @@
   "title": "Mensor Project Contract v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "sourceRoot", "featureContracts"],
+  "required": ["version", "sourceRoot", "featureContracts", "fileRoles"],
   "properties": {
     "$schema": {
       "type": "string"
@@ -22,13 +22,42 @@
       "items": {
         "$ref": "#/$defs/relativePath"
       }
+    },
+    "fileRoles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/fileRole"
+      }
     }
   },
   "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+    },
     "relativePath": {
       "type": "string",
       "minLength": 1,
       "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "featureDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*//$)(?!.*(?:^|/)\\.(?:/|$)).*[^/]$"
+    },
+    "fileRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "withinFeature"],
+      "properties": {
+        "role": {
+          "$ref": "#/$defs/identifier"
+        },
+        "withinFeature": {
+          "$ref": "#/$defs/featureDirectory"
+        }
+      }
     }
   }
 }

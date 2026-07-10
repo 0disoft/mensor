@@ -8,15 +8,16 @@
 ```text
 packages/
   contract/
+  compiler/
 fixtures/
   valid/
   invalid/
   compound/
 ```
 
-The contract package is the only current package. `packages/compiler`,
-`packages/cli`, and `internal/fixture-kit` are added with the first complete
-compiler vertical slice. Do not create a package until it contains a complete
+The contract and compiler packages are current. `packages/cli` and
+`internal/fixture-kit` are added with their first complete vertical slices. Do
+not create a package until it contains a complete
 responsibility. Empty packages reserved for a possible runtime, adapter, SDK,
 or formatter are forbidden.
 
@@ -34,6 +35,10 @@ Owns deterministic discovery, JSONC loading, TypeScript and HTML fact
 extraction, semantic linking, rules, and report construction. It depends on the
 contract package and parser libraries. It must not depend on the CLI or execute
 inspected source.
+
+The current implementation covers bounded source discovery, feature contracts,
+handler linkage, file-role classification, and placement diagnostics. TypeScript
+and HTML extraction remain planned responsibilities, not implemented claims.
 
 ### `mensor` CLI
 

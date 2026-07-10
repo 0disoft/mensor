@@ -26,5 +26,16 @@ value is explicit in the authoring contract.
 - `feature-contract-v1.schema.json`: one feature and its form-backed actions
 - `diagnostic-report-v1.schema.json`: canonical check output
 
+## Placement Slice
+
+`ProjectContract.fileRoles` maps role names to non-overlapping directories
+relative to each feature contract. An action handler declares its file, export,
+and expected role. The compiler compares the handler path with those declared
+directories and emits `file.role_mismatch` when they disagree.
+
+The first revision intentionally does not define glob precedence. Directory
+slots keep classification deterministic while real projects prove whether a
+more expressive matcher is needed.
+
 Version `1` is an internal design revision until the first preview release. It
 may change while fixtures are still being reviewed.

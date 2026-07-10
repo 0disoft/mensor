@@ -130,19 +130,23 @@
       }
     },
     "diagnostic": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/formFieldMissingDiagnostic"
+        },
+        {
+          "$ref": "#/$defs/fileRoleMismatchDiagnostic"
+        }
+      ]
+    },
+    "diagnosticBase": {
       "type": "object",
       "additionalProperties": false,
       "required": ["code", "severity", "category", "message", "file", "range", "facts", "related", "repair"],
       "properties": {
-        "code": {
-          "const": "form.field_missing"
-        },
-        "severity": {
-          "const": "error"
-        },
-        "category": {
-          "const": "form-contract"
-        },
+        "code": {},
+        "severity": {},
+        "category": {},
         "message": {
           "type": "string",
           "minLength": 1
@@ -155,9 +159,7 @@
         "range": {
           "$ref": "#/$defs/range"
         },
-        "facts": {
-          "$ref": "#/$defs/formFieldMissingFacts"
-        },
+        "facts": {},
         "related": {
           "type": "array",
           "items": {
@@ -168,6 +170,30 @@
           "$ref": "#/$defs/repair"
         }
       }
+    },
+    "formFieldMissingDiagnostic": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/diagnosticBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "const": "form.field_missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "category": {
+              "const": "form-contract"
+            },
+            "facts": {
+              "$ref": "#/$defs/formFieldMissingFacts"
+            }
+          }
+        }
+      ]
     },
     "formFieldMissingFacts": {
       "type": "object",
@@ -195,6 +221,62 @@
           }
         },
         "template": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        }
+      }
+    },
+    "fileRoleMismatchDiagnostic": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/diagnosticBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "const": "file.role_mismatch"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "category": {
+              "const": "project-structure"
+            },
+            "facts": {
+              "$ref": "#/$defs/fileRoleMismatchFacts"
+            }
+          }
+        }
+      ]
+    },
+    "fileRoleMismatchFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "actualRole", "expectedRole", "expectedWithinFeature", "featureId", "handlerFile"],
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actualRole": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedRole": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedWithinFeature": {
+          "type": "string",
+          "minLength": 1
+        },
+        "featureId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "handlerFile": {
           "type": "string",
           "minLength": 1,
           "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"

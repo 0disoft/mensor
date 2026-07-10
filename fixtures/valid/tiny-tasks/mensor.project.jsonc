@@ -4,5 +4,19 @@
   "sourceRoot": "src",
   "featureContracts": [
     "src/features/tasks/feature.mensor.jsonc"
+  ],
+  "fileRoles": [
+    {
+      "role": "server",
+      "withinFeature": "server"
+    },
+    {
+      "role": "route",
+      "withinFeature": "routes"
+    },
+    {
+      "role": "view",
+      "withinFeature": "views"
+    }
   ]
 }

@@ -6,7 +6,11 @@ import {
   parseProjectContract,
 } from "../packages/contract/dist/src/index.js";
 
-const fixtures = ["valid/tiny-tasks", "invalid/form-field-missing"];
+const fixtures = [
+  "valid/tiny-tasks",
+  "invalid/file-role-mismatch",
+  "invalid/form-field-missing",
+];
 const fixtureRoot = new URL("../fixtures/", import.meta.url);
 
 for (const fixture of fixtures) {

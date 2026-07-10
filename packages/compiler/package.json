@@ -1,0 +1,21 @@
+{
+  "name": "@mensor/compiler",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "dependencies": {
+    "@mensor/contract": "workspace:*",
+    "jsonc-parser": "3.3.1"
+  }
+}

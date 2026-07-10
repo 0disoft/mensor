@@ -3,6 +3,9 @@
   "references": [
     {
       "path": "./packages/contract"
+    },
+    {
+      "path": "./packages/compiler"
     }
   ]
 }

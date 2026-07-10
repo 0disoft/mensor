@@ -5,8 +5,8 @@
 
 ## Current Package Surface
 
-`@mensor/contract` is the only implemented package. It is private until the
-first preview release and exports:
+`@mensor/contract` is the serializable contract package. It is private until
+the first preview release and exports:
 
 - `parseJsonc(text)` for strict JSONC parsing with duplicate-key detection;
 - `parseProjectContract(text)`;
@@ -20,15 +20,18 @@ failures are values with deterministic issues; they are not thrown exceptions.
 The parser does not read files, execute configuration, mutate input, inject
 schema defaults, or access the network.
 
-## Planned Compiler Surface
+## Current Compiler Surface
 
-The compiler package is not created until its first vertical slice exists. Its
-planned entry point remains:
+`@mensor/compiler` exports:
 
 ```ts
 export interface CheckProjectOptions {
   readonly root: string;
   readonly configFile?: string;
+  readonly producerVersion?: string;
+  readonly limits?: {
+    readonly maxFiles?: number;
+  };
 }
 
 export function checkProject(
@@ -36,8 +39,15 @@ export function checkProject(
 ): Promise<CheckResult>;
 ```
 
-The final success and failure union will be defined with the compiler fixture,
-not guessed in advance.
+`CheckProjectResult` separates a completed check and its `DiagnosticReport` from
+configuration, filesystem, and unexpected compiler failures. Project placement
+violations are diagnostics in a successful compiler result; malformed contracts
+and unreadable inputs are typed failures.
+
+The compiler walks the configured source root in code-unit sorted order, skips
+symlinks, enforces a file-count limit, and never imports inspected source. It
+currently implements only action-handler placement. HTML and TypeScript source
+fact extraction are not yet public behavior.
 
 ## Export Policy
 

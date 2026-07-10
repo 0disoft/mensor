@@ -39,6 +39,12 @@ export interface ProjectContract {
   readonly version: 1;
   readonly sourceRoot: string;
   readonly featureContracts: readonly string[];
+  readonly fileRoles: readonly FileRoleContract[];
+}
+
+export interface FileRoleContract {
+  readonly role: string;
+  readonly withinFeature: string;
 }
 
 export interface StringSchema {
@@ -86,6 +92,11 @@ export interface ActionContract {
   readonly form: {
     readonly template: string;
     readonly id: string;
+  };
+  readonly handler: {
+    readonly file: string;
+    readonly export: string;
+    readonly role: string;
   };
   readonly input: {
     readonly schema: ObjectSchema;
@@ -146,6 +157,31 @@ export interface FormFieldMissingDiagnostic {
   readonly repair: RepairInstruction;
 }
 
+export interface FileRoleMismatchFacts {
+  readonly actionId: string;
+  readonly actualRole: string;
+  readonly expectedRole: string;
+  readonly expectedWithinFeature: string;
+  readonly featureId: string;
+  readonly handlerFile: string;
+}
+
+export interface FileRoleMismatchDiagnostic {
+  readonly code: "file.role_mismatch";
+  readonly severity: "error";
+  readonly category: "project-structure";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: FileRoleMismatchFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
+export type Diagnostic =
+  | FileRoleMismatchDiagnostic
+  | FormFieldMissingDiagnostic;
+
 export interface DiagnosticReport {
   readonly schemaVersion: 1;
   readonly producer: {
@@ -153,7 +189,7 @@ export interface DiagnosticReport {
     readonly version: string;
   };
   readonly status: "passed" | "failed";
-  readonly diagnostics: readonly FormFieldMissingDiagnostic[];
+  readonly diagnostics: readonly Diagnostic[];
   readonly summary: {
     readonly errorCount: number;
     readonly warningCount: number;

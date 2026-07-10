@@ -16,6 +16,8 @@ surface would split the build tool from the compiler API needed by the product.
 - Use pnpm 11.11.0 workspaces.
 - Use `@typescript/typescript6` 6.0.2 and its `tsc6` command for build,
   declarations, and the future Compiler API boundary.
+- Use `@types/node` 22.20.1 so the type surface matches the Node.js 22 runtime
+  floor instead of allowing newer runtime APIs accidentally.
 - Use `jsonc-parser` 3.3.1 for JSONC text, offsets, and duplicate-key evidence.
 - Use Ajv 8.20.0 in strict Draft 2020-12 mode for runtime schema validation.
 - Keep schemas in `packages/contract/spec` and copy those exact files into the

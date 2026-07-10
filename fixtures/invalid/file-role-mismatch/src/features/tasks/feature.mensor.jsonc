@@ -16,7 +16,7 @@
         "id": "create-task"
       },
       "handler": {
-        "file": "server/create-task.ts",
+        "file": "routes/create-task.ts",
         "export": "createTask",
         "role": "server"
       },

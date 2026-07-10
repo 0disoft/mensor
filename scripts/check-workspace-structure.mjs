@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 
 const workspace = await json("../package.json");
 const contract = await json("../packages/contract/package.json");
+const compiler = await json("../packages/compiler/package.json");
 const failures = [];
 
 if (workspace.private !== true) {
@@ -9,6 +10,9 @@ if (workspace.private !== true) {
 }
 if (contract.private !== true) {
   failures.push("The contract package must remain private before preview release.");
+}
+if (compiler.private !== true) {
+  failures.push("The compiler package must remain private before preview release.");
 }
 if (Object.hasOwn(workspace, "dependencies")) {
   failures.push("Runtime dependencies belong to the package that imports them, not the workspace root.");
@@ -18,8 +22,18 @@ for (const dependency of ["ajv", "jsonc-parser"]) {
     failures.push(`@mensor/contract must declare ${dependency}.`);
   }
 }
+if (compiler.dependencies?.["@mensor/contract"] !== "workspace:*") {
+  failures.push("@mensor/compiler must use the public workspace contract package.");
+}
+if (compiler.dependencies?.["jsonc-parser"] !== "3.3.1") {
+  failures.push("@mensor/compiler must declare its direct jsonc-parser dependency.");
+}
 for (const forbidden of ["preinstall", "install", "postinstall", "prepare"]) {
-  if (workspace.scripts?.[forbidden] !== undefined || contract.scripts?.[forbidden] !== undefined) {
+  if (
+    workspace.scripts?.[forbidden] !== undefined ||
+    contract.scripts?.[forbidden] !== undefined ||
+    compiler.scripts?.[forbidden] !== undefined
+  ) {
     failures.push(`Lifecycle script ${forbidden} is forbidden.`);
   }
 }
