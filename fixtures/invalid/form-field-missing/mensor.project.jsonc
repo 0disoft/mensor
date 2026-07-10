@@ -1,0 +1,8 @@
+{
+  "$schema": "../../../spec/project-contract-v1.schema.json",
+  "version": 1,
+  "sourceRoot": "src",
+  "featureContracts": [
+    "src/features/tasks/feature.mensor.jsonc"
+  ]
+}

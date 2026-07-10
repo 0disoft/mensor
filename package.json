@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "format": "node -e \"console.error('format is not configured. Configure this validation before relying on pnpm run format.'); process.exit(1)\"",
+    "lint": "node -e \"console.error('lint is not configured. Configure this validation before relying on pnpm run lint.'); process.exit(1)\"",
+    "typecheck": "node -e \"console.error('typecheck is not configured. Configure this validation before relying on pnpm run typecheck.'); process.exit(1)\"",
+    "test": "node -e \"console.error('test is not configured. Configure this validation before relying on pnpm run test.'); process.exit(1)\"",
+    "contract": "node -e \"console.error('contract is not configured. Configure this validation before relying on pnpm run contract.'); process.exit(1)\"",
+    "migration-check": "node -e \"console.error('migration-check is not configured. Configure this validation before relying on pnpm run migration-check.'); process.exit(1)\"",
+    "smoke": "node -e \"console.error('smoke is not configured. Configure this validation before relying on pnpm run smoke.'); process.exit(1)\"",
+    "docs": "node -e \"console.error('docs is not configured. Configure this validation before relying on pnpm run docs.'); process.exit(1)\"",
+    "check": "node -e \"console.error('check is not configured. Configure this validation before relying on pnpm run check.'); process.exit(1)\""
+  }
+}

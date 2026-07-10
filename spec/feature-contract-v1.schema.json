@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "feature-contract-v1.schema.json",
+  "title": "Mensor Feature Contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "feature", "actions"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/action"
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "path"],
+      "properties": {
+        "method": {
+          "const": "POST"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^/[^?#]*$"
+        }
+      }
+    },
+    "form": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template", "id"],
+      "properties": {
+        "template": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "stringSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "const": "string"
+        },
+        "minLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "objectSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "properties", "required"],
+      "properties": {
+        "kind": {
+          "const": "object"
+        },
+        "properties": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/stringSchema"
+          }
+        },
+        "required": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "textDecoder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "trim", "empty"],
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "trim": {
+          "type": "boolean"
+        },
+        "empty": {
+          "enum": ["allow", "reject"]
+        }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path", "decode"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "decode": {
+          "$ref": "#/$defs/textDecoder"
+        }
+      }
+    },
+    "ignoredField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "consumer"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "consumer": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "formCodec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["encoding", "unknownFields", "bindings"],
+      "properties": {
+        "encoding": {
+          "const": "urlencoded"
+        },
+        "unknownFields": {
+          "const": "reject"
+        },
+        "bindings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/binding"
+          }
+        },
+        "ignoredFields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/ignoredField"
+          }
+        }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "formCodec"],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/objectSchema"
+        },
+        "formCodec": {
+          "$ref": "#/$defs/formCodec"
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "route", "form", "input"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "route": {
+          "$ref": "#/$defs/route"
+        },
+        "form": {
+          "$ref": "#/$defs/form"
+        },
+        "input": {
+          "$ref": "#/$defs/input"
+        }
+      }
+    }
+  }
+}
