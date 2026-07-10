@@ -10,6 +10,7 @@ const fixtures = [
   "valid/tiny-tasks",
   "invalid/file-role-mismatch",
   "invalid/form-field-missing",
+  "invalid/form-field-unexpected",
 ];
 const fixtureRoot = new URL("../fixtures/", import.meta.url);
 

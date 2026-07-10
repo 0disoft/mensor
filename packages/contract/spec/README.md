@@ -43,6 +43,10 @@ An action links to static HTML through its feature-relative template path and
 exact form id. The compiler uses the action schema and form codec to identify
 required wire fields. When a required binding has no named field candidate in
 the linked form, the diagnostic report contains `form.field_missing`.
+When a named field candidate is absent from both codec bindings and explicit
+ignored fields, the report contains one `form.field_unexpected` diagnostic for
+that wire field name. Repeated controls with the same name share one wire field
+diagnostic.
 
 HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.

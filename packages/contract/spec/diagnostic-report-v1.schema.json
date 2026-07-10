@@ -135,6 +135,9 @@
           "$ref": "#/$defs/formFieldMissingDiagnostic"
         },
         {
+          "$ref": "#/$defs/formFieldUnexpectedDiagnostic"
+        },
+        {
           "$ref": "#/$defs/fileRoleMismatchDiagnostic"
         }
       ]
@@ -224,6 +227,57 @@
           "type": "string",
           "minLength": 1,
           "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        }
+      }
+    },
+    "formFieldUnexpectedDiagnostic": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/diagnosticBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "const": "form.field_unexpected"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "category": {
+              "const": "form-contract"
+            },
+            "facts": {
+              "$ref": "#/$defs/formFieldUnexpectedFacts"
+            }
+          }
+        }
+      ]
+    },
+    "formFieldUnexpectedFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "fieldName", "formId", "template", "unknownFieldsPolicy"],
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fieldName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "formId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "unknownFieldsPolicy": {
+          "const": "reject"
         }
       }
     },

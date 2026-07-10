@@ -25,6 +25,9 @@ rule contract.
 - Link an action to exactly one form by contract template path and form id.
 - Emit `form.field_missing` when a required top-level schema property has an
   explicit codec binding but no matching named field candidate.
+- Preserve the first source range for each unique wire field name and emit one
+  `form.field_unexpected` when that name is neither bound nor explicitly
+  ignored.
 - Limit every contract and template read to 1 MiB by default through
   `limits.maxFileBytes`.
 
@@ -34,8 +37,8 @@ rule contract.
 - parse5 nodes and parser errors remain compiler-internal.
 - The current fact model does not claim complete successful-control semantics
   for disabled fieldsets, named submitters, or codec compatibility.
-- Unexpected controls, form route mismatch, decoder/control mismatch, and
-  unsupported dynamic behavior require separate diagnostic slices.
+- Form route mismatch, decoder/control mismatch, and unsupported dynamic
+  behavior require separate diagnostic slices.
 
 ## Reconsider When
 

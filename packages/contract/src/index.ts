@@ -21,6 +21,8 @@ export type {
   FormCodec,
   FormFieldMissingDiagnostic,
   FormFieldMissingFacts,
+  FormFieldUnexpectedDiagnostic,
+  FormFieldUnexpectedFacts,
   IgnoredFormField,
   JsonObject,
   JsonPrimitive,

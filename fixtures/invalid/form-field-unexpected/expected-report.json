@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "producer": {
+    "name": "mensor",
+    "version": "0.0.0-fixture"
+  },
+  "status": "failed",
+  "diagnostics": [
+    {
+      "code": "form.field_unexpected",
+      "severity": "error",
+      "category": "form-contract",
+      "message": "Form \"create-task\" contains unexpected field \"debug\".",
+      "file": "src/features/tasks/views/index.html",
+      "range": {
+        "start": {
+          "line": 8,
+          "character": 6
+        },
+        "end": {
+          "line": 8,
+          "character": 40
+        }
+      },
+      "facts": {
+        "actionId": "tasks.create",
+        "fieldName": "debug",
+        "formId": "create-task",
+        "template": "src/features/tasks/views/index.html",
+        "unknownFieldsPolicy": "reject"
+      },
+      "related": [
+        {
+          "role": "unknown-fields-policy",
+          "message": "The form codec rejects fields that are neither bound nor explicitly ignored.",
+          "file": "src/features/tasks/feature.mensor.jsonc",
+          "range": {
+            "start": {
+              "line": 36,
+              "character": 27
+            },
+            "end": {
+              "line": 36,
+              "character": 35
+            }
+          }
+        }
+      ],
+      "repair": {
+        "strategy": "declare-or-remove-unexpected-form-field",
+        "hint": "Bind field debug, declare it as ignored with its consumer, or remove the control.",
+        "mustPreserve": [
+          "unknown field rejection",
+          "action tasks.create",
+          "form-to-action linkage"
+        ],
+        "mustNot": [
+          "weaken the unknown field policy",
+          "silently discard debug at runtime"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "errorCount": 1,
+    "warningCount": 0
+  }
+}

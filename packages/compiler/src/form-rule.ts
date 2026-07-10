@@ -4,11 +4,15 @@ import type {
   Diagnostic,
   FeatureContract,
   FormFieldMissingDiagnostic,
+  FormFieldUnexpectedDiagnostic,
 } from "@mensor/contract";
 
 import { readProjectFile } from "./filesystem.js";
 import { extractFormFacts, type FormFact } from "./html-forms.js";
-import { actionSchemaPropertyRange } from "./locations.js";
+import {
+  actionFormCodecPropertyRange,
+  actionSchemaPropertyRange,
+} from "./locations.js";
 import {
   assertRelativePosixPath,
   compareText,
@@ -26,7 +30,7 @@ export async function checkFeatureForms(options: {
 }): Promise<readonly Diagnostic[]> {
   const featureRoot = path.posix.dirname(options.featureContractPath);
   const templateCache = new Map<string, readonly FormFact[]>();
-  const diagnostics: FormFieldMissingDiagnostic[] = [];
+  const diagnostics: Diagnostic[] = [];
 
   for (let actionIndex = 0; actionIndex < options.feature.actions.length; actionIndex += 1) {
     const action = options.feature.actions[actionIndex];
@@ -94,7 +98,7 @@ export async function checkFeatureForms(options: {
           options.featureContractPath,
         );
       }
-      if (form.fields.includes(binding.name)) {
+      if (form.fields.some((field) => field.name === binding.name)) {
         continue;
       }
       diagnostics.push(
@@ -109,9 +113,83 @@ export async function checkFeatureForms(options: {
         }),
       );
     }
+
+    const acceptedFieldNames = new Set([
+      ...action.input.formCodec.bindings.map((binding) => binding.name),
+      ...(action.input.formCodec.ignoredFields ?? []).map((field) => field.name),
+    ]);
+    for (const field of form.fields) {
+      if (acceptedFieldNames.has(field.name)) {
+        continue;
+      }
+      diagnostics.push(
+        unexpectedFieldDiagnostic({
+          actionId: action.id,
+          actionIndex,
+          fieldName: field.name,
+          fieldRange: field.range,
+          form,
+          templateFile: projectTemplate,
+          featureContractPath: options.featureContractPath,
+          featureText: options.featureText,
+        }),
+      );
+    }
   }
 
   return diagnostics;
+}
+
+function unexpectedFieldDiagnostic(options: {
+  readonly actionId: string;
+  readonly actionIndex: number;
+  readonly fieldName: string;
+  readonly fieldRange: FormFact["range"];
+  readonly form: FormFact;
+  readonly templateFile: string;
+  readonly featureContractPath: string;
+  readonly featureText: string;
+}): FormFieldUnexpectedDiagnostic {
+  return {
+    code: "form.field_unexpected",
+    severity: "error",
+    category: "form-contract",
+    message: `Form ${JSON.stringify(options.form.id)} contains unexpected field ${JSON.stringify(options.fieldName)}.`,
+    file: options.templateFile,
+    range: options.fieldRange,
+    facts: {
+      actionId: options.actionId,
+      fieldName: options.fieldName,
+      formId: options.form.id,
+      template: options.templateFile,
+      unknownFieldsPolicy: "reject",
+    },
+    related: [
+      {
+        role: "unknown-fields-policy",
+        message: "The form codec rejects fields that are neither bound nor explicitly ignored.",
+        file: options.featureContractPath,
+        range: actionFormCodecPropertyRange(
+          options.featureText,
+          options.actionIndex,
+          "unknownFields",
+        ),
+      },
+    ],
+    repair: {
+      strategy: "declare-or-remove-unexpected-form-field",
+      hint: `Bind field ${options.fieldName}, declare it as ignored with its consumer, or remove the control.`,
+      mustPreserve: [
+        "unknown field rejection",
+        `action ${options.actionId}`,
+        "form-to-action linkage",
+      ],
+      mustNot: [
+        "weaken the unknown field policy",
+        `silently discard ${options.fieldName} at runtime`,
+      ],
+    },
+  };
 }
 
 function missingFieldDiagnostic(options: {

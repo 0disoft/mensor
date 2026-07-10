@@ -157,6 +157,26 @@ export interface FormFieldMissingDiagnostic {
   readonly repair: RepairInstruction;
 }
 
+export interface FormFieldUnexpectedFacts {
+  readonly actionId: string;
+  readonly fieldName: string;
+  readonly formId: string;
+  readonly template: string;
+  readonly unknownFieldsPolicy: "reject";
+}
+
+export interface FormFieldUnexpectedDiagnostic {
+  readonly code: "form.field_unexpected";
+  readonly severity: "error";
+  readonly category: "form-contract";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: FormFieldUnexpectedFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
 export interface FileRoleMismatchFacts {
   readonly actionId: string;
   readonly actualRole: string;
@@ -180,7 +200,8 @@ export interface FileRoleMismatchDiagnostic {
 
 export type Diagnostic =
   | FileRoleMismatchDiagnostic
-  | FormFieldMissingDiagnostic;
+  | FormFieldMissingDiagnostic
+  | FormFieldUnexpectedDiagnostic;
 
 export interface DiagnosticReport {
   readonly schemaVersion: 1;

@@ -4,12 +4,15 @@ Fixtures are executable specifications for compiler behavior. Each fixture is
 self-contained and contains the project contract, feature contract, source
 files, and canonical expected report needed for one behavior.
 
-- `valid/tiny-tasks`: one valid form-backed action
+- `valid/tiny-tasks`: one valid form-backed action with a host-consumed `_csrf`
+  field declared through `ignoredFields`
 - `invalid/file-role-mismatch`: an action handler discovered in the route slot
   while its contract requires the server role
 - `invalid/form-field-missing`: the same action with its required `title`
   control removed, producing the compiler's canonical `form.field_missing`
   report
+- `invalid/form-field-unexpected`: a valid action form with an unbound `debug`
+  control, producing one canonical `form.field_unexpected` report
 
 `expected-report.json` uses the fixed producer version `0.0.0-fixture` so
 package-version changes do not rewrite behavioral snapshots. The future fixture

@@ -11,7 +11,12 @@ export interface FormFact {
   readonly id: string;
   readonly method: string;
   readonly action: string;
-  readonly fields: readonly string[];
+  readonly fields: readonly FormFieldFact[];
+  readonly range: SourceRange;
+}
+
+export interface FormFieldFact {
+  readonly name: string;
   readonly range: SourceRange;
 }
 
@@ -28,18 +33,33 @@ export function extractFormFacts(html: string): readonly FormFact[] {
       const fields = controls
         .filter((control) => associatedForm(control, forms) === form)
         .filter(isSuccessfulFieldCandidate)
-        .map((control) => attribute(control, "name"))
-        .filter((name): name is string => name !== null && name.length > 0)
-        .sort(compareText);
+        .flatMap((control) => {
+          const name = attribute(control, "name");
+          return name === null || name.length === 0
+            ? []
+            : [{ name, range: elementStartTagRange(control) }];
+        });
       return {
         id,
         method: (attribute(form, "method") ?? "GET").toUpperCase(),
         action: attribute(form, "action") ?? "",
-        fields: [...new Set(fields)],
+        fields: uniqueFields(fields),
         range: elementStartTagRange(form),
       };
     })
     .sort((left, right) => compareText(left.id, right.id));
+}
+
+function uniqueFields(fields: readonly FormFieldFact[]): readonly FormFieldFact[] {
+  const byName = new Map<string, FormFieldFact>();
+  for (const field of fields) {
+    if (!byName.has(field.name)) {
+      byName.set(field.name, field);
+    }
+  }
+  return [...byName.values()].sort((left, right) =>
+    compareText(left.name, right.name),
+  );
 }
 
 function collectElements(

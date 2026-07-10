@@ -63,10 +63,10 @@ It extracts form identity, method, action, source range, and named field
 candidates, then detects:
 
 - a required action field has no matching form control;
+- a named form control is neither bound nor explicitly ignored.
 
 The following form-contract rules remain separate slices:
 
-- a named form control is neither bound nor explicitly ignored;
 - a control shape and its decoder disagree; and
 - form method or action does not match the linked action.
 
@@ -141,7 +141,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 7. Contract and template reads fail closed at the configured byte limit.
 8. A missing required form field emits the exact canonical
    `form.field_missing` diagnostic from different absolute roots.
-9. A repair benchmark requires both a passing check and an unchanged semantic
+9. An unknown named form field emits one exact canonical
+   `form.field_unexpected` diagnostic per wire field name, even when multiple
+   controls share that name.
+10. A repair benchmark requires both a passing check and an unchanged semantic
    application test; contract weakening is a failed repair.
 
 ## Deferred Decisions

@@ -100,6 +100,17 @@ test("requires code-specific diagnostic facts", async () => {
   assert.equal(result.ok, false);
 });
 
+test("validates unexpected-field diagnostic facts independently", async () => {
+  const text = await fixtureText(
+    "invalid/form-field-unexpected/expected-report.json",
+  );
+  const value = JSON.parse(text);
+  delete value.diagnostics[0].facts.unknownFieldsPolicy;
+
+  const result = parseDiagnosticReport(JSON.stringify(value));
+  assert.equal(result.ok, false);
+});
+
 test("recognizes only finite JSON values and plain objects", () => {
   assert.equal(isJsonValue({ nested: [null, true, 1, "value"] }), true);
   assert.equal(isJsonValue(Number.NaN), false);

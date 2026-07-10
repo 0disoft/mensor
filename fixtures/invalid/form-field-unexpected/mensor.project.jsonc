@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../packages/contract/spec/project-contract-v1.schema.json",
+  "version": 1,
+  "sourceRoot": "src",
+  "featureContracts": [
+    "src/features/tasks/feature.mensor.jsonc"
+  ],
+  "fileRoles": [
+    {
+      "role": "server",
+      "withinFeature": "server"
+    },
+    {
+      "role": "route",
+      "withinFeature": "routes"
+    },
+    {
+      "role": "view",
+      "withinFeature": "views"
+    }
+  ]
+}

@@ -51,6 +51,25 @@ export function actionSchemaPropertyRange(
   return zeroRange;
 }
 
+export function actionFormCodecPropertyRange(
+  contractText: string,
+  actionIndex: number,
+  propertyName: string,
+): SourceRange {
+  const root = parseTree(contractText);
+  if (root === undefined) {
+    return zeroRange;
+  }
+  const node = findNodeAtLocation(root, [
+    "actions",
+    actionIndex,
+    "input",
+    "formCodec",
+    propertyName,
+  ]);
+  return node === undefined ? zeroRange : nodeRange(contractText, node);
+}
+
 function nodeRange(text: string, node: Node): SourceRange {
   return {
     start: positionAt(text, node.offset),

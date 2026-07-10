@@ -44,10 +44,21 @@ test("reports the canonical missing form field diagnostic", async () => {
   }
 });
 
+test("reports the canonical unexpected form field diagnostic", async () => {
+  const fixture = "invalid/form-field-unexpected";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
 test("produces byte-identical reports from different absolute roots", async () => {
   for (const fixture of [
     "invalid/file-role-mismatch",
     "invalid/form-field-missing",
+    "invalid/form-field-unexpected",
   ]) {
     const temporaryRoots = await Promise.all([
       copyFixture(fixture),

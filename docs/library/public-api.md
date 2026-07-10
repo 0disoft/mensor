@@ -48,8 +48,9 @@ and unreadable inputs are typed failures.
 The compiler walks the configured source root in code-unit sorted order, skips
 symlinks, enforces file-count and file-byte limits, and never imports inspected
 source. It currently implements action-handler placement plus static HTML form
-linking for required-field presence. Unexpected fields, codec shape, route
-matching, and TypeScript source facts remain later behavior.
+linking for required-field presence and rejection of named fields that are
+neither bound nor explicitly ignored. Codec shape, route matching, and
+TypeScript source facts remain later behavior.
 
 ## Export Policy
 

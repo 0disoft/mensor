@@ -18,7 +18,22 @@ test("normalizes static forms and successful named field candidates", () => {
       id: "task",
       method: "POST",
       action: "/tasks",
-      fields: ["notes", "title"],
+      fields: [
+        {
+          name: "notes",
+          range: {
+            start: { line: 6, character: 0 },
+            end: { line: 6, character: 35 },
+          },
+        },
+        {
+          name: "title",
+          range: {
+            start: { line: 2, character: 2 },
+            end: { line: 2, character: 22 },
+          },
+        },
+      ],
       range: {
         start: { line: 1, character: 0 },
         end: { line: 1, character: 46 },
@@ -32,5 +47,21 @@ test("uses GET and an empty action when attributes are omitted", () => {
 
   assert.equal(facts[0]?.method, "GET");
   assert.equal(facts[0]?.action, "");
-  assert.deepEqual(facts[0]?.fields, ["query"]);
+  assert.deepEqual(facts[0]?.fields.map((field) => field.name), ["query"]);
+});
+
+test("keeps one source location for repeated wire field names", () => {
+  const facts = extractFormFacts(`<form id="filters">
+  <input name="tag">
+  <input name="tag">
+</form>`);
+
+  assert.equal(facts[0]?.fields.length, 1);
+  assert.deepEqual(facts[0]?.fields[0], {
+    name: "tag",
+    range: {
+      start: { line: 1, character: 2 },
+      end: { line: 1, character: 20 },
+    },
+  });
 });

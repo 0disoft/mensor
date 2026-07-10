@@ -45,12 +45,6 @@
                 "empty": "reject"
               }
             }
-          ],
-          "ignoredFields": [
-            {
-              "name": "_csrf",
-              "consumer": "action-guard"
-            }
           ]
         }
       }
