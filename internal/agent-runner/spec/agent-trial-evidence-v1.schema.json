@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-trial-evidence-v1.schema.json",
+  "title": "Mensor Agent Trial Evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "executionFingerprint", "execution", "report"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "executionFingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "execution": {
+      "$ref": "agent-execution-descriptor-v1.schema.json"
+    },
+    "report": {
+      "$ref": "agent-trial-report-v1.schema.json"
+    }
+  }
+}

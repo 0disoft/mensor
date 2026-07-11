@@ -76,6 +76,10 @@ Owns bounded external command execution for trial adapters. It depends on the
 fixture kit's provider-neutral types. It must remain private and must not become
 a dependency of the compiler, CLI, or published packages.
 
+It also owns canonical execution descriptors and trial-evidence envelopes.
+Those artifacts identify comparable evaluation cohorts without moving command
+paths, environment values, prompts, transcripts, or credentials into reports.
+
 ## Dependency Rules
 
 ```text

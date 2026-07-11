@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-execution-descriptor-v1.schema.json",
+  "title": "Mensor Agent Execution Descriptor v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "descriptorId", "agent", "artifacts", "environment", "limits"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "descriptorId": { "$ref": "#/$defs/identifier" },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "modelId", "modelRevision"],
+      "properties": {
+        "providerId": { "$ref": "#/$defs/name" },
+        "modelId": { "$ref": "#/$defs/name" },
+        "modelRevision": {
+          "oneOf": [
+            { "$ref": "#/$defs/name" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "prompt", "toolset", "dataset"],
+      "properties": {
+        "adapter": { "$ref": "#/$defs/artifactRef" },
+        "prompt": { "$ref": "#/$defs/artifactRef" },
+        "toolset": { "$ref": "#/$defs/artifactRef" },
+        "dataset": { "$ref": "#/$defs/artifactRef" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner", "platform", "architecture", "nodeVersion", "isolation", "networkControl"],
+      "properties": {
+        "runner": { "const": "local-command" },
+        "platform": {
+          "enum": [
+            "aix",
+            "android",
+            "darwin",
+            "freebsd",
+            "haiku",
+            "linux",
+            "openbsd",
+            "sunos",
+            "win32",
+            "cygwin",
+            "netbsd"
+          ]
+        },
+        "architecture": { "$ref": "#/$defs/name" },
+        "nodeVersion": { "$ref": "#/$defs/name" },
+        "isolation": { "const": "process-only" },
+        "networkControl": { "const": "not-enforced" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeoutMs", "maxInputBytes", "maxOutputBytes"],
+      "properties": {
+        "timeoutMs": { "type": "integer", "minimum": 1, "maximum": 300000 },
+        "maxInputBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "maxOutputBytes": { "type": "integer", "minimum": 1, "maximum": 1048576 }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "revision", "sha256"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "revision": { "$ref": "#/$defs/name" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

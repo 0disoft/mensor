@@ -14,7 +14,8 @@ evaluation preview:
 - CLI: arguments, config selection, output routing, and exit status; and
 - fixture kit: deterministic fixtures, snapshots, security probes, and repair
   evaluation support that is never published as a runtime dependency; and
-- agent runner: a private bounded process adapter for evaluation commands.
+- agent runner: a private bounded process adapter plus execution-evidence
+  contracts for evaluation commands.
 
 It consumes the local filesystem and parser libraries. It does not own the
 application framework, HTTP server, database, authentication, deployment, or

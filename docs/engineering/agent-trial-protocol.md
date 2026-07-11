@@ -56,3 +56,9 @@ rate is claimed.
 The separate private agent runner now supplies a bounded command adapter for
 fake executable tests. It does not change the claim boundary: no real model or
 provider has been measured.
+
+Before retaining real-agent evidence, the runner binds the report to
+`agent-execution-descriptor/v1` through a derived execution fingerprint. Runs
+with different fingerprints are separate cohorts and must not be merged into
+one repair metric. The descriptor contract is documented in
+`docs/engineering/agent-execution-descriptor.md`.

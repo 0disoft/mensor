@@ -1,13 +1,22 @@
 {
   "name": "@mensor/agent-runner",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "private": true,
   "type": "module",
   "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
     "@mensor/fixture-kit": "workspace:*"
+  },
+  "devDependencies": {
+    "ajv": "8.17.1"
   }
 }

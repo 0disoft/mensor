@@ -5,8 +5,18 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { runAgentTrial } from "@mensor/fixture-kit";
-import { createCommandAgentAdapter } from "../dist/src/index.js";
+import { Ajv2020 } from "ajv/dist/2020.js";
+import { parseAgentTrialReport, runAgentTrial } from "@mensor/fixture-kit";
+import {
+  createAgentTrialEvidence,
+  createCommandAgentAdapter,
+  createCommandExecutionDescriptor,
+  executionFingerprint,
+  parseAgentExecutionDescriptor,
+  parseAgentTrialEvidence,
+  serializeAgentExecutionDescriptor,
+  serializeAgentTrialEvidence,
+} from "../dist/src/index.js";
 
 const fixture = fileURLToPath(
   new URL("../../../fixtures/valid/tiny-tasks/", import.meta.url),
@@ -42,9 +52,9 @@ test("passes only explicitly allowlisted environment values", async () => {
       const command = createCommandAgentAdapter({
         executable: process.execPath,
         args: [fakeAgent, "environment"],
-      timeoutMs: 5_000,
-      maxInputBytes: 4_096,
-      maxOutputBytes: 4_096,
+        timeoutMs: 5_000,
+        maxInputBytes: 4_096,
+        maxOutputBytes: 4_096,
         environment: { ALLOWED: "yes" },
       });
       const result = await command(context(root));
@@ -57,6 +67,122 @@ test("passes only explicitly allowlisted environment values", async () => {
       }
     }
   });
+});
+
+test("creates a canonical execution descriptor without command or secret values", () => {
+  const descriptor = createCommandExecutionDescriptor(metadata(), commandOptions());
+  const serialized = serializeAgentExecutionDescriptor(descriptor);
+
+  assert.deepEqual(parseAgentExecutionDescriptor(serialized), descriptor);
+  assert.equal(descriptor.environment.platform, process.platform);
+  assert.equal(descriptor.environment.architecture, process.arch);
+  assert.equal(descriptor.environment.nodeVersion, process.versions.node);
+  assert.equal(descriptor.environment.isolation, "process-only");
+  assert.equal(descriptor.environment.networkControl, "not-enforced");
+  assert.deepEqual(descriptor.limits, {
+    timeoutMs: 5_000,
+    maxInputBytes: 4_096,
+    maxOutputBytes: 4_096,
+  });
+  assert.equal(serialized.includes(process.execPath), false);
+  assert.equal(serialized.includes(fakeAgent), false);
+  assert.equal(serialized.includes("sentinel-value"), false);
+  assert.equal(serialized.endsWith("\n"), true);
+});
+
+test("fingerprints every declared execution contract", () => {
+  const first = createCommandExecutionDescriptor(metadata(), commandOptions());
+  const identical = createCommandExecutionDescriptor(metadata(), commandOptions());
+  const second = createCommandExecutionDescriptor({
+    ...metadata(),
+    prompt: artifact("repair-prompt", "v2", "b"),
+  }, commandOptions());
+
+  assert.match(executionFingerprint(first), /^[a-f0-9]{64}$/);
+  assert.equal(executionFingerprint(first), executionFingerprint(identical));
+  assert.notEqual(executionFingerprint(first), executionFingerprint(second));
+});
+
+test("binds a canonical report to one execution fingerprint", async () => {
+  const report = parseAgentTrialReport(await readFile(new URL(
+    "../../fixture-kit/fixtures/agent-trial-report-v1.json",
+    import.meta.url,
+  ), "utf8"));
+  const descriptor = createCommandExecutionDescriptor(metadata(), commandOptions());
+  const evidence = createAgentTrialEvidence(descriptor, report);
+  const serialized = serializeAgentTrialEvidence(evidence);
+
+  assert.deepEqual(parseAgentTrialEvidence(serialized), evidence);
+  assert.equal(evidence.executionFingerprint, executionFingerprint(descriptor));
+  assert.throws(
+    () => parseAgentTrialEvidence(JSON.stringify({
+      ...evidence,
+      executionFingerprint: "0".repeat(64),
+    })),
+    /canonical execution fingerprint/,
+  );
+});
+
+test("rejects descriptor drift and malformed metadata", () => {
+  const descriptor = createCommandExecutionDescriptor(metadata(), commandOptions());
+  assert.throws(
+    () => parseAgentExecutionDescriptor(JSON.stringify({ ...descriptor, timestamp: "hidden" })),
+    /must contain exactly/,
+  );
+  assert.throws(
+    () => createCommandExecutionDescriptor({
+      ...metadata(),
+      prompt: artifact("repair-prompt", "v1", "not-a-digest"),
+    }, commandOptions()),
+    /SHA-256/,
+  );
+  assert.throws(
+    () => createCommandExecutionDescriptor({
+      ...metadata(),
+      providerId: "provider with spaces",
+    }, commandOptions()),
+    /bounded artifact name/,
+  );
+});
+
+test("keeps execution schema identifiers and references stable", async () => {
+  const descriptorSchema = JSON.parse(await readFile(new URL(
+    "../spec/agent-execution-descriptor-v1.schema.json",
+    import.meta.url,
+  ), "utf8"));
+  const evidenceSchema = JSON.parse(await readFile(new URL(
+    "../spec/agent-trial-evidence-v1.schema.json",
+    import.meta.url,
+  ), "utf8"));
+  const reportSchema = JSON.parse(await readFile(new URL(
+    "../../fixture-kit/spec/agent-trial-report-v1.schema.json",
+    import.meta.url,
+  ), "utf8"));
+
+  assert.equal(descriptorSchema.$id, "agent-execution-descriptor-v1.schema.json");
+  assert.equal(evidenceSchema.$id, "agent-trial-evidence-v1.schema.json");
+  assert.equal(
+    evidenceSchema.properties.execution.$ref,
+    "agent-execution-descriptor-v1.schema.json",
+  );
+  assert.equal(
+    evidenceSchema.properties.report.$ref,
+    "agent-trial-report-v1.schema.json",
+  );
+
+  const report = parseAgentTrialReport(await readFile(new URL(
+    "../../fixture-kit/fixtures/agent-trial-report-v1.json",
+    import.meta.url,
+  ), "utf8"));
+  const evidence = createAgentTrialEvidence(
+    createCommandExecutionDescriptor(metadata(), commandOptions()),
+    report,
+  );
+  const ajv = new Ajv2020({ strict: true });
+  ajv.addSchema(reportSchema);
+  ajv.addSchema(descriptorSchema);
+  const validateEvidence = ajv.compile(evidenceSchema);
+  assert.equal(validateEvidence(evidence), true, JSON.stringify(validateEvidence.errors));
 });
 
 test("rejects relative executables before process creation", () => {
@@ -122,6 +248,34 @@ function adapter(mode, overrides = {}) {
     maxOutputBytes: overrides.maxOutputBytes ?? 4_096,
     environment: {},
   });
+}
+
+function commandOptions() {
+  return {
+    executable: process.execPath,
+    args: [fakeAgent, "repair"],
+    timeoutMs: 5_000,
+    maxInputBytes: 4_096,
+    maxOutputBytes: 4_096,
+    environment: { EVAL_SENTINEL: "sentinel-value" },
+  };
+}
+
+function metadata() {
+  return {
+    descriptorId: "fake-agent-local-v1",
+    providerId: "fake-provider",
+    modelId: "fake/model",
+    modelRevision: "2026-07-11",
+    adapter: artifact("command-adapter", "v1", "a"),
+    prompt: artifact("repair-prompt", "v1", "b"),
+    toolset: artifact("workspace-tools", "v1", "c"),
+    dataset: artifact("golden-mutations", "v1", "d"),
+  };
+}
+
+function artifact(id, revision, character) {
+  return { id, revision, sha256: character.repeat(64) };
 }
 
 function context(root) {

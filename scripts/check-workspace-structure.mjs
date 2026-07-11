@@ -55,6 +55,15 @@ if (fixtureKit.dependencies?.["@mensor/compiler"] !== "workspace:*") {
 if (agentRunner.dependencies?.["@mensor/fixture-kit"] !== "workspace:*") {
   failures.push("@mensor/agent-runner must use the private workspace fixture kit.");
 }
+if (agentRunner.exports?.["."]?.import !== "./dist/src/index.js") {
+  failures.push("@mensor/agent-runner must expose only its built root entrypoint.");
+}
+if (agentRunner.exports?.["."]?.types !== "./dist/src/index.d.ts") {
+  failures.push("@mensor/agent-runner must expose its built root type declarations.");
+}
+if (agentRunner.devDependencies?.ajv !== "8.17.1") {
+  failures.push("@mensor/agent-runner must declare the schema validator used by its tests.");
+}
 if (cli.bin?.mensor !== "./dist/src/bin.js") {
   failures.push("@mensor/cli must expose the built mensor executable.");
 }
