@@ -62,6 +62,10 @@ files, reruns the compiler, and invokes a trusted semantic application check.
 A repair succeeds only when all three gates pass: the compiler is clean, no
 protected file changed, and application semantics remain intact.
 
+The fixture kit also owns a provider-neutral trial state machine and report
+aggregation. Provider SDKs, credentials, shell execution, network access, raw
+prompts, and transcripts remain outside this package.
+
 ## Dependency Rules
 
 ```text

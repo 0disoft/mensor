@@ -43,6 +43,6 @@ stabilized.
 
 `detectionPassedCount / caseCount` measures deterministic detection coverage.
 It is not `pass@k`, `pass^k`, repair rate, semantic preservation rate, or safe
-trajectory rate. Those metrics require repeated agent trials, final-state
-application checks, protected-contract checks, patch evidence, and explicit
-tool or approval policy.
+trajectory rate. The private trial protocol can record those final-state checks
+with fake adapters, but real metrics still require repeated provider trials and
+explicit tool, environment, cost, and approval policy.
