@@ -63,12 +63,13 @@ It extracts form identity, method, action, source range, and named field
 candidates, then detects:
 
 - a required action field has no matching form control;
-- a named form control is neither bound nor explicitly ignored.
+- a named form control is neither bound nor explicitly ignored;
+- form method does not match the linked action method; and
+- form action does not match the linked action path.
 
 The following form-contract rules remain separate slices:
 
-- a control shape and its decoder disagree; and
-- form method or action does not match the linked action.
+- a control shape and its decoder disagree.
 
 For form comparison, the compiler normalizes an HTML form method to ASCII uppercase
 and treats an omitted method as `GET`. The first schema accepts only a static,
@@ -146,6 +147,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
    controls share that name.
 10. A repair benchmark requires both a passing check and an unchanged semantic
    application test; contract weakening is a failed repair.
+11. Form method and action mismatches emit separate exact diagnostics at the
+    corresponding HTML attributes with the declared route as a related location.
 
 ## Deferred Decisions
 

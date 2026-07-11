@@ -138,6 +138,12 @@
           "$ref": "#/$defs/formFieldUnexpectedDiagnostic"
         },
         {
+          "$ref": "#/$defs/formMethodMismatchDiagnostic"
+        },
+        {
+          "$ref": "#/$defs/formActionMismatchDiagnostic"
+        },
+        {
           "$ref": "#/$defs/fileRoleMismatchDiagnostic"
         }
       ]
@@ -278,6 +284,107 @@
         },
         "unknownFieldsPolicy": {
           "const": "reject"
+        }
+      }
+    },
+    "formMethodMismatchDiagnostic": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/diagnosticBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "const": "form.method_mismatch"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "category": {
+              "const": "form-contract"
+            },
+            "facts": {
+              "$ref": "#/$defs/formMethodMismatchFacts"
+            }
+          }
+        }
+      ]
+    },
+    "formMethodMismatchFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "actualMethod", "expectedMethod", "formId", "template"],
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actualMethod": {
+          "type": "string"
+        },
+        "expectedMethod": {
+          "const": "POST"
+        },
+        "formId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        }
+      }
+    },
+    "formActionMismatchDiagnostic": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/diagnosticBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "const": "form.action_mismatch"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "category": {
+              "const": "form-contract"
+            },
+            "facts": {
+              "$ref": "#/$defs/formActionMismatchFacts"
+            }
+          }
+        }
+      ]
+    },
+    "formActionMismatchFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "actualAction", "expectedAction", "formId", "template"],
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actualAction": {
+          "type": "string"
+        },
+        "expectedAction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "formId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
         }
       }
     },

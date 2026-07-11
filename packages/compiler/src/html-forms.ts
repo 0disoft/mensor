@@ -10,7 +10,9 @@ import { compareText } from "./paths.js";
 export interface FormFact {
   readonly id: string;
   readonly method: string;
+  readonly methodRange: SourceRange;
   readonly action: string;
+  readonly actionRange: SourceRange;
   readonly fields: readonly FormFieldFact[];
   readonly range: SourceRange;
 }
@@ -41,13 +43,21 @@ export function extractFormFacts(html: string): readonly FormFact[] {
         });
       return {
         id,
-        method: (attribute(form, "method") ?? "GET").toUpperCase(),
+        method: asciiUppercase(attribute(form, "method") ?? "GET"),
+        methodRange: elementAttributeRange(form, "method"),
         action: attribute(form, "action") ?? "",
+        actionRange: elementAttributeRange(form, "action"),
         fields: uniqueFields(fields),
         range: elementStartTagRange(form),
       };
     })
     .sort((left, right) => compareText(left.id, right.id));
+}
+
+function asciiUppercase(value: string): string {
+  return value.replace(/[a-z]/gu, (character) =>
+    String.fromCharCode(character.charCodeAt(0) - 32),
+  );
 }
 
 function uniqueFields(fields: readonly FormFieldFact[]): readonly FormFieldFact[] {
@@ -130,6 +140,26 @@ function elementStartTagRange(
       start: { line: 0, character: 0 },
       end: { line: 0, character: 0 },
     };
+  }
+  return {
+    start: {
+      line: location.startLine - 1,
+      character: location.startCol - 1,
+    },
+    end: {
+      line: location.endLine - 1,
+      character: location.endCol - 1,
+    },
+  };
+}
+
+function elementAttributeRange(
+  element: DefaultTreeAdapterTypes.Element,
+  name: string,
+): SourceRange {
+  const location = element.sourceCodeLocation?.attrs?.[name];
+  if (location === undefined) {
+    return elementStartTagRange(element);
   }
   return {
     start: {

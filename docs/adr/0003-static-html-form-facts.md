@@ -28,6 +28,8 @@ rule contract.
 - Preserve the first source range for each unique wire field name and emit one
   `form.field_unexpected` when that name is neither bound nor explicitly
   ignored.
+- Preserve method and action attribute ranges and emit separate mismatch
+  diagnostics against the linked action route.
 - Limit every contract and template read to 1 MiB by default through
   `limits.maxFileBytes`.
 
@@ -37,8 +39,8 @@ rule contract.
 - parse5 nodes and parser errors remain compiler-internal.
 - The current fact model does not claim complete successful-control semantics
   for disabled fieldsets, named submitters, or codec compatibility.
-- Form route mismatch, decoder/control mismatch, and unsupported dynamic
-  behavior require separate diagnostic slices.
+- Decoder/control mismatch and unsupported dynamic behavior require separate
+  diagnostic slices.
 
 ## Reconsider When
 

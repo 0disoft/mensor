@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "producer": { "name": "mensor", "version": "0.0.0-fixture" },
+  "status": "failed",
+  "diagnostics": [
+    {
+      "code": "form.method_mismatch",
+      "severity": "error",
+      "category": "form-contract",
+      "message": "Form \"create-task\" uses method \"GET\", but action \"tasks.create\" requires \"POST\".",
+      "file": "src/features/tasks/views/index.html",
+      "range": {
+        "start": { "line": 3, "character": 27 },
+        "end": { "line": 3, "character": 39 }
+      },
+      "facts": {
+        "actionId": "tasks.create",
+        "actualMethod": "GET",
+        "expectedMethod": "POST",
+        "formId": "create-task",
+        "template": "src/features/tasks/views/index.html"
+      },
+      "related": [
+        {
+          "role": "action-route-method",
+          "message": "The action contract declares the required HTTP method.",
+          "file": "src/features/tasks/feature.mensor.jsonc",
+          "range": {
+            "start": { "line": 7, "character": 27 },
+            "end": { "line": 7, "character": 33 }
+          }
+        }
+      ],
+      "repair": {
+        "strategy": "align-form-method",
+        "hint": "Set form create-task method to POST.",
+        "mustPreserve": [
+          "action tasks.create",
+          "route method POST",
+          "form-to-action linkage"
+        ],
+        "mustNot": [
+          "change the action route to match an accidental form method",
+          "remove the form-to-action linkage"
+        ]
+      }
+    }
+  ],
+  "summary": { "errorCount": 1, "warningCount": 0 }
+}

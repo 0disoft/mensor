@@ -177,6 +177,46 @@ export interface FormFieldUnexpectedDiagnostic {
   readonly repair: RepairInstruction;
 }
 
+export interface FormMethodMismatchFacts {
+  readonly actionId: string;
+  readonly actualMethod: string;
+  readonly expectedMethod: "POST";
+  readonly formId: string;
+  readonly template: string;
+}
+
+export interface FormMethodMismatchDiagnostic {
+  readonly code: "form.method_mismatch";
+  readonly severity: "error";
+  readonly category: "form-contract";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: FormMethodMismatchFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
+export interface FormActionMismatchFacts {
+  readonly actionId: string;
+  readonly actualAction: string;
+  readonly expectedAction: string;
+  readonly formId: string;
+  readonly template: string;
+}
+
+export interface FormActionMismatchDiagnostic {
+  readonly code: "form.action_mismatch";
+  readonly severity: "error";
+  readonly category: "form-contract";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: FormActionMismatchFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
 export interface FileRoleMismatchFacts {
   readonly actionId: string;
   readonly actualRole: string;
@@ -200,8 +240,10 @@ export interface FileRoleMismatchDiagnostic {
 
 export type Diagnostic =
   | FileRoleMismatchDiagnostic
+  | FormActionMismatchDiagnostic
   | FormFieldMissingDiagnostic
-  | FormFieldUnexpectedDiagnostic;
+  | FormFieldUnexpectedDiagnostic
+  | FormMethodMismatchDiagnostic;
 
 export interface DiagnosticReport {
   readonly schemaVersion: 1;

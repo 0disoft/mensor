@@ -17,7 +17,15 @@ test("normalizes static forms and successful named field candidates", () => {
     {
       id: "task",
       method: "POST",
+      methodRange: {
+        start: { line: 1, character: 16 },
+        end: { line: 1, character: 29 },
+      },
       action: "/tasks",
+      actionRange: {
+        start: { line: 1, character: 30 },
+        end: { line: 1, character: 45 },
+      },
       fields: [
         {
           name: "notes",

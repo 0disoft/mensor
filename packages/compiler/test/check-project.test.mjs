@@ -54,11 +54,33 @@ test("reports the canonical unexpected form field diagnostic", async () => {
   }
 });
 
+test("reports the canonical form method mismatch diagnostic", async () => {
+  const fixture = "invalid/form-method-mismatch";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
+test("reports the canonical form action mismatch diagnostic", async () => {
+  const fixture = "invalid/form-action-mismatch";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
 test("produces byte-identical reports from different absolute roots", async () => {
   for (const fixture of [
     "invalid/file-role-mismatch",
     "invalid/form-field-missing",
     "invalid/form-field-unexpected",
+    "invalid/form-method-mismatch",
+    "invalid/form-action-mismatch",
   ]) {
     const temporaryRoots = await Promise.all([
       copyFixture(fixture),

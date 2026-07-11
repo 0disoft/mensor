@@ -11,6 +11,8 @@ const fixtures = [
   "invalid/file-role-mismatch",
   "invalid/form-field-missing",
   "invalid/form-field-unexpected",
+  "invalid/form-method-mismatch",
+  "invalid/form-action-mismatch",
 ];
 const fixtureRoot = new URL("../fixtures/", import.meta.url);
 

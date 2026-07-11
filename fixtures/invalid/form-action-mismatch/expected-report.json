@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "producer": { "name": "mensor", "version": "0.0.0-fixture" },
+  "status": "failed",
+  "diagnostics": [
+    {
+      "code": "form.action_mismatch",
+      "severity": "error",
+      "category": "form-contract",
+      "message": "Form \"create-task\" submits to \"/wrong\", but action \"tasks.create\" requires \"/tasks\".",
+      "file": "src/features/tasks/views/index.html",
+      "range": {
+        "start": { "line": 3, "character": 41 },
+        "end": { "line": 3, "character": 56 }
+      },
+      "facts": {
+        "actionId": "tasks.create",
+        "actualAction": "/wrong",
+        "expectedAction": "/tasks",
+        "formId": "create-task",
+        "template": "src/features/tasks/views/index.html"
+      },
+      "related": [
+        {
+          "role": "action-route-path",
+          "message": "The action contract declares the required submission path.",
+          "file": "src/features/tasks/feature.mensor.jsonc",
+          "range": {
+            "start": { "line": 7, "character": 43 },
+            "end": { "line": 7, "character": 51 }
+          }
+        }
+      ],
+      "repair": {
+        "strategy": "align-form-action",
+        "hint": "Set form create-task action to /tasks.",
+        "mustPreserve": [
+          "action tasks.create",
+          "route path /tasks",
+          "form-to-action linkage"
+        ],
+        "mustNot": [
+          "change the action route to match an accidental form target",
+          "remove the form-to-action linkage"
+        ]
+      }
+    }
+  ],
+  "summary": { "errorCount": 1, "warningCount": 0 }
+}

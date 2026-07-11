@@ -48,6 +48,11 @@ ignored fields, the report contains one `form.field_unexpected` diagnostic for
 that wire field name. Repeated controls with the same name share one wire field
 diagnostic.
 
+The compiler compares the normalized HTML method and literal action attribute
+with the linked action route. Method and path drift use separate
+`form.method_mismatch` and `form.action_mismatch` diagnostics so repair agents
+do not have to infer which route fact is wrong.
+
 HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.
 

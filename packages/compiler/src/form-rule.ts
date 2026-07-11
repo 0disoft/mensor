@@ -3,14 +3,17 @@ import * as path from "node:path";
 import type {
   Diagnostic,
   FeatureContract,
+  FormActionMismatchDiagnostic,
   FormFieldMissingDiagnostic,
   FormFieldUnexpectedDiagnostic,
+  FormMethodMismatchDiagnostic,
 } from "@mensor/contract";
 
 import { readProjectFile } from "./filesystem.js";
 import { extractFormFacts, type FormFact } from "./html-forms.js";
 import {
   actionFormCodecPropertyRange,
+  actionRoutePropertyRange,
   actionSchemaPropertyRange,
 } from "./locations.js";
 import {
@@ -77,6 +80,35 @@ export async function checkFeatureForms(options: {
       continue;
     }
 
+    if (form.method !== action.route.method) {
+      diagnostics.push(
+        methodMismatchDiagnostic({
+          actionId: action.id,
+          actionIndex,
+          actualMethod: form.method,
+          expectedMethod: action.route.method,
+          form,
+          templateFile: projectTemplate,
+          featureContractPath: options.featureContractPath,
+          featureText: options.featureText,
+        }),
+      );
+    }
+    if (form.action !== action.route.path) {
+      diagnostics.push(
+        actionMismatchDiagnostic({
+          actionId: action.id,
+          actionIndex,
+          actualAction: form.action,
+          expectedAction: action.route.path,
+          form,
+          templateFile: projectTemplate,
+          featureContractPath: options.featureContractPath,
+          featureText: options.featureText,
+        }),
+      );
+    }
+
     for (const fieldName of [...action.input.schema.required].sort(compareText)) {
       if (!Object.hasOwn(action.input.schema.properties, fieldName)) {
         throw new InputFailure(
@@ -138,6 +170,110 @@ export async function checkFeatureForms(options: {
   }
 
   return diagnostics;
+}
+
+function methodMismatchDiagnostic(options: {
+  readonly actionId: string;
+  readonly actionIndex: number;
+  readonly actualMethod: string;
+  readonly expectedMethod: "POST";
+  readonly form: FormFact;
+  readonly templateFile: string;
+  readonly featureContractPath: string;
+  readonly featureText: string;
+}): FormMethodMismatchDiagnostic {
+  return {
+    code: "form.method_mismatch",
+    severity: "error",
+    category: "form-contract",
+    message: `Form ${JSON.stringify(options.form.id)} uses method ${JSON.stringify(options.actualMethod)}, but action ${JSON.stringify(options.actionId)} requires ${JSON.stringify(options.expectedMethod)}.`,
+    file: options.templateFile,
+    range: options.form.methodRange,
+    facts: {
+      actionId: options.actionId,
+      actualMethod: options.actualMethod,
+      expectedMethod: options.expectedMethod,
+      formId: options.form.id,
+      template: options.templateFile,
+    },
+    related: [
+      {
+        role: "action-route-method",
+        message: "The action contract declares the required HTTP method.",
+        file: options.featureContractPath,
+        range: actionRoutePropertyRange(
+          options.featureText,
+          options.actionIndex,
+          "method",
+        ),
+      },
+    ],
+    repair: {
+      strategy: "align-form-method",
+      hint: `Set form ${options.form.id} method to ${options.expectedMethod}.`,
+      mustPreserve: [
+        `action ${options.actionId}`,
+        `route method ${options.expectedMethod}`,
+        "form-to-action linkage",
+      ],
+      mustNot: [
+        "change the action route to match an accidental form method",
+        "remove the form-to-action linkage",
+      ],
+    },
+  };
+}
+
+function actionMismatchDiagnostic(options: {
+  readonly actionId: string;
+  readonly actionIndex: number;
+  readonly actualAction: string;
+  readonly expectedAction: string;
+  readonly form: FormFact;
+  readonly templateFile: string;
+  readonly featureContractPath: string;
+  readonly featureText: string;
+}): FormActionMismatchDiagnostic {
+  return {
+    code: "form.action_mismatch",
+    severity: "error",
+    category: "form-contract",
+    message: `Form ${JSON.stringify(options.form.id)} submits to ${JSON.stringify(options.actualAction)}, but action ${JSON.stringify(options.actionId)} requires ${JSON.stringify(options.expectedAction)}.`,
+    file: options.templateFile,
+    range: options.form.actionRange,
+    facts: {
+      actionId: options.actionId,
+      actualAction: options.actualAction,
+      expectedAction: options.expectedAction,
+      formId: options.form.id,
+      template: options.templateFile,
+    },
+    related: [
+      {
+        role: "action-route-path",
+        message: "The action contract declares the required submission path.",
+        file: options.featureContractPath,
+        range: actionRoutePropertyRange(
+          options.featureText,
+          options.actionIndex,
+          "path",
+        ),
+      },
+    ],
+    repair: {
+      strategy: "align-form-action",
+      hint: `Set form ${options.form.id} action to ${options.expectedAction}.`,
+      mustPreserve: [
+        `action ${options.actionId}`,
+        `route path ${options.expectedAction}`,
+        "form-to-action linkage",
+      ],
+      mustNot: [
+        "change the action route to match an accidental form target",
+        "remove the form-to-action linkage",
+      ],
+    },
+  };
 }
 
 function unexpectedFieldDiagnostic(options: {
