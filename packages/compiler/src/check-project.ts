@@ -16,6 +16,7 @@ import {
   readProjectFile,
 } from "./filesystem.js";
 import { checkFeatureForms } from "./form-rule.js";
+import { checkFeatureHandlers } from "./handler-rule.js";
 import { handlerFileRange } from "./locations.js";
 import {
   assertRelativePosixPath,
@@ -113,6 +114,16 @@ export async function checkProject(
           project.fileRoles,
           discovered,
         ),
+      );
+      diagnostics.push(
+        ...(await checkFeatureHandlers({
+          root,
+          featureContractPath: safeFeatureContractPath,
+          featureText,
+          feature: featureResult.value,
+          discovered,
+          maxFileBytes,
+        })),
       );
       diagnostics.push(
         ...(await checkFeatureForms({

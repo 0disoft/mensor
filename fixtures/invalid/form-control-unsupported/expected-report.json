@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "producer": { "name": "mensor", "version": "0.0.0-fixture" },
+  "status": "failed",
+  "diagnostics": [
+    {
+      "code": "form.control_unsupported",
+      "severity": "error",
+      "category": "form-contract",
+      "message": "Form \"create-task\" contains unsupported file input.",
+      "file": "src/features/tasks/views/index.html",
+      "range": {
+        "start": { "line": 4, "character": 6 },
+        "end": { "line": 4, "character": 45 }
+      },
+      "facts": {
+        "actionId": "tasks.create",
+        "controlKind": "input",
+        "controlType": "file",
+        "fieldName": "attachment",
+        "formId": "create-task",
+        "reason": "file-input",
+        "template": "src/features/tasks/views/index.html"
+      },
+      "related": [
+        {
+          "role": "linked-action-route",
+          "message": "This form is linked to a static action route contract.",
+          "file": "src/features/tasks/feature.mensor.jsonc",
+          "range": {
+            "start": { "line": 7, "character": 43 },
+            "end": { "line": 7, "character": 51 }
+          }
+        }
+      ],
+      "repair": {
+        "strategy": "remove-or-model-unsupported-control",
+        "hint": "Remove the file input, or add an explicit serializable contract before relying on it.",
+        "mustPreserve": [
+          "action tasks.create",
+          "static form-to-action linkage"
+        ],
+        "mustNot": [
+          "silently ignore the unsupported control",
+          "weaken the action contract"
+        ]
+      }
+    }
+  ],
+  "summary": { "errorCount": 1, "warningCount": 0 }
+}

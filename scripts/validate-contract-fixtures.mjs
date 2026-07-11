@@ -14,6 +14,8 @@ const fixtures = [
   "invalid/form-method-mismatch",
   "invalid/form-action-mismatch",
   "invalid/form-control-codec-mismatch",
+  "invalid/form-control-unsupported",
+  "invalid/handler-export-missing",
 ];
 const fixtureRoot = new URL("../fixtures/", import.meta.url);
 

@@ -64,12 +64,61 @@ test("normalizes static forms and successful named field candidates", () => {
           },
         },
       ],
+      unsupportedControls: [
+        {
+          kind: "button",
+          inputType: "submit",
+          name: "submitter",
+          reason: "named-submitter",
+          range: {
+            start: { line: 4, character: 2 },
+            end: { line: 4, character: 41 },
+          },
+        },
+      ],
       range: {
         start: { line: 1, character: 0 },
         end: { line: 1, character: 46 },
       },
     },
   ]);
+});
+
+test("extracts unsupported file and submitter controls explicitly", () => {
+  const facts = extractFormFacts(`<form id="upload">
+  <input name="attachment" type="file">
+  <button name="intent" type="submit">Save</button>
+  <button type="submit" formaction="/other">Other</button>
+</form>`);
+
+  assert.deepEqual(
+    facts[0]?.unsupportedControls.map((control) => ({
+      kind: control.kind,
+      inputType: control.inputType,
+      name: control.name,
+      reason: control.reason,
+    })),
+    [
+      {
+        kind: "button",
+        inputType: "submit",
+        name: "",
+        reason: "submitter-route-override",
+      },
+      {
+        kind: "input",
+        inputType: "file",
+        name: "attachment",
+        reason: "file-input",
+      },
+      {
+        kind: "button",
+        inputType: "submit",
+        name: "intent",
+        reason: "named-submitter",
+      },
+    ],
+  );
 });
 
 test("uses GET and an empty action when attributes are omitted", () => {

@@ -35,6 +35,9 @@ if (compiler.dependencies?.["jsonc-parser"] !== "3.3.1") {
 if (compiler.dependencies?.["parse5"] !== "8.0.1") {
   failures.push("@mensor/compiler must declare its direct parse5 dependency.");
 }
+if (compiler.dependencies?.["@typescript/typescript6"] !== "6.0.2") {
+  failures.push("@mensor/compiler must declare its direct TypeScript parser dependency.");
+}
 if (cli.dependencies?.["@mensor/compiler"] !== "workspace:*") {
   failures.push("@mensor/cli must use the public workspace compiler package.");
 }

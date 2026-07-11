@@ -55,8 +55,9 @@ project contract
 The project contract declares non-overlapping feature-relative directories for
 architectural roles. An action handler declares its source file, export name,
 and expected role. The compiler reports a placement error when the discovered
-file belongs to another role or no role. The compiler does not inspect or
-execute the handler body in this slice.
+file belongs to another role or no role. It parses the handler source without
+executing it and reports a missing explicit named export. Wildcard re-exports
+fail closed because their target cannot be proven without module resolution.
 
 The second vertical slice connects one static HTML form to one action contract.
 It extracts form identity, method, action, source range, and named field
@@ -77,6 +78,8 @@ and treats an omitted method as `GET`. The first schema accepts only a static,
 root-relative action path without a query or fragment. URL resolution, route
 parameters, named submitters, and per-button method or action overrides are
 unsupported and must produce an explicit diagnostic when encountered.
+Named file inputs are also explicit unsupported controls because multipart
+transport is outside the MVP.
 
 ## MVP Rule Families
 
@@ -155,6 +158,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 13. `mensor check --json` writes one JSON document and one LF to stdout and
     maps clean, diagnostic, configuration, and internal outcomes to exit codes
     `0`, `1`, `2`, and `3` without stdout contamination.
+14. Named file inputs, named submitters, and submitter route overrides emit
+    `form.control_unsupported` instead of disappearing from analysis.
+15. A declared handler export missing from its source emits
+    `handler.export_missing` without importing or executing that module.
 
 ## Deferred Decisions
 

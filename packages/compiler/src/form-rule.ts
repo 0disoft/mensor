@@ -5,6 +5,7 @@ import type {
   FeatureContract,
   FormActionMismatchDiagnostic,
   FormControlCodecMismatchDiagnostic,
+  FormControlUnsupportedDiagnostic,
   FormFieldMissingDiagnostic,
   FormFieldUnexpectedDiagnostic,
   FormMethodMismatchDiagnostic,
@@ -111,6 +112,20 @@ export async function checkFeatureForms(options: {
       );
     }
 
+    for (const control of form.unsupportedControls) {
+      diagnostics.push(
+        unsupportedControlDiagnostic({
+          actionId: action.id,
+          form,
+          control,
+          templateFile: projectTemplate,
+          featureContractPath: options.featureContractPath,
+          featureText: options.featureText,
+          actionIndex,
+        }),
+      );
+    }
+
     for (const fieldName of [...action.input.schema.required].sort(compareText)) {
       if (!Object.hasOwn(action.input.schema.properties, fieldName)) {
         throw new InputFailure(
@@ -200,6 +215,64 @@ export async function checkFeatureForms(options: {
   }
 
   return diagnostics;
+}
+
+function unsupportedControlDiagnostic(options: {
+  readonly actionId: string;
+  readonly actionIndex: number;
+  readonly form: FormFact;
+  readonly control: FormFact["unsupportedControls"][number];
+  readonly templateFile: string;
+  readonly featureContractPath: string;
+  readonly featureText: string;
+}): FormControlUnsupportedDiagnostic {
+  const description =
+    options.control.reason === "file-input"
+      ? "file input"
+      : options.control.reason === "named-submitter"
+        ? "named submitter"
+        : "submitter route override";
+  return {
+    code: "form.control_unsupported",
+    severity: "error",
+    category: "form-contract",
+    message: `Form ${JSON.stringify(options.form.id)} contains unsupported ${description}.`,
+    file: options.templateFile,
+    range: options.control.range,
+    facts: {
+      actionId: options.actionId,
+      controlKind: options.control.kind,
+      controlType: options.control.inputType,
+      fieldName: options.control.name,
+      formId: options.form.id,
+      reason: options.control.reason,
+      template: options.templateFile,
+    },
+    related: [
+      {
+        role: "linked-action-route",
+        message: "This form is linked to a static action route contract.",
+        file: options.featureContractPath,
+        range: actionRoutePropertyRange(
+          options.featureText,
+          options.actionIndex,
+          "path",
+        ),
+      },
+    ],
+    repair: {
+      strategy: "remove-or-model-unsupported-control",
+      hint: `Remove the ${description}, or add an explicit serializable contract before relying on it.`,
+      mustPreserve: [
+        `action ${options.actionId}`,
+        "static form-to-action linkage",
+      ],
+      mustNot: [
+        "silently ignore the unsupported control",
+        "weaken the action contract",
+      ],
+    },
+  };
 }
 
 function controlCodecMismatchDiagnostic(options: {

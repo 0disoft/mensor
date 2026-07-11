@@ -14,6 +14,7 @@ export interface FormFact {
   readonly action: string;
   readonly actionRange: SourceRange;
   readonly fields: readonly FormFieldFact[];
+  readonly unsupportedControls: readonly UnsupportedFormControlFact[];
   readonly range: SourceRange;
 }
 
@@ -27,6 +28,14 @@ export interface FormControlFact {
   readonly kind: "input" | "select" | "textarea";
   readonly inputType: string;
   readonly multiple: boolean;
+  readonly range: SourceRange;
+}
+
+export interface UnsupportedFormControlFact {
+  readonly kind: "button" | "input";
+  readonly inputType: string;
+  readonly name: string;
+  readonly reason: "file-input" | "named-submitter" | "submitter-route-override";
   readonly range: SourceRange;
 }
 
@@ -53,6 +62,13 @@ export function extractFormFacts(html: string): readonly FormFact[] {
                 range: elementStartTagRange(control),
               }];
         });
+      const unsupportedControls = controls
+        .filter((control) => associatedForm(control, forms) === form)
+        .flatMap(unsupportedControlFact)
+        .sort((left, right) =>
+          compareText(left.name, right.name) ||
+          compareText(left.reason, right.reason),
+        );
       return {
         id,
         method: asciiUppercase(attribute(form, "method") ?? "GET"),
@@ -60,10 +76,49 @@ export function extractFormFacts(html: string): readonly FormFact[] {
         action: attribute(form, "action") ?? "",
         actionRange: elementAttributeRange(form, "action"),
         fields: uniqueFields(fields),
+        unsupportedControls,
         range: elementStartTagRange(form),
       };
     })
     .sort((left, right) => compareText(left.id, right.id));
+}
+
+function unsupportedControlFact(
+  element: DefaultTreeAdapterTypes.Element,
+): readonly UnsupportedFormControlFact[] {
+  if (attribute(element, "disabled") !== null) {
+    return [];
+  }
+  const name = attribute(element, "name") ?? "";
+  const inputType =
+    element.tagName === "input"
+      ? asciiUppercase(attribute(element, "type") ?? "text").toLowerCase()
+      : element.tagName === "button"
+        ? asciiUppercase(attribute(element, "type") ?? "submit").toLowerCase()
+        : "";
+  const isSubmitter =
+    element.tagName === "button" ||
+    (element.tagName === "input" && ["image", "submit"].includes(inputType));
+  const reason =
+    isSubmitter &&
+    (attribute(element, "formaction") !== null ||
+      attribute(element, "formmethod") !== null)
+      ? "submitter-route-override"
+      : isSubmitter && name.length > 0
+        ? "named-submitter"
+        : element.tagName === "input" && inputType === "file" && name.length > 0
+          ? "file-input"
+          : undefined;
+  if (reason === undefined) {
+    return [];
+  }
+  return [{
+    kind: element.tagName === "button" ? "button" : "input",
+    inputType,
+    name,
+    reason,
+    range: elementStartTagRange(element),
+  }];
 }
 
 function asciiUppercase(value: string): string {

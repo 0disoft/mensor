@@ -37,9 +37,9 @@ contract package and parser libraries. It must not depend on the CLI or execute
 inspected source.
 
 The current implementation covers bounded source discovery, feature contracts,
-handler linkage, file-role classification, placement diagnostics, and static
-HTML form extraction. TypeScript source facts remain planned responsibilities,
-not implemented claims.
+handler linkage, file-role classification, placement diagnostics, static HTML
+form extraction, and explicit handler export facts. TypeScript import edges
+remain a planned responsibility.
 
 ### `@mensor/cli`
 

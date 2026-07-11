@@ -10,6 +10,8 @@ const fixtures = [
   "../fixtures/invalid/form-method-mismatch/mensor.project.jsonc",
   "../fixtures/invalid/form-action-mismatch/mensor.project.jsonc",
   "../fixtures/invalid/form-control-codec-mismatch/mensor.project.jsonc",
+  "../fixtures/invalid/form-control-unsupported/mensor.project.jsonc",
+  "../fixtures/invalid/handler-export-missing/mensor.project.jsonc",
   "../fixtures/invalid/file-role-mismatch/mensor.project.jsonc",
   "../fixtures/valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/form-field-missing/src/features/tasks/feature.mensor.jsonc",
@@ -17,6 +19,8 @@ const fixtures = [
   "../fixtures/invalid/form-method-mismatch/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/form-action-mismatch/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/form-control-codec-mismatch/src/features/tasks/feature.mensor.jsonc",
+  "../fixtures/invalid/form-control-unsupported/src/features/tasks/feature.mensor.jsonc",
+  "../fixtures/invalid/handler-export-missing/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/file-role-mismatch/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/valid/tiny-tasks/expected-report.json",
   "../fixtures/invalid/form-field-missing/expected-report.json",
@@ -24,6 +28,8 @@ const fixtures = [
   "../fixtures/invalid/form-method-mismatch/expected-report.json",
   "../fixtures/invalid/form-action-mismatch/expected-report.json",
   "../fixtures/invalid/form-control-codec-mismatch/expected-report.json",
+  "../fixtures/invalid/form-control-unsupported/expected-report.json",
+  "../fixtures/invalid/handler-export-missing/expected-report.json",
   "../fixtures/invalid/file-role-mismatch/expected-report.json",
 ];
 

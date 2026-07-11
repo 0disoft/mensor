@@ -58,6 +58,11 @@ The v1 codec currently owns only scalar text decoding. Checkbox controls and
 silently coerced through that decoder, so the compiler emits
 `form.control_codec_mismatch` until a matching serializable codec exists.
 
+Named file inputs, named submitters, and submitter-specific method or action
+overrides are represented as unsupported control facts and emit
+`form.control_unsupported`. Handler source is parsed without execution; a
+missing explicit export emits `handler.export_missing`.
+
 HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.
 

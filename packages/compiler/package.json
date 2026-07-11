@@ -1,6 +1,6 @@
 {
   "name": "@mensor/compiler",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@mensor/contract": "workspace:*",
+    "@typescript/typescript6": "6.0.2",
     "jsonc-parser": "3.3.1",
     "parse5": "8.0.1"
   }

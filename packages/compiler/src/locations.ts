@@ -23,6 +23,23 @@ export function handlerFileRange(
   return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
+export function handlerExportRange(
+  contractText: string,
+  actionIndex: number,
+): SourceRange {
+  const root = parseTree(contractText);
+  if (root === undefined) {
+    return zeroRange;
+  }
+  const node = findNodeAtLocation(root, [
+    "actions",
+    actionIndex,
+    "handler",
+    "export",
+  ]);
+  return node === undefined ? zeroRange : nodeRange(contractText, node);
+}
+
 export function actionSchemaPropertyRange(
   contractText: string,
   actionIndex: number,

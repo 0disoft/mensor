@@ -147,6 +147,12 @@
           "$ref": "#/$defs/formControlCodecMismatchDiagnostic"
         },
         {
+          "$ref": "#/$defs/formControlUnsupportedDiagnostic"
+        },
+        {
+          "$ref": "#/$defs/handlerExportMissingDiagnostic"
+        },
+        {
           "$ref": "#/$defs/fileRoleMismatchDiagnostic"
         }
       ]
@@ -445,6 +451,72 @@
           "type": "boolean"
         },
         "template": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        }
+      }
+    },
+    "formControlUnsupportedDiagnostic": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/diagnosticBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": { "const": "form.control_unsupported" },
+            "severity": { "const": "error" },
+            "category": { "const": "form-contract" },
+            "facts": { "$ref": "#/$defs/formControlUnsupportedFacts" }
+          }
+        }
+      ]
+    },
+    "formControlUnsupportedFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "controlKind", "controlType", "fieldName", "formId", "reason", "template"],
+      "properties": {
+        "actionId": { "type": "string", "minLength": 1 },
+        "controlKind": { "enum": ["button", "input"] },
+        "controlType": { "type": "string" },
+        "fieldName": { "type": "string" },
+        "formId": { "type": "string", "minLength": 1 },
+        "reason": {
+          "enum": ["file-input", "named-submitter", "submitter-route-override"]
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        }
+      }
+    },
+    "handlerExportMissingDiagnostic": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/diagnosticBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": { "const": "handler.export_missing" },
+            "severity": { "const": "error" },
+            "category": { "const": "project-structure" },
+            "facts": { "$ref": "#/$defs/handlerExportMissingFacts" }
+          }
+        }
+      ]
+    },
+    "handlerExportMissingFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "exportName", "handlerFile"],
+      "properties": {
+        "actionId": { "type": "string", "minLength": 1 },
+        "exportName": { "type": "string", "minLength": 1 },
+        "handlerFile": {
           "type": "string",
           "minLength": 1,
           "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"

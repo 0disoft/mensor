@@ -136,6 +136,19 @@ test("validates control-codec diagnostic facts independently", async () => {
   assert.equal(result.ok, false);
 });
 
+test("validates unsupported-control and handler-export facts independently", async () => {
+  for (const fixture of [
+    "invalid/form-control-unsupported/expected-report.json",
+    "invalid/handler-export-missing/expected-report.json",
+  ]) {
+    const value = JSON.parse(await fixtureText(fixture));
+    delete value.diagnostics[0].facts.actionId;
+
+    const result = parseDiagnosticReport(JSON.stringify(value));
+    assert.equal(result.ok, false, fixture);
+  }
+});
+
 test("recognizes only finite JSON values and plain objects", () => {
   assert.equal(isJsonValue({ nested: [null, true, 1, "value"] }), true);
   assert.equal(isJsonValue(Number.NaN), false);

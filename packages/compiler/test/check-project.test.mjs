@@ -84,6 +84,26 @@ test("reports the canonical control and codec mismatch diagnostic", async () => 
   }
 });
 
+test("reports unsupported form controls instead of silently ignoring them", async () => {
+  const fixture = "invalid/form-control-unsupported";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
+test("reports a declared handler export that is missing from source", async () => {
+  const fixture = "invalid/handler-export-missing";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
 test("produces byte-identical reports from different absolute roots", async () => {
   for (const fixture of [
     "invalid/file-role-mismatch",
@@ -92,6 +112,8 @@ test("produces byte-identical reports from different absolute roots", async () =
     "invalid/form-method-mismatch",
     "invalid/form-action-mismatch",
     "invalid/form-control-codec-mismatch",
+    "invalid/form-control-unsupported",
+    "invalid/handler-export-missing",
   ]) {
     const temporaryRoots = await Promise.all([
       copyFixture(fixture),

@@ -240,6 +240,46 @@ export interface FormControlCodecMismatchDiagnostic {
   readonly repair: RepairInstruction;
 }
 
+export interface FormControlUnsupportedFacts {
+  readonly actionId: string;
+  readonly controlKind: "button" | "input";
+  readonly controlType: string;
+  readonly fieldName: string;
+  readonly formId: string;
+  readonly reason: "file-input" | "named-submitter" | "submitter-route-override";
+  readonly template: string;
+}
+
+export interface FormControlUnsupportedDiagnostic {
+  readonly code: "form.control_unsupported";
+  readonly severity: "error";
+  readonly category: "form-contract";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: FormControlUnsupportedFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
+export interface HandlerExportMissingFacts {
+  readonly actionId: string;
+  readonly exportName: string;
+  readonly handlerFile: string;
+}
+
+export interface HandlerExportMissingDiagnostic {
+  readonly code: "handler.export_missing";
+  readonly severity: "error";
+  readonly category: "project-structure";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: HandlerExportMissingFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
 export interface FileRoleMismatchFacts {
   readonly actionId: string;
   readonly actualRole: string;
@@ -265,9 +305,11 @@ export type Diagnostic =
   | FileRoleMismatchDiagnostic
   | FormActionMismatchDiagnostic
   | FormControlCodecMismatchDiagnostic
+  | FormControlUnsupportedDiagnostic
   | FormFieldMissingDiagnostic
   | FormFieldUnexpectedDiagnostic
-  | FormMethodMismatchDiagnostic;
+  | FormMethodMismatchDiagnostic
+  | HandlerExportMissingDiagnostic;
 
 export interface DiagnosticReport {
   readonly schemaVersion: 1;

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "producer": { "name": "mensor", "version": "0.0.0-fixture" },
+  "status": "failed",
+  "diagnostics": [
+    {
+      "code": "handler.export_missing",
+      "severity": "error",
+      "category": "project-structure",
+      "message": "Handler file \"server/create-task.ts\" does not export \"createTask\".",
+      "file": "src/features/tasks/server/create-task.ts",
+      "range": {
+        "start": { "line": 0, "character": 0 },
+        "end": { "line": 0, "character": 0 }
+      },
+      "facts": {
+        "actionId": "tasks.create",
+        "exportName": "createTask",
+        "handlerFile": "server/create-task.ts"
+      },
+      "related": [
+        {
+          "role": "handler-export-declaration",
+          "message": "The action contract requires this named export.",
+          "file": "src/features/tasks/feature.mensor.jsonc",
+          "range": {
+            "start": { "line": 11, "character": 18 },
+            "end": { "line": 11, "character": 30 }
+          }
+        }
+      ],
+      "repair": {
+        "strategy": "export-declared-handler",
+        "hint": "Export createTask from server/create-task.ts.",
+        "mustPreserve": [
+          "action tasks.create",
+          "handler file server/create-task.ts",
+          "handler export createTask"
+        ],
+        "mustNot": [
+          "change the contract to an unrelated export",
+          "execute the handler during checking"
+        ]
+      }
+    }
+  ],
+  "summary": { "errorCount": 1, "warningCount": 0 }
+}
