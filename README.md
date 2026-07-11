@@ -11,19 +11,19 @@ coding agent can act on.
 
 ## Status
 
-The repository is in pre-implementation design. No package has been published
-and no compatibility promise exists yet.
+The diagnostic-first MVP is implemented and exercised by canonical fixtures.
+No package has been published and no compatibility promise exists yet.
 
 ## First Proof
 
-The first vertical slice will:
+The current proof:
 
-1. load a JSONC project contract without executing project code;
-2. parse one static HTML form and one TypeScript action contract;
-3. detect a missing, unexpected, or incompatible form field;
-4. emit byte-stable diagnostics through `mensor check --json`; and
-5. prove that a coding agent can repair the defect without weakening the
-   contract or deleting the feature.
+1. loads JSONC project and feature contracts without executing project code;
+2. extracts static HTML forms and TypeScript/JavaScript source facts;
+3. detects form, handler, import-boundary, placement, and ownership violations;
+4. emits byte-stable diagnostics through `mensor check --json`; and
+5. rejects checker-clean repairs that weaken a protected contract or delete
+   feature semantics.
 
 ## Product Boundary
 
@@ -36,7 +36,7 @@ The MVP supports TypeScript or JavaScript projects with static `.html` files.
 Dynamic template languages, runtime manifests, production HTTP handling,
 autofix, arbitrary plugins, cloud processing, and telemetry are deferred.
 
-## Planned Repository Shape
+## Repository Shape
 
 - `packages/contract`: serializable contracts, diagnostics, and validation
 - `packages/compiler`: discovery, source facts, semantic linking, and rules
@@ -47,4 +47,4 @@ autofix, arbitrary plugins, cloud processing, and telemetry are deferred.
 See [the product specification](docs/product/02-spec.md),
 [system boundary](docs/architecture/00-system-boundary.md), and
 [workspace boundaries](docs/monorepo/workspace-boundaries.md) before adding
-implementation structure.
+or changing implementation boundaries.
