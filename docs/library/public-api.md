@@ -53,7 +53,9 @@ neither bound nor explicitly ignored. It also compares static form method and
 action attributes with the linked action route and rejects checkbox or repeated
 select controls bound to the v1 scalar text decoder. Additional codec families
 remain later behavior. It now extracts explicit TypeScript/JavaScript exports
-for handler linkage; import edges remain later behavior.
+for handler linkage, resolves local import edges, and applies optional
+project-owned direct or transitive role boundaries. External package imports
+remain graph leaves.
 
 ## Export Policy
 

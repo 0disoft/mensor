@@ -6,6 +6,7 @@ export {
 } from "./validate.js";
 export type {
   ActionContract,
+  BoundaryContract,
   ContractFailure,
   ContractIssue,
   ContractIssueCode,
@@ -33,6 +34,10 @@ export type {
   FormMethodMismatchFacts,
   HandlerExportMissingDiagnostic,
   HandlerExportMissingFacts,
+  ModuleBoundaryViolationDiagnostic,
+  ModuleBoundaryViolationFacts,
+  ModuleDynamicImportUnsupportedDiagnostic,
+  ModuleDynamicImportUnsupportedFacts,
   IgnoredFormField,
   JsonObject,
   JsonPrimitive,

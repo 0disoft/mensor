@@ -40,6 +40,14 @@ export interface ProjectContract {
   readonly sourceRoot: string;
   readonly featureContracts: readonly string[];
   readonly fileRoles: readonly FileRoleContract[];
+  readonly boundaries?: readonly BoundaryContract[];
+}
+
+export interface BoundaryContract {
+  readonly id: string;
+  readonly mode: "direct" | "transitive";
+  readonly from: readonly string[];
+  readonly deny: readonly string[];
 }
 
 export interface FileRoleContract {
@@ -280,6 +288,47 @@ export interface HandlerExportMissingDiagnostic {
   readonly repair: RepairInstruction;
 }
 
+export interface ModuleBoundaryViolationFacts {
+  readonly boundaryId: string;
+  readonly edgeKind: "runtime" | "type";
+  readonly importChain: readonly string[];
+  readonly importSpecifier: string;
+  readonly mode: "direct" | "transitive";
+  readonly sourceRole: string;
+  readonly targetFile: string;
+  readonly targetRole: string;
+}
+
+export interface ModuleBoundaryViolationDiagnostic {
+  readonly code: "module.boundary_violation";
+  readonly severity: "error";
+  readonly category: "environment-boundary";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: ModuleBoundaryViolationFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
+export interface ModuleDynamicImportUnsupportedFacts {
+  readonly boundaryId: string;
+  readonly mode: "direct" | "transitive";
+  readonly sourceRole: string;
+}
+
+export interface ModuleDynamicImportUnsupportedDiagnostic {
+  readonly code: "module.dynamic_import_unsupported";
+  readonly severity: "error";
+  readonly category: "environment-boundary";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: ModuleDynamicImportUnsupportedFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
 export interface FileRoleMismatchFacts {
   readonly actionId: string;
   readonly actualRole: string;
@@ -309,7 +358,9 @@ export type Diagnostic =
   | FormFieldMissingDiagnostic
   | FormFieldUnexpectedDiagnostic
   | FormMethodMismatchDiagnostic
-  | HandlerExportMissingDiagnostic;
+  | HandlerExportMissingDiagnostic
+  | ModuleBoundaryViolationDiagnostic
+  | ModuleDynamicImportUnsupportedDiagnostic;
 
 export interface DiagnosticReport {
   readonly schemaVersion: 1;

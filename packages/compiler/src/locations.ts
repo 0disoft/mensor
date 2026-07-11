@@ -127,6 +127,18 @@ export function actionBindingDecoderKindRange(
   return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
+export function projectBoundaryRange(
+  contractText: string,
+  boundaryIndex: number,
+): SourceRange {
+  const root = parseTree(contractText);
+  if (root === undefined) {
+    return zeroRange;
+  }
+  const node = findNodeAtLocation(root, ["boundaries", boundaryIndex]);
+  return node === undefined ? zeroRange : nodeRange(contractText, node);
+}
+
 function nodeRange(text: string, node: Node): SourceRange {
   return {
     start: positionAt(text, node.offset),

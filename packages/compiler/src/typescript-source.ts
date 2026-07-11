@@ -12,7 +12,15 @@ export interface ModuleExportFact {
 export interface ModuleFact {
   readonly exports: readonly ModuleExportFact[];
   readonly hasExportStar: boolean;
+  readonly imports: readonly ModuleImportFact[];
+  readonly unsupportedDynamicImports: readonly SourceRange[];
   readonly syntaxErrors: readonly string[];
+}
+
+export interface ModuleImportFact {
+  readonly edgeKind: "runtime" | "type";
+  readonly specifier: string;
+  readonly range: SourceRange;
 }
 
 export function extractModuleFact(
@@ -43,18 +51,125 @@ export function extractModuleFact(
     scriptKind(fileName),
   );
   const exports: ModuleExportFact[] = [];
+  const imports: ModuleImportFact[] = [];
+  const unsupportedDynamicImports: SourceRange[] = [];
   let hasExportStar = false;
   for (const statement of sourceFile.statements) {
     if (ts.isExportDeclaration(statement) && statement.exportClause === undefined) {
       hasExportStar = true;
     }
     collectStatementExports(statement, sourceFile, sourceText, exports);
+    collectStaticImport(statement, sourceFile, sourceText, imports);
   }
+  collectDynamicImports(
+    sourceFile,
+    sourceFile,
+    sourceText,
+    imports,
+    unsupportedDynamicImports,
+  );
   return {
     exports: uniqueExports(exports),
     hasExportStar,
+    imports: uniqueImports(imports),
+    unsupportedDynamicImports,
     syntaxErrors,
   };
+}
+
+function collectStaticImport(
+  statement: ts.Statement,
+  sourceFile: ts.SourceFile,
+  sourceText: string,
+  imports: ModuleImportFact[],
+): void {
+  if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
+    imports.push({
+      edgeKind: importDeclarationIsTypeOnly(statement) ? "type" : "runtime",
+      specifier: statement.moduleSpecifier.text,
+      range: nodeRange(statement.moduleSpecifier, sourceFile, sourceText),
+    });
+    return;
+  }
+  if (
+    ts.isExportDeclaration(statement) &&
+    statement.moduleSpecifier !== undefined &&
+    ts.isStringLiteral(statement.moduleSpecifier)
+  ) {
+    imports.push({
+      edgeKind: statement.isTypeOnly ? "type" : "runtime",
+      specifier: statement.moduleSpecifier.text,
+      range: nodeRange(statement.moduleSpecifier, sourceFile, sourceText),
+    });
+    return;
+  }
+  if (
+    ts.isImportEqualsDeclaration(statement) &&
+    ts.isExternalModuleReference(statement.moduleReference) &&
+    statement.moduleReference.expression !== undefined &&
+    ts.isStringLiteral(statement.moduleReference.expression)
+  ) {
+    imports.push({
+      edgeKind: statement.isTypeOnly ? "type" : "runtime",
+      specifier: statement.moduleReference.expression.text,
+      range: nodeRange(statement.moduleReference.expression, sourceFile, sourceText),
+    });
+  }
+}
+
+function collectDynamicImports(
+  node: ts.Node,
+  sourceFile: ts.SourceFile,
+  sourceText: string,
+  imports: ModuleImportFact[],
+  unsupported: SourceRange[],
+): void {
+  if (
+    ts.isCallExpression(node) &&
+    node.expression.kind === ts.SyntaxKind.ImportKeyword
+  ) {
+    const argument = node.arguments[0];
+    if (argument !== undefined && ts.isStringLiteral(argument)) {
+      imports.push({
+        edgeKind: "runtime",
+        specifier: argument.text,
+        range: nodeRange(argument, sourceFile, sourceText),
+      });
+    } else {
+      unsupported.push(nodeRange(node, sourceFile, sourceText));
+    }
+  }
+  node.forEachChild((child) =>
+    collectDynamicImports(child, sourceFile, sourceText, imports, unsupported),
+  );
+}
+
+function importDeclarationIsTypeOnly(statement: ts.ImportDeclaration): boolean {
+  const clause = statement.importClause;
+  if (clause?.isTypeOnly === true) {
+    return true;
+  }
+  return (
+    clause?.name === undefined &&
+    clause?.namedBindings !== undefined &&
+    ts.isNamedImports(clause.namedBindings) &&
+    clause.namedBindings.elements.length > 0 &&
+    clause.namedBindings.elements.every((element) => element.isTypeOnly)
+  );
+}
+
+function uniqueImports(imports: readonly ModuleImportFact[]): readonly ModuleImportFact[] {
+  const byKey = new Map<string, ModuleImportFact>();
+  for (const entry of imports) {
+    const key = `${entry.edgeKind}\u0000${entry.specifier}\u0000${entry.range.start.line}\u0000${entry.range.start.character}`;
+    byKey.set(key, entry);
+  }
+  return [...byKey.values()].sort((left, right) =>
+    compareText(left.specifier, right.specifier) ||
+    compareText(left.edgeKind, right.edgeKind) ||
+    left.range.start.line - right.range.start.line ||
+    left.range.start.character - right.range.start.character,
+  );
 }
 
 function collectStatementExports(

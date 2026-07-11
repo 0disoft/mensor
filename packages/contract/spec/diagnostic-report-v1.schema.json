@@ -153,6 +153,12 @@
           "$ref": "#/$defs/handlerExportMissingDiagnostic"
         },
         {
+          "$ref": "#/$defs/moduleBoundaryViolationDiagnostic"
+        },
+        {
+          "$ref": "#/$defs/moduleDynamicImportUnsupportedDiagnostic"
+        },
+        {
           "$ref": "#/$defs/fileRoleMismatchDiagnostic"
         }
       ]
@@ -521,6 +527,71 @@
           "minLength": 1,
           "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
         }
+      }
+    },
+    "moduleBoundaryViolationDiagnostic": {
+      "allOf": [
+        { "$ref": "#/$defs/diagnosticBase" },
+        {
+          "type": "object",
+          "properties": {
+            "code": { "const": "module.boundary_violation" },
+            "severity": { "const": "error" },
+            "category": { "const": "environment-boundary" },
+            "facts": { "$ref": "#/$defs/moduleBoundaryViolationFacts" }
+          }
+        }
+      ]
+    },
+    "moduleBoundaryViolationFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundaryId", "edgeKind", "importChain", "importSpecifier", "mode", "sourceRole", "targetFile", "targetRole"],
+      "properties": {
+        "boundaryId": { "type": "string", "minLength": 1 },
+        "edgeKind": { "enum": ["runtime", "type"] },
+        "importChain": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+          }
+        },
+        "importSpecifier": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["direct", "transitive"] },
+        "sourceRole": { "type": "string", "minLength": 1 },
+        "targetFile": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "targetRole": { "type": "string", "minLength": 1 }
+      }
+    },
+    "moduleDynamicImportUnsupportedDiagnostic": {
+      "allOf": [
+        { "$ref": "#/$defs/diagnosticBase" },
+        {
+          "type": "object",
+          "properties": {
+            "code": { "const": "module.dynamic_import_unsupported" },
+            "severity": { "const": "error" },
+            "category": { "const": "environment-boundary" },
+            "facts": { "$ref": "#/$defs/moduleDynamicImportUnsupportedFacts" }
+          }
+        }
+      ]
+    },
+    "moduleDynamicImportUnsupportedFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundaryId", "mode", "sourceRole"],
+      "properties": {
+        "boundaryId": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["direct", "transitive"] },
+        "sourceRole": { "type": "string", "minLength": 1 }
       }
     },
     "fileRoleMismatchDiagnostic": {

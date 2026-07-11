@@ -29,6 +29,12 @@
       "items": {
         "$ref": "#/$defs/fileRole"
       }
+    },
+    "boundaries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/boundary"
+      }
     }
   },
   "$defs": {
@@ -56,6 +62,35 @@
         },
         "withinFeature": {
           "$ref": "#/$defs/featureDirectory"
+        }
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "mode", "from", "deny"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "mode": {
+          "enum": ["direct", "transitive"]
+        },
+        "from": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "deny": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
         }
       }
     }

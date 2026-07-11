@@ -83,11 +83,14 @@ transport is outside the MVP.
 
 ## MVP Rule Families
 
-After the placement slice is stable, the same normalized-fact pipeline may add:
+The normalized TypeScript fact pipeline enforces configured direct and
+transitive import boundaries. A browser role can forbid transitively reachable
+server roles, while a route role can forbid only direct imports of database or
+internal roles. Type-only imports remain architectural edges. Non-literal
+dynamic imports reached by a boundary fail explicitly.
 
-- browser-reachable imports of server, database, or internal modules;
-- direct route imports of infrastructure when that policy is enabled; and
-- test or translation files outside their declared feature owner.
+The same project-owned policy model still needs file ownership rules for test
+or translation files outside their declared feature owner.
 
 Import and ownership policies are configurable project contracts, not universal
 opinions baked into the compiler.
@@ -162,6 +165,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     `form.control_unsupported` instead of disappearing from analysis.
 15. A declared handler export missing from its source emits
     `handler.export_missing` without importing or executing that module.
+16. Direct and transitive import boundaries emit exact
+    `module.boundary_violation` diagnostics with a deterministic import chain.
+17. A boundary-reachable non-literal dynamic import emits
+    `module.dynamic_import_unsupported` instead of reducing graph coverage.
 
 ## Deferred Decisions
 

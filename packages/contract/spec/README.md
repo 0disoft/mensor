@@ -63,6 +63,12 @@ overrides are represented as unsupported control facts and emit
 `form.control_unsupported`. Handler source is parsed without execution; a
 missing explicit export emits `handler.export_missing`.
 
+`ProjectContract.boundaries` declares project-owned role policies. `direct`
+checks only edges originating in a configured role; `transitive` follows the
+normalized local module graph. Type-only imports are included. Violations emit
+`module.boundary_violation`, while computed dynamic imports emit
+`module.dynamic_import_unsupported` when reached by an active boundary.
+
 HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.
 

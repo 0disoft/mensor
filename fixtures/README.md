@@ -20,6 +20,12 @@ files, and canonical expected report needed for one behavior.
 - `invalid/form-control-unsupported`: a named file input that cannot be
   represented by the URL-encoded MVP contract
 - `invalid/handler-export-missing`: a handler file without its declared export
+- `invalid/module-boundary-transitive`: browser code reaches a server module
+  through shared code and a type-only edge
+- `invalid/module-boundary-direct`: route code directly imports a database
+  module
+- `invalid/module-dynamic-import-unsupported`: a browser module computes its
+  dynamic import target
 
 `expected-report.json` uses the fixed producer version `0.0.0-fixture` so
 package-version changes do not rewrite behavioral snapshots. The future fixture

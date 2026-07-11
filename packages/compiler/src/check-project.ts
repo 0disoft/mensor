@@ -18,6 +18,7 @@ import {
 import { checkFeatureForms } from "./form-rule.js";
 import { checkFeatureHandlers } from "./handler-rule.js";
 import { handlerFileRange } from "./locations.js";
+import { checkImportBoundaries } from "./module-boundary-rule.js";
 import {
   assertRelativePosixPath,
   compareText,
@@ -136,6 +137,19 @@ export async function checkProject(
         })),
       );
     }
+
+    diagnostics.push(
+      ...(await checkImportBoundaries({
+        root,
+        projectContractPath: configFile,
+        projectText,
+        featureContractPaths: project.featureContracts,
+        fileRoles: project.fileRoles,
+        boundaries: project.boundaries ?? [],
+        discoveredFiles,
+        maxFileBytes,
+      })),
+    );
 
     diagnostics.sort(compareDiagnostics);
     return {

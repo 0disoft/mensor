@@ -37,3 +37,23 @@ test("reports parser diagnostics without executing source", () => {
 
   assert.ok(fact.syntaxErrors.length > 0);
 });
+
+test("extracts static, type-only, literal dynamic, and unsupported dynamic imports", () => {
+  const fact = extractModuleFact(`import value from "./value.js";
+import type { Shape } from "./shape.js";
+export type { Contract } from "./contract.js";
+void import("./lazy.js");
+void import(runtimeTarget);
+`, "browser.ts");
+
+  assert.deepEqual(
+    fact.imports.map((entry) => [entry.specifier, entry.edgeKind]),
+    [
+      ["./contract.js", "type"],
+      ["./lazy.js", "runtime"],
+      ["./shape.js", "type"],
+      ["./value.js", "runtime"],
+    ],
+  );
+  assert.equal(fact.unsupportedDynamicImports.length, 1);
+});

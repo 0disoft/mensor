@@ -39,7 +39,7 @@ inspected source.
 The current implementation covers bounded source discovery, feature contracts,
 handler linkage, file-role classification, placement diagnostics, static HTML
 form extraction, and explicit handler export facts. TypeScript import edges
-remain a planned responsibility.
+are normalized for configured direct and transitive role boundaries.
 
 ### `@mensor/cli`
 

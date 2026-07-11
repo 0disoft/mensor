@@ -104,6 +104,36 @@ test("reports a declared handler export that is missing from source", async () =
   }
 });
 
+test("reports a transitive browser-to-server import boundary", async () => {
+  const fixture = "invalid/module-boundary-transitive";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
+test("reports a direct route-to-database import boundary", async () => {
+  const fixture = "invalid/module-boundary-direct";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
+test("reports non-literal dynamic imports reached by a boundary", async () => {
+  const fixture = "invalid/module-dynamic-import-unsupported";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
 test("produces byte-identical reports from different absolute roots", async () => {
   for (const fixture of [
     "invalid/file-role-mismatch",
@@ -114,6 +144,9 @@ test("produces byte-identical reports from different absolute roots", async () =
     "invalid/form-control-codec-mismatch",
     "invalid/form-control-unsupported",
     "invalid/handler-export-missing",
+    "invalid/module-boundary-transitive",
+    "invalid/module-boundary-direct",
+    "invalid/module-dynamic-import-unsupported",
   ]) {
     const temporaryRoots = await Promise.all([
       copyFixture(fixture),

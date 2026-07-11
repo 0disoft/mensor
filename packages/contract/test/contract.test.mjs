@@ -149,6 +149,19 @@ test("validates unsupported-control and handler-export facts independently", asy
   }
 });
 
+test("validates module-boundary diagnostic facts independently", async () => {
+  for (const fixture of [
+    "invalid/module-boundary-transitive/expected-report.json",
+    "invalid/module-dynamic-import-unsupported/expected-report.json",
+  ]) {
+    const value = JSON.parse(await fixtureText(fixture));
+    delete value.diagnostics[0].facts.boundaryId;
+
+    const result = parseDiagnosticReport(JSON.stringify(value));
+    assert.equal(result.ok, false, fixture);
+  }
+});
+
 test("recognizes only finite JSON values and plain objects", () => {
   assert.equal(isJsonValue({ nested: [null, true, 1, "value"] }), true);
   assert.equal(isJsonValue(Number.NaN), false);

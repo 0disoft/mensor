@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "producer": { "name": "mensor", "version": "0.0.0-fixture" },
+  "status": "failed",
+  "diagnostics": [
+    {
+      "code": "module.boundary_violation",
+      "severity": "error",
+      "category": "environment-boundary",
+      "message": "Boundary \"browser-no-server\" forbids \"browser\" code from reaching \"server\" module \"src/features/tasks/server/secret.ts\".",
+      "file": "src/features/tasks/shared/task.ts",
+      "range": {
+        "start": { "line": 0, "character": 34 },
+        "end": { "line": 0, "character": 55 }
+      },
+      "facts": {
+        "boundaryId": "browser-no-server",
+        "edgeKind": "type",
+        "importChain": [
+          "src/features/tasks/browser/app.ts",
+          "src/features/tasks/shared/task.ts",
+          "src/features/tasks/server/secret.ts"
+        ],
+        "importSpecifier": "../server/secret.js",
+        "mode": "transitive",
+        "sourceRole": "browser",
+        "targetFile": "src/features/tasks/server/secret.ts",
+        "targetRole": "server"
+      },
+      "related": [
+        {
+          "role": "forbidden-target",
+          "message": "This module is classified as server.",
+          "file": "src/features/tasks/server/secret.ts",
+          "range": {
+            "start": { "line": 0, "character": 0 },
+            "end": { "line": 0, "character": 0 }
+          }
+        },
+        {
+          "role": "boundary-declaration",
+          "message": "This project contract declares the violated boundary.",
+          "file": "mensor.project.jsonc",
+          "range": {
+            "start": { "line": 13, "character": 4 },
+            "end": { "line": 18, "character": 5 }
+          }
+        }
+      ],
+      "repair": {
+        "strategy": "remove-forbidden-module-edge",
+        "hint": "Move shared contracts behind an allowed module and remove the dependency on src/features/tasks/server/secret.ts.",
+        "mustPreserve": [
+          "boundary browser-no-server",
+          "server classification of src/features/tasks/server/secret.ts"
+        ],
+        "mustNot": [
+          "delete the boundary",
+          "reclassify src/features/tasks/server/secret.ts to hide the violation"
+        ]
+      }
+    }
+  ],
+  "summary": { "errorCount": 1, "warningCount": 0 }
+}

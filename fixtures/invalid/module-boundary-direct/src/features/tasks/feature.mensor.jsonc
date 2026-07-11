@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../../../../packages/contract/spec/feature-contract-v1.schema.json",
+  "version": 1,
+  "feature": { "id": "tasks" },
+  "actions": [
+    {
+      "id": "tasks.create",
+      "route": { "method": "POST", "path": "/tasks" },
+      "form": { "template": "views/index.html", "id": "create-task" },
+      "handler": {
+        "file": "server/create-task.ts",
+        "export": "createTask",
+        "role": "server"
+      },
+      "input": {
+        "schema": {
+          "kind": "object",
+          "properties": {
+            "title": { "kind": "string", "minLength": 1, "maxLength": 120 }
+          },
+          "required": ["title"]
+        },
+        "formCodec": {
+          "encoding": "urlencoded",
+          "unknownFields": "reject",
+          "bindings": [
+            {
+              "name": "title",
+              "path": ["title"],
+              "decode": { "kind": "text", "trim": true, "empty": "reject" }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
