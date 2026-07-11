@@ -124,6 +124,18 @@ test("validates route mismatch diagnostic facts independently", async () => {
   }
 });
 
+test("validates control-codec diagnostic facts independently", async () => {
+  const value = JSON.parse(
+    await fixtureText(
+      "invalid/form-control-codec-mismatch/expected-report.json",
+    ),
+  );
+  delete value.diagnostics[0].facts.decoderKind;
+
+  const result = parseDiagnosticReport(JSON.stringify(value));
+  assert.equal(result.ok, false);
+});
+
 test("recognizes only finite JSON values and plain objects", () => {
   assert.equal(isJsonValue({ nested: [null, true, 1, "value"] }), true);
   assert.equal(isJsonValue(Number.NaN), false);

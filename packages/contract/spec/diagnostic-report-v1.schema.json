@@ -144,6 +144,9 @@
           "$ref": "#/$defs/formActionMismatchDiagnostic"
         },
         {
+          "$ref": "#/$defs/formControlCodecMismatchDiagnostic"
+        },
+        {
           "$ref": "#/$defs/fileRoleMismatchDiagnostic"
         }
       ]
@@ -380,6 +383,66 @@
         "formId": {
           "type": "string",
           "minLength": 1
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        }
+      }
+    },
+    "formControlCodecMismatchDiagnostic": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/diagnosticBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "const": "form.control_codec_mismatch"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "category": {
+              "const": "form-contract"
+            },
+            "facts": {
+              "$ref": "#/$defs/formControlCodecMismatchFacts"
+            }
+          }
+        }
+      ]
+    },
+    "formControlCodecMismatchFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "controlKind", "controlType", "decoderKind", "fieldName", "formId", "multiple", "template"],
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "controlKind": {
+          "enum": ["input", "select"]
+        },
+        "controlType": {
+          "type": "string"
+        },
+        "decoderKind": {
+          "const": "text"
+        },
+        "fieldName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "formId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "multiple": {
+          "type": "boolean"
         },
         "template": {
           "type": "string",

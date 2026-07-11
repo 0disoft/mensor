@@ -74,6 +74,16 @@ test("reports the canonical form action mismatch diagnostic", async () => {
   }
 });
 
+test("reports the canonical control and codec mismatch diagnostic", async () => {
+  const fixture = "invalid/form-control-codec-mismatch";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
 test("produces byte-identical reports from different absolute roots", async () => {
   for (const fixture of [
     "invalid/file-role-mismatch",
@@ -81,6 +91,7 @@ test("produces byte-identical reports from different absolute roots", async () =
     "invalid/form-field-unexpected",
     "invalid/form-method-mismatch",
     "invalid/form-action-mismatch",
+    "invalid/form-control-codec-mismatch",
   ]) {
     const temporaryRoots = await Promise.all([
       copyFixture(fixture),

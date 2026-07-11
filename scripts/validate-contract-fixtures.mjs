@@ -13,6 +13,7 @@ const fixtures = [
   "invalid/form-field-unexpected",
   "invalid/form-method-mismatch",
   "invalid/form-action-mismatch",
+  "invalid/form-control-codec-mismatch",
 ];
 const fixtureRoot = new URL("../fixtures/", import.meta.url);
 

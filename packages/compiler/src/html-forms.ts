@@ -19,6 +19,14 @@ export interface FormFact {
 
 export interface FormFieldFact {
   readonly name: string;
+  readonly controls: readonly FormControlFact[];
+  readonly range: SourceRange;
+}
+
+export interface FormControlFact {
+  readonly kind: "input" | "select" | "textarea";
+  readonly inputType: string;
+  readonly multiple: boolean;
   readonly range: SourceRange;
 }
 
@@ -39,7 +47,11 @@ export function extractFormFacts(html: string): readonly FormFact[] {
           const name = attribute(control, "name");
           return name === null || name.length === 0
             ? []
-            : [{ name, range: elementStartTagRange(control) }];
+            : [{
+                name,
+                controls: [controlFact(control)],
+                range: elementStartTagRange(control),
+              }];
         });
       return {
         id,
@@ -63,13 +75,39 @@ function asciiUppercase(value: string): string {
 function uniqueFields(fields: readonly FormFieldFact[]): readonly FormFieldFact[] {
   const byName = new Map<string, FormFieldFact>();
   for (const field of fields) {
-    if (!byName.has(field.name)) {
+    const existing = byName.get(field.name);
+    if (existing === undefined) {
       byName.set(field.name, field);
+    } else {
+      byName.set(field.name, {
+        ...existing,
+        controls: [...existing.controls, ...field.controls],
+      });
     }
   }
   return [...byName.values()].sort((left, right) =>
     compareText(left.name, right.name),
   );
+}
+
+function controlFact(
+  element: DefaultTreeAdapterTypes.Element,
+): FormControlFact {
+  const kind =
+    element.tagName === "input"
+      ? "input"
+      : element.tagName === "select"
+        ? "select"
+        : "textarea";
+  return {
+    kind,
+    inputType:
+      element.tagName === "input"
+        ? asciiUppercase(attribute(element, "type") ?? "text").toLowerCase()
+        : "",
+    multiple: attribute(element, "multiple") !== null,
+    range: elementStartTagRange(element),
+  };
 }
 
 function collectElements(

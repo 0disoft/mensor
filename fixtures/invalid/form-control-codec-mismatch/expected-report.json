@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "producer": { "name": "mensor", "version": "0.0.0-fixture" },
+  "status": "failed",
+  "diagnostics": [
+    {
+      "code": "form.control_codec_mismatch",
+      "severity": "error",
+      "category": "form-contract",
+      "message": "Form field \"title\" uses input[type=checkbox], which is incompatible with the text decoder.",
+      "file": "src/features/tasks/views/index.html",
+      "range": {
+        "start": { "line": 4, "character": 6 },
+        "end": { "line": 4, "character": 44 }
+      },
+      "facts": {
+        "actionId": "tasks.create",
+        "controlKind": "input",
+        "controlType": "checkbox",
+        "decoderKind": "text",
+        "fieldName": "title",
+        "formId": "create-task",
+        "multiple": false,
+        "template": "src/features/tasks/views/index.html"
+      },
+      "related": [
+        {
+          "role": "form-decoder-kind",
+          "message": "The form codec declares a scalar text decoder for this field.",
+          "file": "src/features/tasks/feature.mensor.jsonc",
+          "range": {
+            "start": { "line": 30, "character": 24 },
+            "end": { "line": 30, "character": 30 }
+          }
+        }
+      ],
+      "repair": {
+        "strategy": "align-control-and-decoder",
+        "hint": "Use a scalar text control for title, or introduce a codec that explicitly models input[type=checkbox].",
+        "mustPreserve": [
+          "action tasks.create",
+          "field binding title",
+          "form-to-action linkage"
+        ],
+        "mustNot": [
+          "coerce repeated or missing form values through the text decoder",
+          "remove the field binding to hide the mismatch"
+        ]
+      }
+    }
+  ],
+  "summary": { "errorCount": 1, "warningCount": 0 }
+}

@@ -29,6 +29,17 @@ test("normalizes static forms and successful named field candidates", () => {
       fields: [
         {
           name: "notes",
+          controls: [
+            {
+              kind: "textarea",
+              inputType: "",
+              multiple: false,
+              range: {
+                start: { line: 6, character: 0 },
+                end: { line: 6, character: 35 },
+              },
+            },
+          ],
           range: {
             start: { line: 6, character: 0 },
             end: { line: 6, character: 35 },
@@ -36,6 +47,17 @@ test("normalizes static forms and successful named field candidates", () => {
         },
         {
           name: "title",
+          controls: [
+            {
+              kind: "input",
+              inputType: "text",
+              multiple: false,
+              range: {
+                start: { line: 2, character: 2 },
+                end: { line: 2, character: 22 },
+              },
+            },
+          ],
           range: {
             start: { line: 2, character: 2 },
             end: { line: 2, character: 22 },
@@ -65,11 +87,30 @@ test("keeps one source location for repeated wire field names", () => {
 </form>`);
 
   assert.equal(facts[0]?.fields.length, 1);
-  assert.deepEqual(facts[0]?.fields[0], {
-    name: "tag",
-    range: {
-      start: { line: 1, character: 2 },
-      end: { line: 1, character: 20 },
-    },
+  assert.equal(facts[0]?.fields[0]?.name, "tag");
+  assert.equal(facts[0]?.fields[0]?.controls.length, 2);
+  assert.deepEqual(facts[0]?.fields[0]?.range, {
+    start: { line: 1, character: 2 },
+    end: { line: 1, character: 20 },
   });
+});
+
+test("preserves control shape needed for codec compatibility", () => {
+  const facts = extractFormFacts(`<form id="settings">
+  <input name="enabled" type="checkbox">
+  <select name="labels" multiple><option>A</option></select>
+</form>`);
+
+  assert.deepEqual(
+    facts[0]?.fields.map((field) => ({
+      name: field.name,
+      kind: field.controls[0]?.kind,
+      inputType: field.controls[0]?.inputType,
+      multiple: field.controls[0]?.multiple,
+    })),
+    [
+      { name: "enabled", kind: "input", inputType: "checkbox", multiple: false },
+      { name: "labels", kind: "select", inputType: "", multiple: true },
+    ],
+  );
 });

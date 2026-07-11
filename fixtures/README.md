@@ -15,6 +15,8 @@ files, and canonical expected report needed for one behavior.
   control, producing one canonical `form.field_unexpected` report
 - `invalid/form-method-mismatch`: a linked form using GET for a POST action
 - `invalid/form-action-mismatch`: a linked form submitting to the wrong path
+- `invalid/form-control-codec-mismatch`: a checkbox bound to the scalar text
+  decoder
 
 `expected-report.json` uses the fixed producer version `0.0.0-fixture` so
 package-version changes do not rewrite behavioral snapshots. The future fixture

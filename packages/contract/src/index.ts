@@ -21,6 +21,8 @@ export type {
   FormCodec,
   FormActionMismatchDiagnostic,
   FormActionMismatchFacts,
+  FormControlCodecMismatchDiagnostic,
+  FormControlCodecMismatchFacts,
   FormFieldMissingDiagnostic,
   FormFieldMissingFacts,
   FormFieldUnexpectedDiagnostic,

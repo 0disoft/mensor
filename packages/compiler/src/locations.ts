@@ -88,6 +88,28 @@ export function actionRoutePropertyRange(
   return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
+export function actionBindingDecoderKindRange(
+  contractText: string,
+  actionIndex: number,
+  bindingIndex: number,
+): SourceRange {
+  const root = parseTree(contractText);
+  if (root === undefined) {
+    return zeroRange;
+  }
+  const node = findNodeAtLocation(root, [
+    "actions",
+    actionIndex,
+    "input",
+    "formCodec",
+    "bindings",
+    bindingIndex,
+    "decode",
+    "kind",
+  ]);
+  return node === undefined ? zeroRange : nodeRange(contractText, node);
+}
+
 function nodeRange(text: string, node: Node): SourceRange {
   return {
     start: positionAt(text, node.offset),

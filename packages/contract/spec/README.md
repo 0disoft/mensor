@@ -53,6 +53,11 @@ with the linked action route. Method and path drift use separate
 `form.method_mismatch` and `form.action_mismatch` diagnostics so repair agents
 do not have to infer which route fact is wrong.
 
+The v1 codec currently owns only scalar text decoding. Checkbox controls and
+`select[multiple]` have missing-value or repeated-value semantics that cannot be
+silently coerced through that decoder, so the compiler emits
+`form.control_codec_mismatch` until a matching serializable codec exists.
+
 HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.
 

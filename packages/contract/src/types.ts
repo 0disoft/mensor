@@ -217,6 +217,29 @@ export interface FormActionMismatchDiagnostic {
   readonly repair: RepairInstruction;
 }
 
+export interface FormControlCodecMismatchFacts {
+  readonly actionId: string;
+  readonly controlKind: "input" | "select";
+  readonly controlType: string;
+  readonly decoderKind: "text";
+  readonly fieldName: string;
+  readonly formId: string;
+  readonly multiple: boolean;
+  readonly template: string;
+}
+
+export interface FormControlCodecMismatchDiagnostic {
+  readonly code: "form.control_codec_mismatch";
+  readonly severity: "error";
+  readonly category: "form-contract";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: FormControlCodecMismatchFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
 export interface FileRoleMismatchFacts {
   readonly actionId: string;
   readonly actualRole: string;
@@ -241,6 +264,7 @@ export interface FileRoleMismatchDiagnostic {
 export type Diagnostic =
   | FileRoleMismatchDiagnostic
   | FormActionMismatchDiagnostic
+  | FormControlCodecMismatchDiagnostic
   | FormFieldMissingDiagnostic
   | FormFieldUnexpectedDiagnostic
   | FormMethodMismatchDiagnostic;

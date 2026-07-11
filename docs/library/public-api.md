@@ -50,8 +50,9 @@ symlinks, enforces file-count and file-byte limits, and never imports inspected
 source. It currently implements action-handler placement plus static HTML form
 linking for required-field presence and rejection of named fields that are
 neither bound nor explicitly ignored. It also compares static form method and
-action attributes with the linked action route. Codec shape and TypeScript
-source facts remain later behavior.
+action attributes with the linked action route and rejects checkbox or repeated
+select controls bound to the v1 scalar text decoder. Additional codec families
+and TypeScript source facts remain later behavior.
 
 ## Export Policy
 

@@ -4,6 +4,7 @@ import type {
   Diagnostic,
   FeatureContract,
   FormActionMismatchDiagnostic,
+  FormControlCodecMismatchDiagnostic,
   FormFieldMissingDiagnostic,
   FormFieldUnexpectedDiagnostic,
   FormMethodMismatchDiagnostic,
@@ -13,6 +14,7 @@ import { readProjectFile } from "./filesystem.js";
 import { extractFormFacts, type FormFact } from "./html-forms.js";
 import {
   actionFormCodecPropertyRange,
+  actionBindingDecoderKindRange,
   actionRoutePropertyRange,
   actionSchemaPropertyRange,
 } from "./locations.js";
@@ -167,9 +169,97 @@ export async function checkFeatureForms(options: {
         }),
       );
     }
+
+    action.input.formCodec.bindings.forEach((binding, bindingIndex) => {
+      const field = form.fields.find((candidate) => candidate.name === binding.name);
+      if (field === undefined) {
+        return;
+      }
+      const incompatibleControl = field.controls.find(
+        (control) =>
+          (control.kind === "input" && control.inputType === "checkbox") ||
+          (control.kind === "select" && control.multiple),
+      );
+      if (incompatibleControl === undefined) {
+        return;
+      }
+      diagnostics.push(
+        controlCodecMismatchDiagnostic({
+          actionId: action.id,
+          actionIndex,
+          bindingIndex,
+          fieldName: binding.name,
+          form,
+          control: incompatibleControl,
+          templateFile: projectTemplate,
+          featureContractPath: options.featureContractPath,
+          featureText: options.featureText,
+        }),
+      );
+    });
   }
 
   return diagnostics;
+}
+
+function controlCodecMismatchDiagnostic(options: {
+  readonly actionId: string;
+  readonly actionIndex: number;
+  readonly bindingIndex: number;
+  readonly fieldName: string;
+  readonly form: FormFact;
+  readonly control: FormFact["fields"][number]["controls"][number];
+  readonly templateFile: string;
+  readonly featureContractPath: string;
+  readonly featureText: string;
+}): FormControlCodecMismatchDiagnostic {
+  const controlShape =
+    options.control.kind === "input"
+      ? `input[type=${options.control.inputType}]`
+      : "select[multiple]";
+  return {
+    code: "form.control_codec_mismatch",
+    severity: "error",
+    category: "form-contract",
+    message: `Form field ${JSON.stringify(options.fieldName)} uses ${controlShape}, which is incompatible with the text decoder.`,
+    file: options.templateFile,
+    range: options.control.range,
+    facts: {
+      actionId: options.actionId,
+      controlKind: options.control.kind === "select" ? "select" : "input",
+      controlType: options.control.inputType,
+      decoderKind: "text",
+      fieldName: options.fieldName,
+      formId: options.form.id,
+      multiple: options.control.multiple,
+      template: options.templateFile,
+    },
+    related: [
+      {
+        role: "form-decoder-kind",
+        message: "The form codec declares a scalar text decoder for this field.",
+        file: options.featureContractPath,
+        range: actionBindingDecoderKindRange(
+          options.featureText,
+          options.actionIndex,
+          options.bindingIndex,
+        ),
+      },
+    ],
+    repair: {
+      strategy: "align-control-and-decoder",
+      hint: `Use a scalar text control for ${options.fieldName}, or introduce a codec that explicitly models ${controlShape}.`,
+      mustPreserve: [
+        `action ${options.actionId}`,
+        `field binding ${options.fieldName}`,
+        "form-to-action linkage",
+      ],
+      mustNot: [
+        "coerce repeated or missing form values through the text decoder",
+        "remove the field binding to hide the mismatch",
+      ],
+    },
+  };
 }
 
 function methodMismatchDiagnostic(options: {

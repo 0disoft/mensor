@@ -65,11 +65,12 @@ candidates, then detects:
 - a required action field has no matching form control;
 - a named form control is neither bound nor explicitly ignored;
 - form method does not match the linked action method; and
-- form action does not match the linked action path.
+- form action does not match the linked action path; and
+- checkbox or repeated select semantics are connected to the scalar text
+  decoder.
 
-The following form-contract rules remain separate slices:
-
-- a control shape and its decoder disagree.
+Additional decoder families remain separate slices and are supported only when
+their serializable schema and form semantics are defined.
 
 For form comparison, the compiler normalizes an HTML form method to ASCII uppercase
 and treats an omitted method as `GET`. The first schema accepts only a static,
@@ -149,6 +150,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
    application test; contract weakening is a failed repair.
 11. Form method and action mismatches emit separate exact diagnostics at the
     corresponding HTML attributes with the declared route as a related location.
+12. A checkbox or `select[multiple]` bound to the scalar text decoder emits
+    `form.control_codec_mismatch` at the incompatible control.
 
 ## Deferred Decisions
 
