@@ -1,9 +1,15 @@
 {
   "name": "@mensor/fixture-kit",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "private": true,
   "type": "module",
   "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
   "engines": {
     "node": ">=22"
   },

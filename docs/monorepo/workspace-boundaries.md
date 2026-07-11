@@ -10,13 +10,16 @@ packages/
   contract/
   compiler/
   cli/
+internal/
+  fixture-kit/
+  agent-runner/
 fixtures/
   valid/
   invalid/
   compound/
 ```
 
-The contract, compiler, CLI, and internal fixture-kit packages are current.
+The contract, compiler, CLI, fixture-kit, and agent-runner packages are current.
 Each package was introduced with a complete vertical slice. Empty packages
 reserved for a possible runtime, adapter, SDK, or formatter are forbidden.
 
@@ -66,12 +69,18 @@ The fixture kit also owns a provider-neutral trial state machine and report
 aggregation. Provider SDKs, credentials, shell execution, network access, raw
 prompts, and transcripts remain outside this package.
 
+### `internal/agent-runner`
+
+Owns bounded external command execution for trial adapters. It depends on the
+fixture kit's provider-neutral types. It must remain private and must not become
+a dependency of the compiler, CLI, or published packages.
+
 ## Dependency Rules
 
 ```text
 contract <- compiler <- cli
-    ^          ^         ^
-    +---------- fixture-kit
+               ^
+               +-- fixture-kit <- agent-runner
 ```
 
 - Cross-package imports use declared public exports.

@@ -1,0 +1,13 @@
+{
+  "name": "@mensor/agent-runner",
+  "version": "0.0.15",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@mensor/fixture-kit": "workspace:*"
+  }
+}

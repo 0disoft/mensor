@@ -41,3 +41,7 @@ versions.
 
 Current repository evidence covers fake adapters only. No real-agent repair
 rate is claimed.
+
+The separate private agent runner now supplies a bounded command adapter for
+fake executable tests. It does not change the claim boundary: no real model or
+provider has been measured.

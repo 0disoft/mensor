@@ -4,7 +4,8 @@
 
 ## Owned Components
 
-Mensor owns four implementation boundaries for the MVP:
+Mensor owns five implementation boundaries for the current diagnostic and
+evaluation preview:
 
 - contract: serializable authoring contracts, normalized IR, diagnostics, and
   validators;
@@ -12,7 +13,8 @@ Mensor owns four implementation boundaries for the MVP:
   pure rules;
 - CLI: arguments, config selection, output routing, and exit status; and
 - fixture kit: deterministic fixtures, snapshots, security probes, and repair
-  evaluation support that is never published as a runtime dependency.
+  evaluation support that is never published as a runtime dependency; and
+- agent runner: a private bounded process adapter for evaluation commands.
 
 It consumes the local filesystem and parser libraries. It does not own the
 application framework, HTTP server, database, authentication, deployment, or
@@ -42,14 +44,14 @@ extraction boundary. Rules receive only Mensor-owned serializable facts.
 ## Dependency Direction
 
 ```text
-@mensor/contract <- @mensor/compiler <- mensor CLI
-          ^                 ^
-          +------ internal/fixture-kit
+@mensor/contract <- @mensor/compiler <- @mensor/cli
+                           ^
+                           +-- internal/fixture-kit <- internal/agent-runner
 ```
 
 The contract package has no filesystem or parser dependency. The compiler does
-not depend on the CLI. Published packages never depend on fixture or benchmark
-code.
+not depend on the CLI. Published packages never depend on fixture, runner, or
+benchmark code.
 
 ## Trust Boundary
 

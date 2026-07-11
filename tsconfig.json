@@ -12,6 +12,9 @@
     },
     {
       "path": "./internal/fixture-kit"
+    },
+    {
+      "path": "./internal/agent-runner"
     }
   ]
 }

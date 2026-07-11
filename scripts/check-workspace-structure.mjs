@@ -5,6 +5,7 @@ const contract = await json("../packages/contract/package.json");
 const compiler = await json("../packages/compiler/package.json");
 const cli = await json("../packages/cli/package.json");
 const fixtureKit = await json("../internal/fixture-kit/package.json");
+const agentRunner = await json("../internal/agent-runner/package.json");
 const failures = [];
 
 if (workspace.private !== true) {
@@ -21,6 +22,9 @@ if (cli.private !== true) {
 }
 if (fixtureKit.private !== true) {
   failures.push("The fixture kit must remain an internal private package.");
+}
+if (agentRunner.private !== true) {
+  failures.push("The agent runner must remain an internal private package.");
 }
 if (Object.hasOwn(workspace, "dependencies")) {
   failures.push("Runtime dependencies belong to the package that imports them, not the workspace root.");
@@ -48,6 +52,9 @@ if (cli.dependencies?.["@mensor/compiler"] !== "workspace:*") {
 if (fixtureKit.dependencies?.["@mensor/compiler"] !== "workspace:*") {
   failures.push("@mensor/fixture-kit must use the public workspace compiler package.");
 }
+if (agentRunner.dependencies?.["@mensor/fixture-kit"] !== "workspace:*") {
+  failures.push("@mensor/agent-runner must use the private workspace fixture kit.");
+}
 if (cli.bin?.mensor !== "./dist/src/bin.js") {
   failures.push("@mensor/cli must expose the built mensor executable.");
 }
@@ -55,7 +62,8 @@ if (
   workspace.version !== contract.version ||
   workspace.version !== compiler.version ||
   workspace.version !== cli.version ||
-  workspace.version !== fixtureKit.version
+  workspace.version !== fixtureKit.version ||
+  workspace.version !== agentRunner.version
 ) {
   failures.push("All private workspace packages must use one fixed version.");
 }
@@ -65,7 +73,8 @@ for (const forbidden of ["preinstall", "install", "postinstall", "prepare"]) {
     contract.scripts?.[forbidden] !== undefined ||
     compiler.scripts?.[forbidden] !== undefined ||
     cli.scripts?.[forbidden] !== undefined ||
-    fixtureKit.scripts?.[forbidden] !== undefined
+    fixtureKit.scripts?.[forbidden] !== undefined ||
+    agentRunner.scripts?.[forbidden] !== undefined
   ) {
     failures.push(`Lifecycle script ${forbidden} is forbidden.`);
   }
