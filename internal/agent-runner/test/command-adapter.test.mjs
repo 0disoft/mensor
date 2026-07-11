@@ -6,12 +6,17 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { Ajv2020 } from "ajv/dist/2020.js";
-import { parseAgentTrialReport, runAgentTrial } from "@mensor/fixture-kit";
+import {
+  createAgentTrialReport,
+  parseAgentTrialReport,
+  runAgentTrial,
+} from "@mensor/fixture-kit";
 import {
   createAgentTrialEvidence,
   createCommandAgentAdapter,
   createCommandExecutionDescriptor,
   executionFingerprint,
+  mergeAgentTrialEvidence,
   parseAgentExecutionDescriptor,
   parseAgentTrialEvidence,
   serializeAgentExecutionDescriptor,
@@ -120,6 +125,79 @@ test("binds a canonical report to one execution fingerprint", async () => {
       executionFingerprint: "0".repeat(64),
     })),
     /canonical execution fingerprint/,
+  );
+});
+
+test("merges repeated trials only inside one execution cohort", async () => {
+  const report = await goldenReport();
+  const descriptor = createCommandExecutionDescriptor(metadata(), commandOptions());
+  const first = createAgentTrialEvidence(
+    descriptor,
+    reportWithTrialId(report, "cohort-2"),
+  );
+  const second = createAgentTrialEvidence(
+    descriptor,
+    reportWithTrialId(report, "cohort-1"),
+  );
+
+  const merged = mergeAgentTrialEvidence([first, second]);
+  const reversed = mergeAgentTrialEvidence([second, first]);
+  assert.equal(
+    serializeAgentTrialEvidence(merged),
+    serializeAgentTrialEvidence(reversed),
+  );
+  assert.deepEqual(merged.report.trials.map((trial) => trial.trialId), [
+    "cohort-1",
+    "cohort-2",
+  ]);
+  assert.deepEqual(merged.report.metrics, [{
+    mutationId: "form-field-missing",
+    baselineId: "tiny-tasks",
+    trialCount: 2,
+    repairedCount: 2,
+    anyTrialRepaired: true,
+    allTrialsRepaired: true,
+  }]);
+});
+
+test("rejects mixed, duplicate, empty, and producer-drift cohorts", async () => {
+  const report = await goldenReport();
+  const descriptor = createCommandExecutionDescriptor(metadata(), commandOptions());
+  const first = createAgentTrialEvidence(descriptor, reportWithTrialId(report, "cohort-1"));
+  const differentExecution = createAgentTrialEvidence(
+    createCommandExecutionDescriptor({
+      ...metadata(),
+      prompt: artifact("repair-prompt", "v2", "e"),
+    }, commandOptions()),
+    reportWithTrialId(report, "cohort-2"),
+  );
+  const differentProducer = createAgentTrialEvidence(
+    descriptor,
+    createAgentTrialReport([
+      { ...report.trials[0], trialId: "cohort-3" },
+    ], "0.0.1-test"),
+  );
+  const empty = createAgentTrialEvidence(
+    descriptor,
+    createAgentTrialReport([], report.producerVersion),
+  );
+
+  assert.throws(() => mergeAgentTrialEvidence([]), /at least one evidence item/);
+  assert.throws(
+    () => mergeAgentTrialEvidence([first, differentExecution]),
+    /cannot mix execution fingerprints/,
+  );
+  assert.throws(
+    () => mergeAgentTrialEvidence([first, differentProducer]),
+    /cannot mix report producer versions/,
+  );
+  assert.throws(
+    () => mergeAgentTrialEvidence([first, first]),
+    /Duplicate agent trial ID/,
+  );
+  assert.throws(
+    () => mergeAgentTrialEvidence([empty]),
+    /at least one trial/,
   );
 });
 
@@ -276,6 +354,20 @@ function metadata() {
 
 function artifact(id, revision, character) {
   return { id, revision, sha256: character.repeat(64) };
+}
+
+async function goldenReport() {
+  return parseAgentTrialReport(await readFile(new URL(
+    "../../fixture-kit/fixtures/agent-trial-report-v1.json",
+    import.meta.url,
+  ), "utf8"));
+}
+
+function reportWithTrialId(report, trialId) {
+  return createAgentTrialReport(
+    [{ ...report.trials[0], trialId }],
+    report.producerVersion,
+  );
 }
 
 function context(root) {

@@ -62,3 +62,8 @@ Before retaining real-agent evidence, the runner binds the report to
 with different fingerprints are separate cohorts and must not be merged into
 one repair metric. The descriptor contract is documented in
 `docs/engineering/agent-execution-descriptor.md`.
+
+Repeated evidence is aggregated through the runner-owned cohort merger rather
+than by concatenating report JSON. The merger rejects execution, producer, and
+trial-identity drift before recomputing any-trial, all-trials, and failure
+metrics from the combined final-state records.

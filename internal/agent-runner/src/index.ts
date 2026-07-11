@@ -4,11 +4,13 @@ export {
   createAgentTrialEvidence,
   createCommandExecutionDescriptor,
   executionFingerprint,
+  mergeAgentTrialEvidence,
   parseAgentExecutionDescriptor,
   parseAgentTrialEvidence,
   serializeAgentExecutionDescriptor,
   serializeAgentTrialEvidence,
   validateAgentExecutionDescriptor,
+  validateAgentTrialEvidence,
 } from "./execution-descriptor.js";
 export type {
   AgentExecutionArtifactRef,

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import {
+  createAgentTrialReport,
   validateAgentTrialReport,
   type AgentTrialReport,
 } from "@mensor/fixture-kit";
@@ -129,7 +130,10 @@ export function serializeAgentExecutionDescriptor(
 }
 
 export function parseAgentTrialEvidence(text: string): AgentTrialEvidence {
-  const value = parseJson(text, "agent trial evidence");
+  return validateAgentTrialEvidence(parseJson(text, "agent trial evidence"));
+}
+
+export function validateAgentTrialEvidence(value: unknown): AgentTrialEvidence {
   const record = requireRecord(value, "evidence");
   requireExactKeys(
     record,
@@ -148,11 +152,42 @@ export function parseAgentTrialEvidence(text: string): AgentTrialEvidence {
   return canonical;
 }
 
-export function serializeAgentTrialEvidence(evidence: AgentTrialEvidence): string {
-  const canonical = createAgentTrialEvidence(evidence.execution, evidence.report);
-  if (JSON.stringify(evidence) !== JSON.stringify(canonical)) {
-    throw new Error("Agent trial evidence must match its canonical execution fingerprint and ordering.");
+export function mergeAgentTrialEvidence(
+  evidenceItems: readonly AgentTrialEvidence[],
+): AgentTrialEvidence {
+  if (evidenceItems.length === 0) {
+    throw new Error("Agent trial evidence cohort must contain at least one evidence item.");
   }
+  const validated = evidenceItems.map((item) => validateAgentTrialEvidence(item));
+  const first = validated[0];
+  if (first === undefined) {
+    throw new Error("Agent trial evidence cohort must contain a first item.");
+  }
+  const executionBytes = serializeAgentExecutionDescriptor(first.execution);
+  const producerVersion = first.report.producerVersion;
+  for (const item of validated.slice(1)) {
+    if (
+      item.executionFingerprint !== first.executionFingerprint ||
+      serializeAgentExecutionDescriptor(item.execution) !== executionBytes
+    ) {
+      throw new Error("Agent trial evidence cohort cannot mix execution fingerprints.");
+    }
+    if (item.report.producerVersion !== producerVersion) {
+      throw new Error("Agent trial evidence cohort cannot mix report producer versions.");
+    }
+  }
+  const trials = validated.flatMap((item) => item.report.trials);
+  if (trials.length === 0) {
+    throw new Error("Agent trial evidence cohort must contain at least one trial.");
+  }
+  return createAgentTrialEvidence(
+    first.execution,
+    createAgentTrialReport(trials, producerVersion),
+  );
+}
+
+export function serializeAgentTrialEvidence(evidence: AgentTrialEvidence): string {
+  const canonical = validateAgentTrialEvidence(evidence);
   return `${JSON.stringify(canonical, null, 2)}\n`;
 }
 

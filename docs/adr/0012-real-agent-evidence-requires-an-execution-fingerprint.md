@@ -34,6 +34,8 @@ it does not implement.
 ## Consequences
 
 - Reports from different fingerprints must not be merged into one metric.
+- Cohort aggregation revalidates evidence and derives metrics from unique trial
+  records instead of accepting caller-supplied totals.
 - A missing model revision remains explicit as `null` instead of being guessed.
 - Hashes identify reviewed artifacts but do not prove their contents are safe,
   secret-free, or available for audit.

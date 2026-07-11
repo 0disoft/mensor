@@ -39,3 +39,9 @@ Do not merge reports with different execution fingerprints. A model, prompt,
 toolset, dataset, adapter, platform, runtime, isolation, network-control, or
 limit change starts a new comparison cohort. Cost and latency need separate
 bounded measurement contracts and are not inferred from this descriptor.
+
+`mergeAgentTrialEvidence` is the only supported cohort merger. It validates
+every input again, requires byte-identical descriptors and fingerprints,
+requires one report producer version, rejects duplicate trial IDs and empty
+cohorts, and derives the combined report from trial records. Input ordering
+does not change canonical output.
