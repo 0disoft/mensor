@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-trial-report-v1.schema.json",
+  "title": "Mensor Agent Trial Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "producerVersion", "trials", "metrics", "summary"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "producerVersion": { "$ref": "#/$defs/identifier" },
+    "trials": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/trial" }
+    },
+    "metrics": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/metric" }
+    },
+    "summary": { "$ref": "#/$defs/summary" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "sha256OrNull": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "mutationId": {
+      "enum": [
+        "browser-direct-server-import",
+        "browser-dynamic-import",
+        "browser-transitive-server-import",
+        "form-action-mismatch",
+        "form-control-codec-mismatch",
+        "form-field-missing",
+        "form-field-unexpected",
+        "form-method-mismatch",
+        "handler-export-missing",
+        "ownership-i18n-outside-feature",
+        "ownership-test-outside-slot",
+        "route-direct-database-import"
+      ]
+    },
+    "baselineId": {
+      "enum": ["layered-tasks", "tiny-tasks"]
+    },
+    "failureCategory": {
+      "enum": [
+        "agent-error",
+        "check-failed",
+        "contract-weakened",
+        "diagnostic-not-produced",
+        "semantic-regression",
+        null
+      ]
+    },
+    "fileChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "beforeSha256", "afterSha256"],
+      "properties": {
+        "file": { "$ref": "#/$defs/relativePath" },
+        "beforeSha256": { "$ref": "#/$defs/sha256OrNull" },
+        "afterSha256": { "$ref": "#/$defs/sha256OrNull" }
+      }
+    },
+    "trial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "trialId",
+        "mutationId",
+        "baselineId",
+        "initialDiagnosticCodes",
+        "detectionPassed",
+        "adapterCompleted",
+        "rounds",
+        "repaired",
+        "checkPassed",
+        "protectedFilesChanged",
+        "semanticCheckPassed",
+        "repairChanges",
+        "failureCategory"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "trialId": { "$ref": "#/$defs/identifier" },
+        "mutationId": { "$ref": "#/$defs/mutationId" },
+        "baselineId": { "$ref": "#/$defs/baselineId" },
+        "initialDiagnosticCodes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "detectionPassed": { "type": "boolean" },
+        "adapterCompleted": { "type": "boolean" },
+        "rounds": { "type": "integer", "minimum": 0 },
+        "repaired": { "type": "boolean" },
+        "checkPassed": { "type": "boolean" },
+        "protectedFilesChanged": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/relativePath" }
+        },
+        "semanticCheckPassed": { "type": "boolean" },
+        "repairChanges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fileChange" }
+        },
+        "failureCategory": { "$ref": "#/$defs/failureCategory" }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutationId",
+        "baselineId",
+        "trialCount",
+        "repairedCount",
+        "anyTrialRepaired",
+        "allTrialsRepaired"
+      ],
+      "properties": {
+        "mutationId": { "$ref": "#/$defs/mutationId" },
+        "baselineId": { "$ref": "#/$defs/baselineId" },
+        "trialCount": { "type": "integer", "minimum": 1 },
+        "repairedCount": { "type": "integer", "minimum": 0 },
+        "anyTrialRepaired": { "type": "boolean" },
+        "allTrialsRepaired": { "type": "boolean" }
+      }
+    },
+    "failureCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent-error",
+        "check-failed",
+        "contract-weakened",
+        "diagnostic-not-produced",
+        "semantic-regression"
+      ],
+      "properties": {
+        "agent-error": { "type": "integer", "minimum": 0 },
+        "check-failed": { "type": "integer", "minimum": 0 },
+        "contract-weakened": { "type": "integer", "minimum": 0 },
+        "diagnostic-not-produced": { "type": "integer", "minimum": 0 },
+        "semantic-regression": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trialCount", "repairedCount", "failedCount", "failureCounts"],
+      "properties": {
+        "trialCount": { "type": "integer", "minimum": 0 },
+        "repairedCount": { "type": "integer", "minimum": 0 },
+        "failedCount": { "type": "integer", "minimum": 0 },
+        "failureCounts": { "$ref": "#/$defs/failureCounts" }
+      }
+    }
+  }
+}

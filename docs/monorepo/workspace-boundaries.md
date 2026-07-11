@@ -57,7 +57,8 @@ The current executable exposes only `mensor check [root] [--config <path>]
 ### `internal/fixture-kit`
 
 Owns fixture execution, canonical snapshots, randomized discovery tests,
-security sentinels, and repair evaluation helpers. It may depend on public
+security sentinels, the agent-trial report schema and canonical serializer,
+and repair evaluation helpers. It may depend on public
 packages but is private and never appears in a published dependency graph.
 
 The current repair evaluator captures hashes for explicitly protected contract

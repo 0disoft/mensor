@@ -14,7 +14,14 @@ export {
   mutationCatalog,
   runMutationCase,
 } from "./mutations.js";
-export { createAgentTrialReport, runAgentTrial } from "./agent-trial.js";
+export {
+  agentTrialFailureCategories,
+  createAgentTrialReport,
+  parseAgentTrialReport,
+  runAgentTrial,
+  serializeAgentTrialReport,
+  validateAgentTrialReport,
+} from "./agent-trial.js";
 export type {
   AgentTrialAdapter,
   AgentTrialAdapterResult,

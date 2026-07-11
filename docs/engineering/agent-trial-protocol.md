@@ -26,6 +26,12 @@ Each serializable result contains:
 - root-relative changed paths with before and after SHA-256 values; and
 - one failure category without raw exception or provider output.
 
+`internal/fixture-kit/spec/agent-trial-report-v1.schema.json` defines the
+machine-readable envelope. The fixture kit validates every trial's final-state
+invariants, derives metrics and failure counts again, and rejects unknown,
+reordered, or inconsistent report data. `serializeAgentTrialReport` emits the
+validated report as two-space JSON with LF and one final newline.
+
 Failure categories are `diagnostic-not-produced`, `agent-error`,
 `contract-weakened`, `semantic-regression`, and `check-failed`. Final-state
 evidence takes precedence over a friendly adapter response.
@@ -38,6 +44,11 @@ case. The second answers whether every observed trial solved it. Neither is a
 statistically meaningful product claim until real providers run multiple
 controlled trials with recorded model, prompt, tool, environment, and cost
 versions.
+
+The summary also records one count for every stable failure category. These
+counts are derived from trials; callers cannot supply independent aggregate
+claims. Synthetic golden data verifies the byte contract but is not benchmark
+history.
 
 Current repository evidence covers fake adapters only. No real-agent repair
 rate is claimed.

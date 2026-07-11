@@ -5,7 +5,14 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { createAgentTrialReport, runAgentTrial } from "../dist/src/index.js";
+import {
+  agentTrialFailureCategories,
+  createAgentTrialReport,
+  mutationCatalog,
+  parseAgentTrialReport,
+  runAgentTrial,
+  serializeAgentTrialReport,
+} from "../dist/src/index.js";
 
 const fixture = fileURLToPath(
   new URL("../../../fixtures/valid/tiny-tasks/", import.meta.url),
@@ -138,6 +145,13 @@ test("builds deterministic any-trial and all-trials metrics", async () => {
     trialCount: 2,
     repairedCount: 1,
     failedCount: 1,
+    failureCounts: {
+      "agent-error": 0,
+      "check-failed": 0,
+      "contract-weakened": 0,
+      "diagnostic-not-produced": 0,
+      "semantic-regression": 1,
+    },
   });
   assert.deepEqual(report.metrics, [
     {
@@ -150,6 +164,91 @@ test("builds deterministic any-trial and all-trials metrics", async () => {
     },
   ]);
   assert.deepEqual(report.trials.map((trial) => trial.trialId), ["trial-1", "trial-2"]);
+});
+
+test("serializes and parses a canonical report without host-specific data", async () => {
+  await withFixture(async (root) => {
+    const trial = await runAgentTrial({
+      trialId: "canonical-1",
+      root,
+      mutationId: "form-field-missing",
+      protectedFiles,
+      adapter: async () => {
+        await restoreTitle(root);
+        return { rounds: 1 };
+      },
+      semanticCheck: () => semanticFeaturePresent(root),
+    });
+    const report = createAgentTrialReport([trial], "0.0.0-test");
+    const serialized = serializeAgentTrialReport(report);
+
+    assert.deepEqual(parseAgentTrialReport(serialized), report);
+    assert.equal(serialized.endsWith("\n"), true);
+    assert.equal(serialized.includes(root), false);
+    assert.equal(serialized.includes("timestamp"), false);
+  });
+});
+
+test("rejects non-canonical or internally inconsistent reports", async () => {
+  await withFixture(async (root) => {
+    const trial = await runAgentTrial({
+      trialId: "invalid-1",
+      root,
+      mutationId: "form-field-missing",
+      protectedFiles,
+      adapter: async () => {
+        await restoreTitle(root);
+        return { rounds: 1 };
+      },
+      semanticCheck: () => semanticFeaturePresent(root),
+    });
+    const report = createAgentTrialReport([trial], "0.0.0-test");
+
+    assert.throws(
+      () => parseAgentTrialReport(JSON.stringify({ ...report, timestamp: "secret" })),
+      /must contain exactly/,
+    );
+    assert.throws(
+      () => parseAgentTrialReport(JSON.stringify({
+        ...report,
+        summary: { ...report.summary, repairedCount: 0 },
+      })),
+      /canonical derived metrics/,
+    );
+    assert.throws(
+      () => parseAgentTrialReport(JSON.stringify({
+        ...report,
+        trials: [{ ...trial, repaired: false }],
+      })),
+      /repair outcome/,
+    );
+  });
+});
+
+test("keeps the report schema catalogs aligned with implementation", async () => {
+  const schema = JSON.parse(await readFile(new URL(
+    "../spec/agent-trial-report-v1.schema.json",
+    import.meta.url,
+  ), "utf8"));
+
+  assert.equal(schema.$id, "agent-trial-report-v1.schema.json");
+  assert.deepEqual(
+    schema.$defs.mutationId.enum,
+    mutationCatalog.map((definition) => definition.id),
+  );
+  assert.deepEqual(
+    schema.$defs.failureCategory.enum,
+    [...agentTrialFailureCategories, null],
+  );
+});
+
+test("keeps the golden report byte-canonical", async () => {
+  const golden = await readFile(new URL(
+    "../fixtures/agent-trial-report-v1.json",
+    import.meta.url,
+  ), "utf8");
+
+  assert.equal(serializeAgentTrialReport(parseAgentTrialReport(golden)), golden);
 });
 
 test("produces byte-identical trial results across absolute roots", async () => {

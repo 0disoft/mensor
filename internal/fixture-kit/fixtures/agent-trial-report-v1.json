@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "producerVersion": "0.0.0-test",
+  "trials": [
+    {
+      "schemaVersion": 1,
+      "trialId": "golden-1",
+      "mutationId": "form-field-missing",
+      "baselineId": "tiny-tasks",
+      "initialDiagnosticCodes": [
+        "form.field_missing"
+      ],
+      "detectionPassed": true,
+      "adapterCompleted": true,
+      "rounds": 1,
+      "repaired": true,
+      "checkPassed": true,
+      "protectedFilesChanged": [],
+      "semanticCheckPassed": true,
+      "repairChanges": [
+        {
+          "file": "src/features/tasks/views/index.html",
+          "beforeSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "afterSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      ],
+      "failureCategory": null
+    }
+  ],
+  "metrics": [
+    {
+      "mutationId": "form-field-missing",
+      "baselineId": "tiny-tasks",
+      "trialCount": 1,
+      "repairedCount": 1,
+      "anyTrialRepaired": true,
+      "allTrialsRepaired": true
+    }
+  ],
+  "summary": {
+    "trialCount": 1,
+    "repairedCount": 1,
+    "failedCount": 0,
+    "failureCounts": {
+      "agent-error": 0,
+      "check-failed": 0,
+      "contract-weakened": 0,
+      "diagnostic-not-produced": 0,
+      "semantic-regression": 0
+    }
+  }
+}
