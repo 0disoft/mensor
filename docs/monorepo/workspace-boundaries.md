@@ -9,15 +9,15 @@
 packages/
   contract/
   compiler/
+  cli/
 fixtures/
   valid/
   invalid/
   compound/
 ```
 
-The contract and compiler packages are current. `packages/cli` and
-`internal/fixture-kit` are added with their first complete vertical slices. Do
-not create a package until it contains a complete
+The contract, compiler, and CLI packages are current. `internal/fixture-kit` is
+added only with its first complete vertical slice. Do not create a package until it contains a complete
 responsibility. Empty packages reserved for a possible runtime, adapter, SDK,
 or formatter are forbidden.
 
@@ -37,14 +37,18 @@ contract package and parser libraries. It must not depend on the CLI or execute
 inspected source.
 
 The current implementation covers bounded source discovery, feature contracts,
-handler linkage, file-role classification, and placement diagnostics. TypeScript
-and HTML extraction remain planned responsibilities, not implemented claims.
+handler linkage, file-role classification, placement diagnostics, and static
+HTML form extraction. TypeScript source facts remain planned responsibilities,
+not implemented claims.
 
-### `mensor` CLI
+### `@mensor/cli`
 
 Owns argument parsing, config selection, stdout and stderr behavior, exit
 status, and future atomic artifact writes. It delegates all checking behavior
 to the compiler and does not parse source directly.
+
+The current executable exposes only `mensor check [root] [--config <path>]
+[--json]` and maps compiler results to the documented `0/1/2/3` exit statuses.
 
 ### `internal/fixture-kit`
 

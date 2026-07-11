@@ -64,6 +64,14 @@ and TypeScript source facts remain later behavior.
   public API.
 - Database models and framework runtime objects are outside this product.
 
+## Current CLI Surface
+
+`@mensor/cli` exports `runCli(options)` for process-isolated testing and host
+embedding, plus the `mensor` executable. The library function receives argv,
+cwd, stdout, and stderr ports explicitly and returns an exit status without
+mutating global process state. The executable is the only module that writes to
+the real process streams and `process.exitCode`.
+
 ## Schema Ownership
 
 The package-local `packages/contract/spec` directory is the schema source of

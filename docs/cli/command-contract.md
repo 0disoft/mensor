@@ -1,6 +1,6 @@
 # Command Contract
 
-- Status: Proposed
+- Status: Active
 - Owner: Maintainer
 
 ## Runtime Target
@@ -54,6 +54,29 @@ The normative diagnostic fields and canonicalization rules live in
 Warnings alone do not produce exit status `1`. A failure before a report can be
 constructed still respects `--json` by emitting a documented machine-readable
 error envelope.
+
+The failure envelope is:
+
+```json
+{
+  "schemaVersion": 1,
+  "producer": {
+    "name": "mensor",
+    "version": "0.0.6"
+  },
+  "status": "error",
+  "failure": {
+    "kind": "configuration",
+    "code": "path.invalid",
+    "message": "configFile contains an empty, current-directory, or parent-directory segment.",
+    "file": "../outside.jsonc"
+  }
+}
+```
+
+`file` and `issues` are present only when the compiler failure owns those
+facts. JSON failures go to stdout with one LF and no stderr output. Human-mode
+setup failures go to stderr.
 
 ## Failure Separation
 

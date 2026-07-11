@@ -152,6 +152,9 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     corresponding HTML attributes with the declared route as a related location.
 12. A checkbox or `select[multiple]` bound to the scalar text decoder emits
     `form.control_codec_mismatch` at the incompatible control.
+13. `mensor check --json` writes one JSON document and one LF to stdout and
+    maps clean, diagnostic, configuration, and internal outcomes to exit codes
+    `0`, `1`, `2`, and `3` without stdout contamination.
 
 ## Deferred Decisions
 

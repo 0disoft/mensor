@@ -1,6 +1,6 @@
 {
   "name": "mensor-workspace",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.11.0",
@@ -12,12 +12,13 @@
     "lint": "node scripts/check-workspace-structure.mjs",
     "typecheck": "tsc6 -b --pretty false",
     "build": "tsc6 -b --pretty false",
-    "test": "pnpm run build && node --test packages/contract/test/*.test.mjs packages/compiler/test/*.test.mjs",
+    "test": "pnpm run build && node --test packages/contract/test/*.test.mjs packages/compiler/test/*.test.mjs packages/cli/test/*.test.mjs",
     "contract": "pnpm run build && node scripts/validate-contract-fixtures.mjs",
     "migration-check": "pnpm run build && node scripts/check-schema-revisions.mjs",
     "smoke": "pnpm run build && node scripts/smoke-contract.mjs",
     "docs": "node scripts/check-docs.mjs",
-    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run docs"
+    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run docs",
+    "mensor": "node packages/cli/dist/src/bin.js"
   },
   "devDependencies": {
     "@types/node": "22.20.1",
