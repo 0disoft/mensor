@@ -2,6 +2,8 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import * as path from "node:path";
 import { TextDecoder } from "node:util";
 
+import { parseDiagnosticReport, type DiagnosticReport } from "@mensor/contract";
+
 import type {
   AgentTrialAdapter,
   AgentTrialAdapterResult,
@@ -21,7 +23,7 @@ interface CommandInput {
   readonly schemaVersion: 1;
   readonly mutationId: AgentTrialContext["mutationId"];
   readonly baselineId: AgentTrialContext["baselineId"];
-  readonly diagnosticCodes: readonly string[];
+  readonly diagnosticReport: DiagnosticReport;
 }
 
 export function createCommandAgentAdapter(
@@ -87,11 +89,12 @@ async function runCommand(
   options: ValidatedOptions,
   context: AgentTrialContext,
 ): Promise<AgentTrialAdapterResult> {
+  const diagnosticReport = validateContextReport(context);
   const input: CommandInput = {
     schemaVersion: 1,
     mutationId: context.mutationId,
     baselineId: context.baselineId,
-    diagnosticCodes: context.diagnosticCodes,
+    diagnosticReport,
   };
   const inputText = `${JSON.stringify(input)}\n`;
   if (Buffer.byteLength(inputText, "utf8") > options.maxInputBytes) {
@@ -148,6 +151,21 @@ async function runCommand(
     throw new Error("Agent command exited unsuccessfully.");
   }
   return parseOutput(Buffer.concat(stdout));
+}
+
+function validateContextReport(context: AgentTrialContext): DiagnosticReport {
+  const parsed = parseDiagnosticReport(JSON.stringify(context.diagnosticReport));
+  if (!parsed.ok) {
+    throw new Error("Agent command diagnostic report does not satisfy its contract.");
+  }
+  const reportCodes = parsed.value.diagnostics.map((diagnostic) => diagnostic.code);
+  if (!sameStrings(reportCodes, context.diagnosticCodes)) {
+    throw new Error("Agent command diagnostic report does not match its diagnostic codes.");
+  }
+  if (parsed.value.status !== "failed" || parsed.value.diagnostics.length === 0) {
+    throw new Error("Agent command requires a failing diagnostic report.");
+  }
+  return parsed.value;
 }
 
 function parseOutput(bytes: Buffer): AgentTrialAdapterResult {
@@ -207,4 +225,8 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function sameStrings(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }

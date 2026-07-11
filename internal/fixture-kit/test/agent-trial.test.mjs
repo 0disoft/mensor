@@ -31,8 +31,14 @@ test("accepts a fake agent that restores final state", async () => {
       root,
       mutationId: "form-field-missing",
       protectedFiles,
-      adapter: async ({ diagnosticCodes }) => {
+      adapter: async ({ diagnosticCodes, diagnosticReport }) => {
         assert.deepEqual(diagnosticCodes, ["form.field_missing"]);
+        assert.equal(diagnosticReport.status, "failed");
+        assert.equal(diagnosticReport.diagnostics[0].facts.fieldName, "title");
+        assert.equal(
+          diagnosticReport.diagnostics[0].repair.strategy,
+          "add-missing-form-control",
+        );
         await restoreTitle(root);
         return { rounds: 1 };
       },

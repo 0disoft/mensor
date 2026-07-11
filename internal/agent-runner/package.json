@@ -1,6 +1,6 @@
 {
   "name": "@mensor/agent-runner",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -14,7 +14,8 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@mensor/fixture-kit": "workspace:*"
+    "@mensor/fixture-kit": "workspace:*",
+    "@mensor/contract": "workspace:*"
   },
   "devDependencies": {
     "ajv": "8.17.1"

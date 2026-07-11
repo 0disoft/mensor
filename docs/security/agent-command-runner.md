@@ -14,8 +14,10 @@ general process API.
 - The child working directory is the trial workspace.
 - No parent environment variable is inherited. Callers provide an explicit
   allowlist of safe names and values.
-- Input is one bounded protocol document on stdin containing only schema,
-  mutation, baseline, and diagnostic identifiers.
+- Input is one bounded protocol document on stdin containing schema, mutation
+  and baseline identifiers, plus the validated canonical diagnostic report.
+  It contains no source snippet, absolute path, environment value, prompt, or
+  transcript.
 - Combined stdout and stderr have a byte limit.
 - Execution has a bounded timeout.
 - Timeout and output overflow terminate the process group on POSIX and the
@@ -27,6 +29,12 @@ Successful stdout must be one UTF-8 JSON object containing exactly
 `schemaVersion` and `rounds`. Exit failures, stderr, malformed output, timeout,
 and overflow become generic adapter errors. Raw output is never copied into an
 agent trial result.
+
+`internal/agent-runner/spec/agent-command-input-v1.schema.json` and
+`agent-command-output-v1.schema.json` define the wire shapes. Before spawning,
+the runner requires a failing non-empty report and verifies that its diagnostic
+codes match the provider-neutral trial context. Malformed, passing, mismatched,
+or oversized reports fail closed.
 
 ## Evidence Boundary
 

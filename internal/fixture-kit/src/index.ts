@@ -12,6 +12,7 @@ export {
   applyMutation,
   createMutationBenchmarkReport,
   mutationCatalog,
+  runMutationCheck,
   runMutationCase,
 } from "./mutations.js";
 export {
@@ -37,6 +38,7 @@ export type {
   MutationBaselineId,
   MutationBenchmarkCase,
   MutationBenchmarkReport,
+  MutationCheckResult,
   MutationDefinition,
   MutationFileChange,
   MutationId,

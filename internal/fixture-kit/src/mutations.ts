@@ -3,6 +3,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 
 import { checkProject } from "@mensor/compiler";
+import type { DiagnosticReport } from "@mensor/contract";
 
 export type MutationId =
   | "browser-direct-server-import"
@@ -54,6 +55,11 @@ export interface MutationBenchmarkReport {
     readonly detectionPassedCount: number;
     readonly detectionFailedCount: number;
   };
+}
+
+export interface MutationCheckResult {
+  readonly benchmarkCase: MutationBenchmarkCase;
+  readonly diagnosticReport: DiagnosticReport | null;
 }
 
 const template = "src/features/tasks/views/index.html";
@@ -134,6 +140,13 @@ export async function runMutationCase(
   root: string,
   mutationId: MutationId,
 ): Promise<MutationBenchmarkCase> {
+  return (await runMutationCheck(root, mutationId)).benchmarkCase;
+}
+
+export async function runMutationCheck(
+  root: string,
+  mutationId: MutationId,
+): Promise<MutationCheckResult> {
   const application = await applyMutation(root, mutationId);
   const result = await checkProject({
     root,
@@ -143,12 +156,15 @@ export async function runMutationCase(
     ? result.report.diagnostics.map((diagnostic) => diagnostic.code)
     : [result.failure.code];
   return {
-    ...application,
-    actualDiagnosticCodes,
-    detectionPassed: sameStrings(
-      application.expectedDiagnosticCodes,
+    benchmarkCase: {
+      ...application,
       actualDiagnosticCodes,
-    ),
+      detectionPassed: sameStrings(
+        application.expectedDiagnosticCodes,
+        actualDiagnosticCodes,
+      ),
+    },
+    diagnosticReport: result.ok ? result.report : null,
   };
 }
 

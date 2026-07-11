@@ -17,6 +17,9 @@ importers:
 
   internal/agent-runner:
     dependencies:
+      '@mensor/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
       '@mensor/fixture-kit':
         specifier: workspace:*
         version: link:../fixture-kit
@@ -30,6 +33,9 @@ importers:
       '@mensor/compiler':
         specifier: workspace:*
         version: link:../../packages/compiler
+      '@mensor/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
 
   packages/cli:
     dependencies:

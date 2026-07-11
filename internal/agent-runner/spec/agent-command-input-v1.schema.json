@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-command-input-v1.schema.json",
+  "title": "Mensor Agent Command Input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mutationId", "baselineId", "diagnosticReport"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "mutationId": {
+      "enum": [
+        "browser-direct-server-import",
+        "browser-dynamic-import",
+        "browser-transitive-server-import",
+        "form-action-mismatch",
+        "form-control-codec-mismatch",
+        "form-field-missing",
+        "form-field-unexpected",
+        "form-method-mismatch",
+        "handler-export-missing",
+        "ownership-i18n-outside-feature",
+        "ownership-test-outside-slot",
+        "route-direct-database-import"
+      ]
+    },
+    "baselineId": {
+      "enum": ["layered-tasks", "tiny-tasks"]
+    },
+    "diagnosticReport": {
+      "$ref": "diagnostic-report-v1.schema.json"
+    }
+  }
+}

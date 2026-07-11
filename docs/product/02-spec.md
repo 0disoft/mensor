@@ -174,6 +174,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     `module.dynamic_import_unsupported` instead of reducing graph coverage.
 18. Test and i18n suffix rules emit `file.ownership_mismatch` for both a wrong
     feature slot and a file outside every declared feature.
+19. An agent repair command receives the validated failing diagnostic report,
+    including facts and repair constraints, through bounded stdin. Report/code
+    drift, passing reports, malformed reports, and oversized input fail before
+    command execution.
 
 ## Deferred Decisions
 

@@ -52,8 +52,14 @@ if (cli.dependencies?.["@mensor/compiler"] !== "workspace:*") {
 if (fixtureKit.dependencies?.["@mensor/compiler"] !== "workspace:*") {
   failures.push("@mensor/fixture-kit must use the public workspace compiler package.");
 }
+if (fixtureKit.dependencies?.["@mensor/contract"] !== "workspace:*") {
+  failures.push("@mensor/fixture-kit must declare its direct diagnostic contract dependency.");
+}
 if (agentRunner.dependencies?.["@mensor/fixture-kit"] !== "workspace:*") {
   failures.push("@mensor/agent-runner must use the private workspace fixture kit.");
+}
+if (agentRunner.dependencies?.["@mensor/contract"] !== "workspace:*") {
+  failures.push("@mensor/agent-runner must declare its direct diagnostic validator dependency.");
 }
 if (agentRunner.exports?.["."]?.import !== "./dist/src/index.js") {
   failures.push("@mensor/agent-runner must expose only its built root entrypoint.");

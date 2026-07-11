@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import {
   createAgentTrialReport,
+  mutationCatalog,
   parseAgentTrialReport,
   runAgentTrial,
 } from "@mensor/fixture-kit";
@@ -31,6 +32,14 @@ const protectedFiles = [
   "mensor.project.jsonc",
   "src/features/tasks/feature.mensor.jsonc",
 ];
+const diagnosticReport = JSON.parse(await readFile(new URL(
+  "../../../fixtures/invalid/form-field-missing/expected-report.json",
+  import.meta.url,
+), "utf8"));
+const passingReport = JSON.parse(await readFile(new URL(
+  "../../../fixtures/valid/tiny-tasks/expected-report.json",
+  import.meta.url,
+), "utf8"));
 
 test("repairs a mutation through the bounded command protocol", async () => {
   await withFixture(async (root) => {
@@ -52,7 +61,7 @@ test("repairs a mutation through the bounded command protocol", async () => {
 test("passes only explicitly allowlisted environment values", async () => {
   await withFixture(async (root) => {
     const previous = process.env["FORBIDDEN"];
-    process.env["FORBIDDEN"] = "parent-secret";
+    process.env["FORBIDDEN"] = "ambient-value";
     try {
       const command = createCommandAgentAdapter({
         executable: process.execPath,
@@ -263,6 +272,43 @@ test("keeps execution schema identifiers and references stable", async () => {
   assert.equal(validateEvidence(evidence), true, JSON.stringify(validateEvidence.errors));
 });
 
+test("keeps the command protocol schemas aligned with diagnostic input", async () => {
+  const inputSchema = JSON.parse(await readFile(new URL(
+    "../spec/agent-command-input-v1.schema.json",
+    import.meta.url,
+  ), "utf8"));
+  const outputSchema = JSON.parse(await readFile(new URL(
+    "../spec/agent-command-output-v1.schema.json",
+    import.meta.url,
+  ), "utf8"));
+  const diagnosticSchema = JSON.parse(await readFile(new URL(
+    "../../../packages/contract/spec/diagnostic-report-v1.schema.json",
+    import.meta.url,
+  ), "utf8"));
+  const ajv = new Ajv2020({ strict: true });
+  ajv.addSchema(diagnosticSchema);
+  const validateInput = ajv.compile(inputSchema);
+  const validateOutput = ajv.compile(outputSchema);
+
+  assert.equal(inputSchema.$id, "agent-command-input-v1.schema.json");
+  assert.equal(outputSchema.$id, "agent-command-output-v1.schema.json");
+  assert.deepEqual(
+    inputSchema.properties.mutationId.enum,
+    mutationCatalog.map((definition) => definition.id),
+  );
+  assert.equal(validateInput({
+    schemaVersion: 1,
+    mutationId: "form-field-missing",
+    baselineId: "tiny-tasks",
+    diagnosticReport,
+  }), true, JSON.stringify(validateInput.errors));
+  assert.equal(
+    validateOutput({ schemaVersion: 1, rounds: 1 }),
+    true,
+    JSON.stringify(validateOutput.errors),
+  );
+});
+
 test("rejects relative executables before process creation", () => {
   assert.throws(
     () =>
@@ -292,13 +338,33 @@ test("rejects oversized protocol input before running the command", async () => 
   await withFixture(async (root) => {
     const command = createCommandAgentAdapter({
       executable: process.execPath,
-      args: [fakeAgent, "repair"],
+      args: [fakeAgent, "sentinel"],
       timeoutMs: 5_000,
       maxInputBytes: 1,
       maxOutputBytes: 4_096,
       environment: {},
     });
     await assert.rejects(command(context(root)), /input limit/);
+    await assertFileMissing(path.join(root, "agent-started.marker"));
+  });
+});
+
+test("rejects diagnostic report drift before process creation", async () => {
+  await withFixture(async (root) => {
+    const command = adapter("sentinel");
+    await assert.rejects(
+      command({ ...context(root), diagnosticCodes: ["form.field_unexpected"] }),
+      /does not match its diagnostic codes/,
+    );
+    await assert.rejects(
+      command({ ...context(root), diagnosticReport: passingReport, diagnosticCodes: [] }),
+      /requires a failing diagnostic report/,
+    );
+    await assert.rejects(
+      command({ ...context(root), diagnosticReport: { ...diagnosticReport, timestamp: "invalid" } }),
+      /does not satisfy its contract/,
+    );
+    await assertFileMissing(path.join(root, "agent-started.marker"));
   });
 });
 
@@ -313,7 +379,7 @@ test("trial results do not expose command stderr", async () => {
       semanticCheck: () => semanticFeaturePresent(root),
     });
     assert.equal(result.failureCategory, "agent-error");
-    assert.equal(JSON.stringify(result).includes("private provider failure details"), false);
+    assert.equal(JSON.stringify(result).includes("provider command failure details"), false);
   });
 });
 
@@ -376,6 +442,7 @@ function context(root) {
     mutationId: "form-field-missing",
     baselineId: "tiny-tasks",
     diagnosticCodes: ["form.field_missing"],
+    diagnosticReport,
   };
 }
 
@@ -399,4 +466,8 @@ async function withFixture(callback) {
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+}
+
+async function assertFileMissing(file) {
+  await assert.rejects(readFile(file), (error) => error?.code === "ENOENT");
 }

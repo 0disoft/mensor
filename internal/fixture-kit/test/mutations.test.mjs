@@ -5,11 +5,11 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { checkProject } from "@mensor/compiler";
 import {
   applyMutation,
   createMutationBenchmarkReport,
   mutationCatalog,
+  runMutationCheck,
   runMutationCase,
 } from "../dist/src/index.js";
 
@@ -20,20 +20,15 @@ const fixtureRoot = fileURLToPath(
 test("each mutation produces its one declared diagnostic", async () => {
   for (const mutation of mutationCatalog) {
     await withFixture(mutation.baselineId, async (root) => {
-      const application = await applyMutation(root, mutation.id);
-      const result = await checkProject({
-        root,
-        producerVersion: "0.0.0-mutation",
-      });
+      const checked = await runMutationCheck(root, mutation.id);
+      const application = checked.benchmarkCase;
 
-      assert.equal(result.ok, true, mutation.id);
-      if (result.ok) {
-        assert.deepEqual(
-          result.report.diagnostics.map((diagnostic) => diagnostic.code),
-          mutation.expectedDiagnosticCodes,
-          mutation.id,
-        );
-      }
+      assert.notEqual(checked.diagnosticReport, null, mutation.id);
+      assert.deepEqual(
+        checked.diagnosticReport?.diagnostics.map((diagnostic) => diagnostic.code),
+        mutation.expectedDiagnosticCodes,
+        mutation.id,
+      );
       assert.deepEqual(application.expectedDiagnosticCodes, mutation.expectedDiagnosticCodes);
       assert.deepEqual(
         application.changes.map((change) => change.file),

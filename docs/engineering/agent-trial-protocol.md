@@ -15,6 +15,11 @@ records the initial diagnostics, invokes the adapter, reruns the compiler,
 executes an application-owned semantic oracle, and compares workspace digests
 before and after the repair attempt.
 
+The adapter context retains the complete compiler-owned diagnostic report.
+Command adapters receive its file, range, facts, related locations, repair
+strategy, and preservation constraints through bounded stdin. A diagnostic
+code list alone is not considered repair evidence.
+
 ## Result Contract
 
 Each serializable result contains:

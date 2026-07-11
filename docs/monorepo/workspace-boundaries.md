@@ -58,7 +58,8 @@ The current executable exposes only `mensor check [root] [--config <path>]
 
 Owns fixture execution, canonical snapshots, randomized discovery tests,
 security sentinels, the agent-trial report schema and canonical serializer,
-and repair evaluation helpers. It may depend on public
+mutation checks that retain compiler diagnostic reports, and repair evaluation
+helpers. It may depend on public
 packages but is private and never appears in a published dependency graph.
 
 The current repair evaluator captures hashes for explicitly protected contract
@@ -73,7 +74,8 @@ prompts, and transcripts remain outside this package.
 ### `internal/agent-runner`
 
 Owns bounded external command execution for trial adapters. It depends on the
-fixture kit's provider-neutral types. It must remain private and must not become
+fixture kit's provider-neutral types and the contract package's diagnostic
+validator. It must remain private and must not become
 a dependency of the compiler, CLI, or published packages.
 
 It also owns canonical execution descriptors and trial-evidence envelopes.

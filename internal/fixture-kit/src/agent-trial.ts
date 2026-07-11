@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import * as path from "node:path";
+import type { DiagnosticReport } from "@mensor/contract";
 
 import {
   captureRepairBaseline,
@@ -8,7 +9,7 @@ import {
 } from "./repair-evaluation.js";
 import {
   mutationCatalog,
-  runMutationCase,
+  runMutationCheck,
   type MutationBaselineId,
   type MutationFileChange,
   type MutationId,
@@ -19,6 +20,7 @@ export interface AgentTrialContext {
   readonly mutationId: MutationId;
   readonly baselineId: MutationBaselineId;
   readonly diagnosticCodes: readonly string[];
+  readonly diagnosticReport: DiagnosticReport;
 }
 
 export interface AgentTrialAdapterResult {
@@ -100,18 +102,23 @@ export async function runAgentTrial(
     root: options.root,
     protectedFiles: options.protectedFiles,
   });
-  const mutation = await runMutationCase(options.root, options.mutationId);
+  const checkedMutation = await runMutationCheck(options.root, options.mutationId);
+  const mutation = checkedMutation.benchmarkCase;
   const mutatedSnapshot = await snapshotWorkspace(options.root);
 
   let adapterCompleted = false;
   let rounds = 0;
   if (mutation.detectionPassed) {
+    if (checkedMutation.diagnosticReport === null) {
+      throw new Error("A detected mutation must have a diagnostic report.");
+    }
     try {
       const adapterResult = await options.adapter({
         root: options.root,
         mutationId: mutation.mutationId,
         baselineId: mutation.baselineId,
         diagnosticCodes: mutation.actualDiagnosticCodes,
+        diagnosticReport: checkedMutation.diagnosticReport,
       });
       assertRounds(adapterResult.rounds);
       rounds = adapterResult.rounds;

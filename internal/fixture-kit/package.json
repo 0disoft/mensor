@@ -1,6 +1,6 @@
 {
   "name": "@mensor/fixture-kit",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -14,6 +14,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@mensor/compiler": "workspace:*"
+    "@mensor/compiler": "workspace:*",
+    "@mensor/contract": "workspace:*"
   }
 }

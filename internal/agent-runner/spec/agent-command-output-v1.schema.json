@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-command-output-v1.schema.json",
+  "title": "Mensor Agent Command Output v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "rounds"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "rounds": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}
