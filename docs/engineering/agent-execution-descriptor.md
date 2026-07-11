@@ -33,6 +33,12 @@ The current runner records `process-only` isolation and `not-enforced` network
 control. This evidence can exercise the protocol but cannot support a claim
 that provider traffic or filesystem access was sandboxed.
 
+`runCommandAgentTrial` is the authoritative constructor for command-backed
+evidence. It validates the command adapter and descriptor from the same options
+before applying a mutation, runs the trial, creates its report, and binds the
+result to the descriptor. Independently combining low-level adapter and
+descriptor constructors is not accepted as execution evidence.
+
 ## Comparison Rule
 
 Do not merge reports with different execution fingerprints. A model, prompt,

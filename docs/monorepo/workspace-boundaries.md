@@ -81,6 +81,8 @@ a dependency of the compiler, CLI, or published packages.
 It also owns canonical execution descriptors and trial-evidence envelopes.
 Those artifacts identify comparable evaluation cohorts without moving command
 paths, environment values, prompts, transcripts, or credentials into reports.
+The high-level command-trial entrypoint constructs process behavior and evidence
+from one options object before any fixture mutation occurs.
 
 ## Dependency Rules
 

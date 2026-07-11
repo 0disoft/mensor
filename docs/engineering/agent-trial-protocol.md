@@ -72,3 +72,8 @@ Repeated evidence is aggregated through the runner-owned cohort merger rather
 than by concatenating report JSON. The merger rejects execution, producer, and
 trial-identity drift before recomputing any-trial, all-trials, and failure
 metrics from the combined final-state records.
+
+For command-backed trials, `runCommandAgentTrial` owns the complete
+configuration-to-evidence path. Adapter and descriptor validation completes
+before mutation, so invalid process configuration cannot leave a mutated trial
+that looks like an attempted repair.

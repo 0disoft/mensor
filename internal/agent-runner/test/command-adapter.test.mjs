@@ -20,6 +20,7 @@ import {
   mergeAgentTrialEvidence,
   parseAgentExecutionDescriptor,
   parseAgentTrialEvidence,
+  runCommandAgentTrial,
   serializeAgentExecutionDescriptor,
   serializeAgentTrialEvidence,
 } from "../dist/src/index.js";
@@ -43,18 +44,68 @@ const passingReport = JSON.parse(await readFile(new URL(
 
 test("repairs a mutation through the bounded command protocol", async () => {
   await withFixture(async (root) => {
-    const result = await runAgentTrial({
-      trialId: "command-success-1",
-      root,
-      mutationId: "form-field-missing",
-      protectedFiles,
-      adapter: adapter("repair"),
-      semanticCheck: () => semanticFeaturePresent(root),
+    const evidence = await runCommandAgentTrial({
+      execution: metadata(),
+      command: commandOptions(),
+      producerVersion: "0.0.0-test",
+      trial: {
+        trialId: "command-success-1",
+        root,
+        mutationId: "form-field-missing",
+        protectedFiles,
+        semanticCheck: () => semanticFeaturePresent(root),
+      },
     });
+    const result = evidence.report.trials[0];
 
-    assert.equal(result.repaired, true);
-    assert.equal(result.adapterCompleted, true);
-    assert.equal(result.rounds, 1);
+    assert.equal(result?.repaired, true);
+    assert.equal(result?.adapterCompleted, true);
+    assert.equal(result?.rounds, 1);
+    assert.equal(
+      evidence.executionFingerprint,
+      executionFingerprint(evidence.execution),
+    );
+    assert.deepEqual(evidence.execution.limits, {
+      timeoutMs: commandOptions().timeoutMs,
+      maxInputBytes: commandOptions().maxInputBytes,
+      maxOutputBytes: commandOptions().maxOutputBytes,
+    });
+  });
+});
+
+test("validates command evidence configuration before mutating the trial", async () => {
+  await withFixture(async (root) => {
+    await assert.rejects(
+      runCommandAgentTrial({
+        execution: metadata(),
+        command: { ...commandOptions(), executable: "node" },
+        producerVersion: "0.0.0-test",
+        trial: {
+          trialId: "command-preflight-1",
+          root,
+          mutationId: "form-field-missing",
+          protectedFiles,
+          semanticCheck: () => semanticFeaturePresent(root),
+        },
+      }),
+      /absolute path/,
+    );
+    await assert.rejects(
+      runCommandAgentTrial({
+        execution: metadata(),
+        command: commandOptions(),
+        producerVersion: "invalid producer version",
+        trial: {
+          trialId: "command-preflight-2",
+          root,
+          mutationId: "form-field-missing",
+          protectedFiles,
+          semanticCheck: () => semanticFeaturePresent(root),
+        },
+      }),
+      /producerVersion must use only/,
+    );
+    assert.equal(await semanticFeaturePresent(root), true);
   });
 });
 

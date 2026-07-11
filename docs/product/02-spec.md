@@ -178,6 +178,9 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     including facts and repair constraints, through bounded stdin. Report/code
     drift, passing reports, malformed reports, and oversized input fail before
     command execution.
+20. Authoritative command-trial evidence derives the adapter, execution
+    descriptor, report, and fingerprint from one command configuration. Invalid
+    execution configuration fails before mutation.
 
 ## Deferred Decisions
 
