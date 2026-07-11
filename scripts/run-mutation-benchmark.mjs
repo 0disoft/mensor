@@ -10,18 +10,21 @@ import {
 } from "../internal/fixture-kit/dist/src/index.js";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
-const sourceFixture = path.join(repositoryRoot, "fixtures", "valid", "tiny-tasks");
 const cases = [];
 
 for (const mutation of mutationCatalog) {
   const root = await mkdtemp(path.join(tmpdir(), "mensor-mutation-benchmark-"));
   try {
-    await cp(sourceFixture, root, { recursive: true });
+    await cp(
+      path.join(repositoryRoot, "fixtures", "valid", mutation.baselineId),
+      root,
+      { recursive: true },
+    );
     cases.push(await runMutationCase(root, mutation.id));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 }
 
-const report = createMutationBenchmarkReport(cases, "0.0.12");
+const report = createMutationBenchmarkReport(cases, "0.0.13");
 process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

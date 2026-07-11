@@ -5,6 +5,7 @@ import { parseJsonc } from "../packages/contract/dist/src/index.js";
 const schemaRoot = new URL("../packages/contract/spec/", import.meta.url);
 const fixtures = [
   "../fixtures/valid/tiny-tasks/mensor.project.jsonc",
+  "../fixtures/valid/layered-tasks/mensor.project.jsonc",
   "../fixtures/invalid/form-field-missing/mensor.project.jsonc",
   "../fixtures/invalid/form-field-unexpected/mensor.project.jsonc",
   "../fixtures/invalid/form-method-mismatch/mensor.project.jsonc",
@@ -19,6 +20,7 @@ const fixtures = [
   "../fixtures/invalid/ownership-i18n-unowned/mensor.project.jsonc",
   "../fixtures/invalid/file-role-mismatch/mensor.project.jsonc",
   "../fixtures/valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
+  "../fixtures/valid/layered-tasks/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/form-field-missing/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/form-field-unexpected/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/form-method-mismatch/src/features/tasks/feature.mensor.jsonc",
@@ -33,6 +35,7 @@ const fixtures = [
   "../fixtures/invalid/ownership-i18n-unowned/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/file-role-mismatch/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/valid/tiny-tasks/expected-report.json",
+  "../fixtures/valid/layered-tasks/expected-report.json",
   "../fixtures/invalid/form-field-missing/expected-report.json",
   "../fixtures/invalid/form-field-unexpected/expected-report.json",
   "../fixtures/invalid/form-method-mismatch/expected-report.json",

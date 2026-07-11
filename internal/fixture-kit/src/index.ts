@@ -16,6 +16,7 @@ export {
 } from "./mutations.js";
 export type {
   MutationApplication,
+  MutationBaselineId,
   MutationBenchmarkCase,
   MutationBenchmarkReport,
   MutationDefinition,

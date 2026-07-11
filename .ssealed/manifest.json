@@ -1,7 +1,7 @@
 {
   "tool": "ssealed",
   "version": "0.6.11",
-  "generatedAt": "2026-07-11T07:11:33.691Z",
+  "generatedAt": "2026-07-11T07:24:28.267Z",
   "scope": "general",
   "profile": "monorepo",
   "addons": [
@@ -222,13 +222,13 @@
     },
     {
       "path": "docs/cli/command-contract.md",
-      "checksum": "sha256:9b8d5f2d72f99f0e924d227cdf2fd9a8d370564cc4fbdb3bc253a47ed393333d",
+      "checksum": "sha256:8d69c06a606c0d1fa5e326728d4f2561cac18aeef0ad8d32f36df821d1af9c18",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:27c3b100ca1684d15c735acbfeafa98f00c1efc64d164fa961074a1b5ffc4a74",
-      "acceptedChecksum": "sha256:9b8d5f2d72f99f0e924d227cdf2fd9a8d370564cc4fbdb3bc253a47ed393333d",
+      "acceptedChecksum": "sha256:8d69c06a606c0d1fa5e326728d4f2561cac18aeef0ad8d32f36df821d1af9c18",
       "generatedChecksum": "sha256:27c3b100ca1684d15c735acbfeafa98f00c1efc64d164fa961074a1b5ffc4a74"
     },
     {
@@ -343,13 +343,13 @@
     },
     {
       "path": "package.json",
-      "checksum": "sha256:04f4cc57dedf268a37a5ede57b0656e52ea1d308a8dfbf7f8c03e954f1ee336c",
+      "checksum": "sha256:267b8da93c3995849fc3deb75844439687e342270bbb1d9af4071f109adcde54",
       "kind": "runner",
       "ownership": "project-owned",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:44087c2e1c46f097ef3938a430169b92bf73ebc6dffa11c0ce0b4717e710d6b5",
-      "acceptedChecksum": "sha256:04f4cc57dedf268a37a5ede57b0656e52ea1d308a8dfbf7f8c03e954f1ee336c",
+      "acceptedChecksum": "sha256:267b8da93c3995849fc3deb75844439687e342270bbb1d9af4071f109adcde54",
       "generatedChecksum": "sha256:44087c2e1c46f097ef3938a430169b92bf73ebc6dffa11c0ce0b4717e710d6b5"
     },
     {

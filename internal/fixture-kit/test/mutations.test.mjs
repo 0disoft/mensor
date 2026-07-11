@@ -13,13 +13,13 @@ import {
   runMutationCase,
 } from "../dist/src/index.js";
 
-const fixture = fileURLToPath(
-  new URL("../../../fixtures/valid/tiny-tasks/", import.meta.url),
+const fixtureRoot = fileURLToPath(
+  new URL("../../../fixtures/valid/", import.meta.url),
 );
 
 test("each mutation produces its one declared diagnostic", async () => {
   for (const mutation of mutationCatalog) {
-    await withFixture(async (root) => {
+    await withFixture(mutation.baselineId, async (root) => {
       const application = await applyMutation(root, mutation.id);
       const result = await checkProject({
         root,
@@ -50,7 +50,10 @@ test("each mutation produces its one declared diagnostic", async () => {
 
 test("mutation applications are byte-identical across absolute roots", async () => {
   for (const mutation of mutationCatalog) {
-    const roots = await Promise.all([copyFixture(), copyFixture()]);
+    const roots = await Promise.all([
+      copyFixture(mutation.baselineId),
+      copyFixture(mutation.baselineId),
+    ]);
     try {
       const applications = await Promise.all(
         roots.map((root) => applyMutation(root, mutation.id)),
@@ -73,7 +76,7 @@ test("builds a deterministic serializable benchmark report", async () => {
   for (let run = 0; run < 2; run += 1) {
     const cases = [];
     for (const mutation of [...mutationCatalog].reverse()) {
-      await withFixture(async (root) => {
+      await withFixture(mutation.baselineId, async (root) => {
         cases.push(await runMutationCase(root, mutation.id));
       });
     }
@@ -85,8 +88,8 @@ test("builds a deterministic serializable benchmark report", async () => {
     `${JSON.stringify(reports[1], null, 2)}\n`,
   );
   assert.deepEqual(reports[0].summary, {
-    caseCount: 6,
-    detectionPassedCount: 6,
+    caseCount: 12,
+    detectionPassedCount: 12,
     detectionFailedCount: 0,
   });
   assert.deepEqual(
@@ -95,14 +98,14 @@ test("builds a deterministic serializable benchmark report", async () => {
   );
 });
 
-async function copyFixture() {
+async function copyFixture(baselineId) {
   const root = await mkdtemp(path.join(tmpdir(), "mensor-mutation-"));
-  await cp(fixture, root, { recursive: true });
+  await cp(path.join(fixtureRoot, baselineId), root, { recursive: true });
   return root;
 }
 
-async function withFixture(callback) {
-  const root = await copyFixture();
+async function withFixture(baselineId, callback) {
+  const root = await copyFixture(baselineId);
   try {
     await callback(root);
   } finally {

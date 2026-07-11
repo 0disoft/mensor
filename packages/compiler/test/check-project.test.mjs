@@ -17,6 +17,14 @@ test("returns the canonical passing report for the valid fixture", async () => {
   }
 });
 
+test("returns the canonical passing report for the layered valid fixture", async () => {
+  const result = await checkFixture("valid/layered-tasks");
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport("valid/layered-tasks"));
+  }
+});
+
 test("reports a stable handler placement diagnostic without executing source", async () => {
   const fixture = "invalid/file-role-mismatch";
   const sentinel = path.join(

@@ -1,6 +1,6 @@
 {
   "name": "@mensor/cli",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": true,
   "type": "module",
   "sideEffects": false,

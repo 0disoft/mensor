@@ -8,6 +8,7 @@ import {
 
 const fixtures = [
   "valid/tiny-tasks",
+  "valid/layered-tasks",
   "invalid/file-role-mismatch",
   "invalid/form-field-missing",
   "invalid/form-field-unexpected",

@@ -25,7 +25,7 @@ observable evidence.
 
 ## Consequences
 
-- A `6/6` mutation report means six defects were detected exactly, not repaired.
+- A `12/12` mutation report means twelve defects were detected exactly, not repaired.
 - Agent models, prompts, tools, and trial counts can change without changing the
   deterministic golden corpus.
 - Dirty cases from real failures are quarantined until they become stable enough

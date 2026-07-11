@@ -17,20 +17,27 @@ prompt, or transcript.
 
 ## Current Golden Corpus
 
-The first corpus contains six deterministic mutations derived from
-`fixtures/valid/tiny-tasks`:
+The golden corpus contains twelve deterministic mutations derived from two
+valid baselines. `tiny-tasks` owns form and handler mutations. `layered-tasks`
+owns browser, shared, route, database, test, and i18n boundary mutations:
 
 - form action mismatch;
 - form control and codec mismatch;
 - missing form field;
 - unexpected form field;
-- form method mismatch; and
-- missing handler export.
+- form method mismatch;
+- missing handler export;
+- direct and transitive browser-to-server imports;
+- a computed browser dynamic import;
+- a direct route-to-database import;
+- a test moved outside its owned slot; and
+- an i18n file moved outside every feature.
 
-Every mutation must produce exactly its declared diagnostic set and must be
-byte-identical when applied under different absolute roots. Golden cases gate
-regressions and must remain deterministic. Real agent failures belong in a
-separate dirty corpus until reviewed and stabilized.
+Every mutation identifies its baseline, must produce exactly its declared
+diagnostic set, and must be byte-identical when applied under different
+absolute roots. Golden cases gate regressions and must remain deterministic.
+Real agent failures belong in a separate dirty corpus until reviewed and
+stabilized.
 
 ## Metric Boundary
 

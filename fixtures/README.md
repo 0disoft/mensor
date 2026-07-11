@@ -6,6 +6,8 @@ files, and canonical expected report needed for one behavior.
 
 - `valid/tiny-tasks`: one valid form-backed action with a host-consumed `_csrf`
   field declared through `ignoredFields`
+- `valid/layered-tasks`: one valid action plus browser, shared, route, server,
+  database, test, and i18n files under enforced boundary and ownership rules
 - `invalid/file-role-mismatch`: an action handler discovered in the route slot
   while its contract requires the server role
 - `invalid/form-field-missing`: the same action with its required `title`
