@@ -1,6 +1,6 @@
 {
   "name": "mensor-workspace",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.11.0",
@@ -16,8 +16,9 @@
     "contract": "pnpm run build && node scripts/validate-contract-fixtures.mjs",
     "migration-check": "pnpm run build && node scripts/check-schema-revisions.mjs",
     "smoke": "pnpm run build && node scripts/smoke-contract.mjs",
+    "package-smoke": "pnpm run build && node scripts/smoke-package-consumer.mjs",
     "docs": "node scripts/check-docs.mjs",
-    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run docs",
+    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run package-smoke && pnpm run docs",
     "mensor": "node packages/cli/dist/src/bin.js"
   },
   "devDependencies": {

@@ -15,6 +15,7 @@ This document owns stable validation names for this scaffold.
 - contract
 - migration-check
 - smoke
+- package-smoke
 - docs
 - check
 
@@ -31,6 +32,10 @@ Unconfigured runner commands must fail, not pass with a fake success.
 The root `package.json` currently configures every standard validation name.
 `pnpm run check` is the aggregate local gate. Individual names remain runnable
 for narrower evidence.
+
+`package-smoke` builds and packs the contract, compiler, and CLI packages,
+installs those tarballs into an isolated offline consumer, and verifies the
+installed CLI against both a valid and an invalid fixture.
 
 ## Hygiene Validation
 
