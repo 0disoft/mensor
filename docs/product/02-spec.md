@@ -177,6 +177,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 
 ## Deferred Decisions
 
+- Agent repair-rate claims: add only after repeated trials record final state,
+  protected-contract integrity, semantic tests, and trajectory evidence. The
+  current mutation benchmark measures detection only.
+
 - Runtime manifest and reference runtime: add only if a real consumer needs a
   compiled artifact beyond diagnostics.
 - Dynamic template adapters: design only after the static HTML fact model is

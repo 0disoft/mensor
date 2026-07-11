@@ -8,3 +8,17 @@ export type {
   RepairBaseline,
   RepairEvaluation,
 } from "./repair-evaluation.js";
+export {
+  applyMutation,
+  createMutationBenchmarkReport,
+  mutationCatalog,
+  runMutationCase,
+} from "./mutations.js";
+export type {
+  MutationApplication,
+  MutationBenchmarkCase,
+  MutationBenchmarkReport,
+  MutationDefinition,
+  MutationFileChange,
+  MutationId,
+} from "./mutations.js";

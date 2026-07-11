@@ -16,6 +16,7 @@ This document owns stable validation names for this scaffold.
 - migration-check
 - smoke
 - package-smoke
+- benchmark
 - docs
 - check
 
@@ -37,6 +38,9 @@ for narrower evidence.
 forces those local tarballs into an isolated consumer while allowing normal
 resolution of public third-party dependencies, and verifies the installed CLI
 against both a valid and an invalid fixture.
+
+`benchmark` emits the deterministic mutation-detection report. It does not run
+an agent and must not be reported as repair-rate evidence.
 
 ## Hygiene Validation
 
