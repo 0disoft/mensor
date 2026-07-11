@@ -121,6 +121,73 @@ test("records adapter failure without exposing its error text", async () => {
   });
 });
 
+test("preserves higher-risk final-state evidence when an adapter throws", async () => {
+  await withFixture(async (root) => {
+    const result = await runAgentTrial({
+      trialId: "throw-after-contract-weakening-1",
+      root,
+      mutationId: "form-field-missing",
+      protectedFiles,
+      adapter: async () => {
+        const file = path.join(root, ...protectedFiles[1].split("/"));
+        const contract = JSON.parse(await readFile(file, "utf8"));
+        contract.actions[0].input.schema.required = [];
+        await writeFile(file, `${JSON.stringify(contract, null, 2)}\n`, "utf8");
+        throw new Error("provider failed after mutating the contract");
+      },
+      semanticCheck: () => semanticFeaturePresent(root),
+    });
+
+    assert.equal(result.adapterCompleted, false);
+    assert.equal(result.failureCategory, "contract-weakened");
+    assert.deepEqual(result.protectedFilesChanged, [protectedFiles[1]]);
+    assert.equal(JSON.stringify(result).includes("provider failed"), false);
+  });
+
+  await withFixture(async (root) => {
+    const result = await runAgentTrial({
+      trialId: "throw-after-semantic-regression-1",
+      root,
+      mutationId: "form-field-missing",
+      protectedFiles,
+      adapter: async () => {
+        await restoreTitle(root);
+        await writeFile(
+          path.join(root, ...handler.split("/")),
+          "export function createTask(): void {}\n",
+          "utf8",
+        );
+        throw new Error("provider failed after deleting semantics");
+      },
+      semanticCheck: () => semanticFeaturePresent(root),
+    });
+
+    assert.equal(result.adapterCompleted, false);
+    assert.equal(result.failureCategory, "semantic-regression");
+    assert.deepEqual(result.protectedFilesChanged, []);
+    assert.equal(JSON.stringify(result).includes("provider failed"), false);
+  });
+
+  await withFixture(async (root) => {
+    const result = await runAgentTrial({
+      trialId: "throw-after-unrelated-write-1",
+      root,
+      mutationId: "form-field-missing",
+      protectedFiles,
+      adapter: async () => {
+        await writeFile(path.join(root, "agent-note.txt"), "partial work\n", "utf8");
+        throw new Error("provider failed after an unrelated write");
+      },
+      semanticCheck: () => semanticFeaturePresent(root),
+    });
+
+    assert.equal(result.adapterCompleted, false);
+    assert.equal(result.checkPassed, false);
+    assert.equal(result.failureCategory, "agent-error");
+    assert.equal(JSON.stringify(result).includes("provider failed"), false);
+  });
+});
+
 test("builds deterministic any-trial and all-trials metrics", async () => {
   const trials = [];
   for (const [trialId, repairs] of [

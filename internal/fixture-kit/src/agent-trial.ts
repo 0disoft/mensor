@@ -267,11 +267,13 @@ function classifyFailure(state: TrialState): AgentTrialFailureCategory | null {
   if (!state.detectionPassed) {
     return "diagnostic-not-produced";
   }
-  if (!state.adapterCompleted) {
-    return "agent-error";
-  }
   if (state.protectedFilesChanged.length > 0) {
     return "contract-weakened";
+  }
+  if (!state.adapterCompleted) {
+    return state.checkPassed && !state.semanticCheckPassed
+      ? "semantic-regression"
+      : "agent-error";
   }
   if (!state.semanticCheckPassed) {
     return "semantic-regression";

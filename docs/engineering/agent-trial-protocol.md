@@ -39,7 +39,9 @@ validated report as two-space JSON with LF and one final newline.
 
 Failure categories are `diagnostic-not-produced`, `agent-error`,
 `contract-weakened`, `semantic-regression`, and `check-failed`. Final-state
-evidence takes precedence over a friendly adapter response.
+evidence takes precedence over adapter completion: if an adapter mutates the
+workspace and then fails, protected-contract damage and checker-clean semantic
+regressions remain visible instead of being collapsed into `agent-error`.
 
 ## Metrics
 
