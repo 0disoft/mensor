@@ -69,6 +69,10 @@ normalized local module graph. Type-only imports are included. Violations emit
 `module.boundary_violation`, while computed dynamic imports emit
 `module.dynamic_import_unsupported` when reached by an active boundary.
 
+`ProjectContract.ownershipRules` maps explicit filename suffixes to a test or
+i18n slot inside each feature. The compiler emits `file.ownership_mismatch` for
+files in the wrong slot and for matching files with no declared feature owner.
+
 HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.
 

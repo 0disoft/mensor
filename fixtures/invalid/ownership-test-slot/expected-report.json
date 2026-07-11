@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "producer": { "name": "mensor", "version": "0.0.0-fixture" },
+  "status": "failed",
+  "diagnostics": [
+    {
+      "code": "file.ownership_mismatch",
+      "severity": "error",
+      "category": "project-structure",
+      "message": "test file \"src/features/tasks/create.test.ts\" is outside feature slot \"tests\".",
+      "file": "src/features/tasks/create.test.ts",
+      "range": {
+        "start": { "line": 0, "character": 0 },
+        "end": { "line": 0, "character": 0 }
+      },
+      "facts": {
+        "actualPath": "create.test.ts",
+        "expectedWithinFeature": "tests",
+        "featureId": "tasks",
+        "kind": "test",
+        "ruleId": "feature-tests"
+      },
+      "related": [
+        {
+          "role": "ownership-rule",
+          "message": "This project contract declares the required feature slot.",
+          "file": "mensor.project.jsonc",
+          "range": {
+            "start": { "line": 11, "character": 4 },
+            "end": { "line": 16, "character": 5 }
+          }
+        }
+      ],
+      "repair": {
+        "strategy": "move-file-to-feature-owner",
+        "hint": "Move the file to tests inside feature tasks.",
+        "mustPreserve": [
+          "test file behavior",
+          "ownership rule feature-tests"
+        ],
+        "mustNot": [
+          "delete the ownership rule",
+          "rename the file only to evade suffix detection"
+        ]
+      }
+    }
+  ],
+  "summary": { "errorCount": 1, "warningCount": 0 }
+}

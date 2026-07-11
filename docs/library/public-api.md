@@ -56,6 +56,8 @@ remain later behavior. It now extracts explicit TypeScript/JavaScript exports
 for handler linkage, resolves local import edges, and applies optional
 project-owned direct or transitive role boundaries. External package imports
 remain graph leaves.
+Optional ownership rules also enforce suffix-based test and i18n slots without
+inferring a feature owner from file content or naming conventions.
 
 ## Export Policy
 

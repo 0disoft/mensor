@@ -162,6 +162,16 @@ test("validates module-boundary diagnostic facts independently", async () => {
   }
 });
 
+test("validates ownership diagnostic facts independently", async () => {
+  const value = JSON.parse(
+    await fixtureText("invalid/ownership-test-slot/expected-report.json"),
+  );
+  delete value.diagnostics[0].facts.ruleId;
+
+  const result = parseDiagnosticReport(JSON.stringify(value));
+  assert.equal(result.ok, false);
+});
+
 test("recognizes only finite JSON values and plain objects", () => {
   assert.equal(isJsonValue({ nested: [null, true, 1, "value"] }), true);
   assert.equal(isJsonValue(Number.NaN), false);

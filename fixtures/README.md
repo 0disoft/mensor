@@ -26,6 +26,10 @@ files, and canonical expected report needed for one behavior.
   module
 - `invalid/module-dynamic-import-unsupported`: a browser module computes its
   dynamic import target
+- `invalid/ownership-test-slot`: a feature test sits outside its declared
+  `tests` slot
+- `invalid/ownership-i18n-unowned`: a translation file sits outside every
+  declared feature
 
 `expected-report.json` uses the fixed producer version `0.0.0-fixture` so
 package-version changes do not rewrite behavioral snapshots. The future fixture

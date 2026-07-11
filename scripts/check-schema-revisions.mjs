@@ -15,6 +15,8 @@ const fixtures = [
   "../fixtures/invalid/module-boundary-transitive/mensor.project.jsonc",
   "../fixtures/invalid/module-boundary-direct/mensor.project.jsonc",
   "../fixtures/invalid/module-dynamic-import-unsupported/mensor.project.jsonc",
+  "../fixtures/invalid/ownership-test-slot/mensor.project.jsonc",
+  "../fixtures/invalid/ownership-i18n-unowned/mensor.project.jsonc",
   "../fixtures/invalid/file-role-mismatch/mensor.project.jsonc",
   "../fixtures/valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/form-field-missing/src/features/tasks/feature.mensor.jsonc",
@@ -27,6 +29,8 @@ const fixtures = [
   "../fixtures/invalid/module-boundary-transitive/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/module-boundary-direct/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/module-dynamic-import-unsupported/src/features/tasks/feature.mensor.jsonc",
+  "../fixtures/invalid/ownership-test-slot/src/features/tasks/feature.mensor.jsonc",
+  "../fixtures/invalid/ownership-i18n-unowned/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/file-role-mismatch/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/valid/tiny-tasks/expected-report.json",
   "../fixtures/invalid/form-field-missing/expected-report.json",
@@ -39,6 +43,8 @@ const fixtures = [
   "../fixtures/invalid/module-boundary-transitive/expected-report.json",
   "../fixtures/invalid/module-boundary-direct/expected-report.json",
   "../fixtures/invalid/module-dynamic-import-unsupported/expected-report.json",
+  "../fixtures/invalid/ownership-test-slot/expected-report.json",
+  "../fixtures/invalid/ownership-i18n-unowned/expected-report.json",
   "../fixtures/invalid/file-role-mismatch/expected-report.json",
 ];
 

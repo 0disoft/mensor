@@ -89,8 +89,10 @@ server roles, while a route role can forbid only direct imports of database or
 internal roles. Type-only imports remain architectural edges. Non-literal
 dynamic imports reached by a boundary fail explicitly.
 
-The same project-owned policy model still needs file ownership rules for test
-or translation files outside their declared feature owner.
+Project-owned ownership rules match explicit suffixes and require test or
+translation files to live under a declared slot inside their feature. Matching
+files outside every feature are reported as unowned rather than assigned by a
+filename guess.
 
 Import and ownership policies are configurable project contracts, not universal
 opinions baked into the compiler.
@@ -169,6 +171,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     `module.boundary_violation` diagnostics with a deterministic import chain.
 17. A boundary-reachable non-literal dynamic import emits
     `module.dynamic_import_unsupported` instead of reducing graph coverage.
+18. Test and i18n suffix rules emit `file.ownership_mismatch` for both a wrong
+    feature slot and a file outside every declared feature.
 
 ## Deferred Decisions
 

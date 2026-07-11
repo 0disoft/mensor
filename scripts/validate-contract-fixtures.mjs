@@ -19,6 +19,8 @@ const fixtures = [
   "invalid/module-boundary-transitive",
   "invalid/module-boundary-direct",
   "invalid/module-dynamic-import-unsupported",
+  "invalid/ownership-test-slot",
+  "invalid/ownership-i18n-unowned",
 ];
 const fixtureRoot = new URL("../fixtures/", import.meta.url);
 

@@ -41,6 +41,7 @@ export interface ProjectContract {
   readonly featureContracts: readonly string[];
   readonly fileRoles: readonly FileRoleContract[];
   readonly boundaries?: readonly BoundaryContract[];
+  readonly ownershipRules?: readonly OwnershipRuleContract[];
 }
 
 export interface BoundaryContract {
@@ -48,6 +49,13 @@ export interface BoundaryContract {
   readonly mode: "direct" | "transitive";
   readonly from: readonly string[];
   readonly deny: readonly string[];
+}
+
+export interface OwnershipRuleContract {
+  readonly id: string;
+  readonly kind: "i18n" | "test";
+  readonly suffixes: readonly string[];
+  readonly withinFeature: string;
 }
 
 export interface FileRoleContract {
@@ -329,6 +337,26 @@ export interface ModuleDynamicImportUnsupportedDiagnostic {
   readonly repair: RepairInstruction;
 }
 
+export interface FileOwnershipMismatchFacts {
+  readonly actualPath: string;
+  readonly expectedWithinFeature: string;
+  readonly featureId: string | null;
+  readonly kind: "i18n" | "test";
+  readonly ruleId: string;
+}
+
+export interface FileOwnershipMismatchDiagnostic {
+  readonly code: "file.ownership_mismatch";
+  readonly severity: "error";
+  readonly category: "project-structure";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: FileOwnershipMismatchFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
 export interface FileRoleMismatchFacts {
   readonly actionId: string;
   readonly actualRole: string;
@@ -351,6 +379,7 @@ export interface FileRoleMismatchDiagnostic {
 }
 
 export type Diagnostic =
+  | FileOwnershipMismatchDiagnostic
   | FileRoleMismatchDiagnostic
   | FormActionMismatchDiagnostic
   | FormControlCodecMismatchDiagnostic

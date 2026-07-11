@@ -40,6 +40,8 @@ The current implementation covers bounded source discovery, feature contracts,
 handler linkage, file-role classification, placement diagnostics, static HTML
 form extraction, and explicit handler export facts. TypeScript import edges
 are normalized for configured direct and transitive role boundaries.
+Suffix-based ownership rules keep test and i18n resources inside their declared
+feature slots.
 
 ### `@mensor/cli`
 

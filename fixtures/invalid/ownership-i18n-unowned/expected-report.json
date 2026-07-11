@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "producer": { "name": "mensor", "version": "0.0.0-fixture" },
+  "status": "failed",
+  "diagnostics": [
+    {
+      "code": "file.ownership_mismatch",
+      "severity": "error",
+      "category": "project-structure",
+      "message": "i18n file \"src/translations/tasks.messages.json\" is outside every declared feature.",
+      "file": "src/translations/tasks.messages.json",
+      "range": {
+        "start": { "line": 0, "character": 0 },
+        "end": { "line": 0, "character": 0 }
+      },
+      "facts": {
+        "actualPath": "src/translations/tasks.messages.json",
+        "expectedWithinFeature": "i18n",
+        "featureId": null,
+        "kind": "i18n",
+        "ruleId": "feature-messages"
+      },
+      "related": [
+        {
+          "role": "ownership-rule",
+          "message": "This project contract declares the required feature slot.",
+          "file": "mensor.project.jsonc",
+          "range": {
+            "start": { "line": 11, "character": 4 },
+            "end": { "line": 16, "character": 5 }
+          }
+        }
+      ],
+      "repair": {
+        "strategy": "move-file-to-feature-owner",
+        "hint": "Move the file under its owning feature's i18n directory.",
+        "mustPreserve": [
+          "i18n file behavior",
+          "ownership rule feature-messages"
+        ],
+        "mustNot": [
+          "delete the ownership rule",
+          "rename the file only to evade suffix detection"
+        ]
+      }
+    }
+  ],
+  "summary": { "errorCount": 1, "warningCount": 0 }
+}

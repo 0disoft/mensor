@@ -139,6 +139,18 @@ export function projectBoundaryRange(
   return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
+export function projectOwnershipRuleRange(
+  contractText: string,
+  ruleIndex: number,
+): SourceRange {
+  const root = parseTree(contractText);
+  if (root === undefined) {
+    return zeroRange;
+  }
+  const node = findNodeAtLocation(root, ["ownershipRules", ruleIndex]);
+  return node === undefined ? zeroRange : nodeRange(contractText, node);
+}
+
 function nodeRange(text: string, node: Node): SourceRange {
   return {
     start: positionAt(text, node.offset),

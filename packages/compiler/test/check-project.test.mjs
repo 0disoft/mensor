@@ -134,6 +134,26 @@ test("reports non-literal dynamic imports reached by a boundary", async () => {
   }
 });
 
+test("reports a feature test outside its declared ownership slot", async () => {
+  const fixture = "invalid/ownership-test-slot";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
+test("reports an i18n file outside every declared feature", async () => {
+  const fixture = "invalid/ownership-i18n-unowned";
+  const result = await checkFixture(fixture);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
 test("produces byte-identical reports from different absolute roots", async () => {
   for (const fixture of [
     "invalid/file-role-mismatch",
@@ -147,6 +167,8 @@ test("produces byte-identical reports from different absolute roots", async () =
     "invalid/module-boundary-transitive",
     "invalid/module-boundary-direct",
     "invalid/module-dynamic-import-unsupported",
+    "invalid/ownership-test-slot",
+    "invalid/ownership-i18n-unowned",
   ]) {
     const temporaryRoots = await Promise.all([
       copyFixture(fixture),

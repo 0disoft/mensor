@@ -19,6 +19,7 @@ import { checkFeatureForms } from "./form-rule.js";
 import { checkFeatureHandlers } from "./handler-rule.js";
 import { handlerFileRange } from "./locations.js";
 import { checkImportBoundaries } from "./module-boundary-rule.js";
+import { checkOwnershipRules, type FeatureOwnerFact } from "./ownership-rule.js";
 import {
   assertRelativePosixPath,
   compareText,
@@ -84,6 +85,7 @@ export async function checkProject(
     );
     const discovered = new Set(discoveredFiles);
     const diagnostics: Diagnostic[] = [];
+    const featureOwners: FeatureOwnerFact[] = [];
 
     for (const featureContractPath of [...project.featureContracts].sort(compareText)) {
       const safeFeatureContractPath = assertRelativePosixPath(
@@ -107,6 +109,10 @@ export async function checkProject(
       if (!featureResult.ok) {
         return contractFailure(safeFeatureContractPath, featureResult.issues);
       }
+      featureOwners.push({
+        id: featureResult.value.feature.id,
+        root: path.posix.dirname(safeFeatureContractPath),
+      });
       diagnostics.push(
         ...checkFeaturePlacement(
           safeFeatureContractPath,
@@ -149,6 +155,15 @@ export async function checkProject(
         discoveredFiles,
         maxFileBytes,
       })),
+    );
+    diagnostics.push(
+      ...checkOwnershipRules({
+        projectContractPath: configFile,
+        projectText,
+        features: featureOwners,
+        rules: project.ownershipRules ?? [],
+        discoveredFiles,
+      }),
     );
 
     diagnostics.sort(compareDiagnostics);

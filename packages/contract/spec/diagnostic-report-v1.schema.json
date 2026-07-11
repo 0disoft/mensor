@@ -159,6 +159,9 @@
           "$ref": "#/$defs/moduleDynamicImportUnsupportedDiagnostic"
         },
         {
+          "$ref": "#/$defs/fileOwnershipMismatchDiagnostic"
+        },
+        {
           "$ref": "#/$defs/fileRoleMismatchDiagnostic"
         }
       ]
@@ -592,6 +595,43 @@
         "boundaryId": { "type": "string", "minLength": 1 },
         "mode": { "enum": ["direct", "transitive"] },
         "sourceRole": { "type": "string", "minLength": 1 }
+      }
+    },
+    "fileOwnershipMismatchDiagnostic": {
+      "allOf": [
+        { "$ref": "#/$defs/diagnosticBase" },
+        {
+          "type": "object",
+          "properties": {
+            "code": { "const": "file.ownership_mismatch" },
+            "severity": { "const": "error" },
+            "category": { "const": "project-structure" },
+            "facts": { "$ref": "#/$defs/fileOwnershipMismatchFacts" }
+          }
+        }
+      ]
+    },
+    "fileOwnershipMismatchFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actualPath", "expectedWithinFeature", "featureId", "kind", "ruleId"],
+      "properties": {
+        "actualPath": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "expectedWithinFeature": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "featureId": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "kind": { "enum": ["i18n", "test"] },
+        "ruleId": { "type": "string", "minLength": 1 }
       }
     },
     "fileRoleMismatchDiagnostic": {
