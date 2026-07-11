@@ -4,6 +4,7 @@ const workspace = await json("../package.json");
 const contract = await json("../packages/contract/package.json");
 const compiler = await json("../packages/compiler/package.json");
 const cli = await json("../packages/cli/package.json");
+const fixtureKit = await json("../internal/fixture-kit/package.json");
 const failures = [];
 
 if (workspace.private !== true) {
@@ -17,6 +18,9 @@ if (compiler.private !== true) {
 }
 if (cli.private !== true) {
   failures.push("The CLI package must remain private before preview release.");
+}
+if (fixtureKit.private !== true) {
+  failures.push("The fixture kit must remain an internal private package.");
 }
 if (Object.hasOwn(workspace, "dependencies")) {
   failures.push("Runtime dependencies belong to the package that imports them, not the workspace root.");
@@ -41,13 +45,17 @@ if (compiler.dependencies?.["@typescript/typescript6"] !== "6.0.2") {
 if (cli.dependencies?.["@mensor/compiler"] !== "workspace:*") {
   failures.push("@mensor/cli must use the public workspace compiler package.");
 }
+if (fixtureKit.dependencies?.["@mensor/compiler"] !== "workspace:*") {
+  failures.push("@mensor/fixture-kit must use the public workspace compiler package.");
+}
 if (cli.bin?.mensor !== "./dist/src/bin.js") {
   failures.push("@mensor/cli must expose the built mensor executable.");
 }
 if (
   workspace.version !== contract.version ||
   workspace.version !== compiler.version ||
-  workspace.version !== cli.version
+  workspace.version !== cli.version ||
+  workspace.version !== fixtureKit.version
 ) {
   failures.push("All private workspace packages must use one fixed version.");
 }
@@ -56,7 +64,8 @@ for (const forbidden of ["preinstall", "install", "postinstall", "prepare"]) {
     workspace.scripts?.[forbidden] !== undefined ||
     contract.scripts?.[forbidden] !== undefined ||
     compiler.scripts?.[forbidden] !== undefined ||
-    cli.scripts?.[forbidden] !== undefined
+    cli.scripts?.[forbidden] !== undefined ||
+    fixtureKit.scripts?.[forbidden] !== undefined
   ) {
     failures.push(`Lifecycle script ${forbidden} is forbidden.`);
   }

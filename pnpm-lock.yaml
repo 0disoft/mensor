@@ -15,6 +15,12 @@ importers:
         specifier: 6.0.2
         version: 6.0.2
 
+  internal/fixture-kit:
+    dependencies:
+      '@mensor/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
   packages/cli:
     dependencies:
       '@mensor/compiler':

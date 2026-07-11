@@ -1,0 +1,13 @@
+{
+  "name": "@mensor/fixture-kit",
+  "version": "0.0.10",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@mensor/compiler": "workspace:*"
+  }
+}

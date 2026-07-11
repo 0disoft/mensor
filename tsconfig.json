@@ -9,6 +9,9 @@
     },
     {
       "path": "./packages/cli"
+    },
+    {
+      "path": "./internal/fixture-kit"
     }
   ]
 }

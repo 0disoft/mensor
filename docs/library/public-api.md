@@ -69,6 +69,10 @@ inferring a feature owner from file content or naming conventions.
   public API.
 - Database models and framework runtime objects are outside this product.
 
+`internal/fixture-kit` is not a public API. Its repair evaluator is repository
+test infrastructure and may change with the fixture corpus without a public
+compatibility promise.
+
 ## Current CLI Surface
 
 `@mensor/cli` exports `runCli(options)` for process-isolated testing and host

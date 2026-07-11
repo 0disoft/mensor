@@ -16,10 +16,9 @@ fixtures/
   compound/
 ```
 
-The contract, compiler, and CLI packages are current. `internal/fixture-kit` is
-added only with its first complete vertical slice. Do not create a package until it contains a complete
-responsibility. Empty packages reserved for a possible runtime, adapter, SDK,
-or formatter are forbidden.
+The contract, compiler, CLI, and internal fixture-kit packages are current.
+Each package was introduced with a complete vertical slice. Empty packages
+reserved for a possible runtime, adapter, SDK, or formatter are forbidden.
 
 ## Package Ownership
 
@@ -57,6 +56,11 @@ The current executable exposes only `mensor check [root] [--config <path>]
 Owns fixture execution, canonical snapshots, randomized discovery tests,
 security sentinels, and repair evaluation helpers. It may depend on public
 packages but is private and never appears in a published dependency graph.
+
+The current repair evaluator captures hashes for explicitly protected contract
+files, reruns the compiler, and invokes a trusted semantic application check.
+A repair succeeds only when all three gates pass: the compiler is clean, no
+protected file changed, and application semantics remain intact.
 
 ## Dependency Rules
 

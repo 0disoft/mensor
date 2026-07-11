@@ -155,7 +155,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
    `form.field_unexpected` diagnostic per wire field name, even when multiple
    controls share that name.
 10. A repair benchmark requires both a passing check and an unchanged semantic
-   application test; contract weakening is a failed repair.
+   application test; protected contracts retain their baseline digests, so
+   contract weakening is a failed repair.
 11. Form method and action mismatches emit separate exact diagnostics at the
     corresponding HTML attributes with the declared route as a related location.
 12. A checkbox or `select[multiple]` bound to the scalar text decoder emits
