@@ -89,7 +89,7 @@ try {
     { recursive: true },
   );
 
-  await runPnpm(["install", "--offline", "--ignore-scripts"], consumerRoot);
+  await runPnpm(["install", "--prefer-offline", "--ignore-scripts"], consumerRoot);
 
   const valid = await runMensor(consumerRoot, "valid");
   assert.equal(valid.code, 0, valid.stderr);

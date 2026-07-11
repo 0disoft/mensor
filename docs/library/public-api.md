@@ -113,7 +113,8 @@ owned schemas or documentation only. Fixtures, benchmarks, private evaluation
 data, source maps containing absolute local paths, and repository operations
 documents are excluded unless a consumer contract explicitly requires them.
 
-The aggregate validation packs all three publishable packages and installs the
-tarballs into an isolated offline consumer. That consumer must execute the
-installed `mensor` binary successfully for a valid fixture and return the
-documented diagnostic exit status for an invalid fixture.
+The aggregate validation packs all three publishable packages and forces the
+local tarballs into an isolated consumer. Public third-party dependencies use
+normal package-manager resolution. The consumer must execute the installed
+`mensor` binary successfully for a valid fixture and return the documented
+diagnostic exit status for an invalid fixture.
