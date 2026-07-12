@@ -56,3 +56,10 @@ every input again, requires byte-identical descriptors and fingerprints,
 requires one report producer version, rejects duplicate trial IDs and empty
 cohorts, and derives the combined report from trial records. Input ordering
 does not change canonical output.
+
+`runCommandAgentSuite` is the repeated-evaluation entrypoint. It validates the
+whole plan before requesting a workspace, assigns deterministic trial IDs, and
+runs every attempt in a caller-provided fresh workspace that is disposed even
+on failure. It remains serial so command trials cannot compete for shared host
+budgets. The workspace provider and external sandbox must enforce isolation
+outside the Node.js process.

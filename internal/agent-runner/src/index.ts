@@ -5,6 +5,12 @@ export {
 export type { CommandAgentAdapterOptions } from "./command-adapter.js";
 export { runCommandAgentTrial } from "./command-trial.js";
 export type { RunCommandAgentTrialOptions } from "./command-trial.js";
+export { runCommandAgentSuite } from "./command-suite.js";
+export type {
+  AgentSuiteWorkspaceProvider,
+  CommandAgentSuiteCase,
+  RunCommandAgentSuiteOptions,
+} from "./command-suite.js";
 export {
   createAgentTrialEvidence,
   createCommandExecutionDescriptor,

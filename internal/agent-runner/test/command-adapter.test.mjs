@@ -21,6 +21,7 @@ import {
   parseAgentExecutionDescriptor,
   parseAgentTrialEvidence,
   runCommandAgentTrial,
+  runCommandAgentSuite,
   serializeAgentExecutionDescriptor,
   serializeAgentTrialEvidence,
 } from "../dist/src/index.js";
@@ -71,6 +72,111 @@ test("repairs a mutation through the bounded command protocol", async () => {
       maxOutputBytes: commandOptions().maxOutputBytes,
     });
   });
+});
+
+test("runs repeated command trials in fresh workspaces and merges one cohort", async () => {
+  const created = [];
+  const disposed = [];
+  const evidence = await runCommandAgentSuite({
+    suiteId: "repair-suite",
+    execution: metadata(),
+    command: commandOptions(),
+    producerVersion: "0.0.0-test",
+    cases: [{
+      mutationId: "form-field-missing",
+      repetitions: 2,
+      protectedFiles,
+      semanticCheck: semanticFeaturePresent,
+    }],
+    workspace: {
+      async create(baselineId, mutationId, trialId) {
+        assert.equal(baselineId, "tiny-tasks");
+        assert.equal(mutationId, "form-field-missing");
+        const root = await mkdtemp(path.join(tmpdir(), "mensor-command-suite-"));
+        await cp(fixture, root, { recursive: true });
+        created.push({ root, trialId });
+        return root;
+      },
+      async dispose(root) {
+        disposed.push(root);
+        await rm(root, { recursive: true, force: true });
+      },
+    },
+  });
+
+  assert.deepEqual(evidence.report.trials.map((trial) => trial.trialId), [
+    "repair-suite.form-field-missing.1",
+    "repair-suite.form-field-missing.2",
+  ]);
+  assert.equal(evidence.report.summary.repairedCount, 2);
+  assert.equal(created.length, 2);
+  assert.deepEqual(disposed, created.map((item) => item.root));
+  assert.notEqual(created[0].root, created[1].root);
+  await Promise.all(created.map(({ root }) => assertFileMissing(root)));
+});
+
+test("validates a command suite before creating mutable workspaces", async () => {
+  let createCount = 0;
+  const base = {
+    suiteId: "invalid-suite",
+    execution: metadata(),
+    command: commandOptions(),
+    producerVersion: "0.0.0-test",
+    workspace: {
+      async create() {
+        createCount += 1;
+        throw new Error("must not create a workspace");
+      },
+      async dispose() {},
+    },
+  };
+  await assert.rejects(
+    runCommandAgentSuite({ ...base, cases: [] }),
+    /at least one case/,
+  );
+  await assert.rejects(
+    runCommandAgentSuite({
+      ...base,
+      cases: [{
+        mutationId: "form-field-missing",
+        repetitions: 0,
+        protectedFiles,
+        semanticCheck: () => true,
+      }],
+    }),
+    /positive safe integer/,
+  );
+  assert.equal(createCount, 0);
+});
+
+test("disposes a command suite workspace when a trial setup fails", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "mensor-command-suite-failure-"));
+  let disposed = false;
+  await assert.rejects(
+    runCommandAgentSuite({
+      suiteId: "cleanup-suite",
+      execution: metadata(),
+      command: commandOptions(),
+      producerVersion: "0.0.0-test",
+      cases: [{
+        mutationId: "form-field-missing",
+        repetitions: 1,
+        protectedFiles,
+        semanticCheck: () => true,
+      }],
+      workspace: {
+        async create() {
+          return root;
+        },
+        async dispose(workspaceRoot) {
+          disposed = true;
+          await rm(workspaceRoot, { recursive: true, force: true });
+        },
+      },
+    }),
+  );
+  assert.equal(disposed, true);
+  await assertFileMissing(root);
 });
 
 test("validates command evidence configuration before mutating the trial", async () => {
