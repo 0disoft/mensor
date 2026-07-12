@@ -163,3 +163,14 @@ test("preserves control shape needed for codec compatibility", () => {
     ],
   );
 });
+
+test("applies disabled fieldset inheritance and the first legend exception", () => {
+  const facts = extractFormFacts(`<form id="settings">
+  <fieldset disabled>
+    <legend><input name="legend-value"></legend>
+    <input name="disabled-value">
+  </fieldset>
+</form>`);
+
+  assert.deepEqual(facts[0]?.fields.map((field) => field.name), ["legend-value"]);
+});

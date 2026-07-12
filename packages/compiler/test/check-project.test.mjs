@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, cp, mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -49,6 +49,57 @@ test("reports the canonical missing form field diagnostic", async () => {
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
+test("does not count a required control inside a disabled fieldset", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    const file = path.join(root, "src/features/tasks/views/index.html");
+    const html = await readFile(file, "utf8");
+    await writeFile(
+      file,
+      html.replace(
+        '<input name="title" type="text" required="required" />',
+        '<fieldset disabled><input name="title" type="text" required="required" /></fieldset>',
+      ),
+      "utf8",
+    );
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+        "form.field_missing",
+      ]);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects repeated successful controls for a scalar text binding", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    const file = path.join(root, "src/features/tasks/views/index.html");
+    const html = await readFile(file, "utf8");
+    await writeFile(
+      file,
+      html.replace(
+        '<input name="title" type="text" required="required" />',
+        '<input name="title" type="text" required="required" />\n        <input name="title" type="text" />',
+      ),
+      "utf8",
+    );
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+        "form.control_codec_mismatch",
+      ]);
+      assert.equal(result.report.diagnostics[0]?.facts.controlCount, 2);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
 
@@ -112,6 +163,27 @@ test("reports a declared handler export that is missing from source", async () =
   }
 });
 
+test("rejects a type-only declaration as a runtime handler export", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    await writeFile(
+      path.join(root, "src/features/tasks/server/create-task.ts"),
+      "export type createTask = () => void;\n",
+      "utf8",
+    );
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.report.status, "failed");
+      assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+        "handler.export_missing",
+      ]);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("reports a transitive browser-to-server import boundary", async () => {
   const fixture = "invalid/module-boundary-transitive";
   const result = await checkFixture(fixture);
@@ -119,6 +191,52 @@ test("reports a transitive browser-to-server import boundary", async () => {
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.deepEqual(result.report, await expectedReport(fixture));
+  }
+});
+
+test("treats literal CommonJS require as a runtime boundary edge", async () => {
+  const root = await copyFixture("valid/layered-tasks");
+  try {
+    const browserFile = path.join(root, "src/features/tasks/browser/app.ts");
+    const source = await readFile(browserFile, "utf8");
+    await writeFile(
+      browserFile,
+      `${source}\nconst secret = require("../server/secret.js");\nvoid secret;\n`,
+      "utf8",
+    );
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.report.status, "failed");
+      assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+        "module.boundary_violation",
+      ]);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("classifies nested feature files against the longest owning root", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "mensor-nested-feature-"));
+  try {
+    const files = nestedFeatureFiles();
+    for (const [relativePath, contents] of Object.entries(files)) {
+      const file = path.join(root, ...relativePath.split("/"));
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, contents, "utf8");
+    }
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.report.status, "failed");
+      assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+        "module.boundary_violation",
+      ]);
+      assert.equal(result.report.diagnostics[0]?.file, "src/features/nested/browser/app.ts");
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
 
@@ -263,4 +381,66 @@ async function copyFixture(relativePath) {
 
 async function assertMissing(file) {
   await assert.rejects(access(file), { code: "ENOENT" });
+}
+
+function nestedFeatureFiles() {
+  const project = {
+    version: 1,
+    sourceRoot: "src",
+    featureContracts: [
+      "src/features/feature.mensor.jsonc",
+      "src/features/nested/feature.mensor.jsonc",
+    ],
+    fileRoles: [
+      { role: "server", withinFeature: "server" },
+      { role: "browser", withinFeature: "browser" },
+      { role: "view", withinFeature: "views" },
+    ],
+    boundaries: [
+      { id: "browser-no-server", mode: "transitive", from: ["browser"], deny: ["server"] },
+    ],
+  };
+  return {
+    "mensor.project.jsonc": `${JSON.stringify(project, null, 2)}\n`,
+    "src/features/feature.mensor.jsonc": featureContract("parent", "/parent"),
+    "src/features/views/parent.html": formHtml("parent", "/parent"),
+    "src/features/server/create-task.ts": "export function createTask(): void {}\n",
+    "src/features/nested/feature.mensor.jsonc": featureContract("nested", "/nested"),
+    "src/features/nested/views/nested.html": formHtml("nested", "/nested"),
+    "src/features/nested/server/create-task.ts": "export function createTask(): void {}\nexport const secret = 1;\n",
+    "src/features/nested/browser/app.ts": "import { secret } from \"../server/create-task.js\";\nvoid secret;\n",
+  };
+}
+
+function featureContract(id, route) {
+  return `${JSON.stringify({
+    version: 1,
+    feature: { id },
+    actions: [{
+      id: `${id}.create`,
+      route: { method: "POST", path: route },
+      form: { template: `views/${id}.html`, id },
+      handler: { file: "server/create-task.ts", export: "createTask", role: "server" },
+      input: {
+        schema: {
+          kind: "object",
+          properties: { title: { kind: "string" } },
+          required: ["title"],
+        },
+        formCodec: {
+          encoding: "urlencoded",
+          unknownFields: "reject",
+          bindings: [{
+            name: "title",
+            path: ["title"],
+            decode: { kind: "text", trim: true, empty: "reject" },
+          }],
+        },
+      },
+    }],
+  }, null, 2)}\n`;
+}
+
+function formHtml(id, route) {
+  return `<!doctype html>\n<form id="${id}" method="post" action="${route}">\n  <input name="title" type="text" />\n</form>\n`;
 }

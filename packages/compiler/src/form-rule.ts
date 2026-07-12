@@ -190,7 +190,9 @@ export async function checkFeatureForms(options: {
       if (field === undefined) {
         return;
       }
-      const incompatibleControl = field.controls.find(
+      const incompatibleControl = field.controls.length > 1
+        ? field.controls[1]
+        : field.controls.find(
         (control) =>
           (control.kind === "input" && control.inputType === "checkbox") ||
           (control.kind === "select" && control.multiple),
@@ -203,6 +205,7 @@ export async function checkFeatureForms(options: {
           actionId: action.id,
           actionIndex,
           bindingIndex,
+          controlCount: field.controls.length,
           fieldName: binding.name,
           form,
           control: incompatibleControl,
@@ -279,6 +282,7 @@ function controlCodecMismatchDiagnostic(options: {
   readonly actionId: string;
   readonly actionIndex: number;
   readonly bindingIndex: number;
+  readonly controlCount: number;
   readonly fieldName: string;
   readonly form: FormFact;
   readonly control: FormFact["fields"][number]["controls"][number];
@@ -286,8 +290,9 @@ function controlCodecMismatchDiagnostic(options: {
   readonly featureContractPath: string;
   readonly featureText: string;
 }): FormControlCodecMismatchDiagnostic {
-  const controlShape =
-    options.control.kind === "input"
+  const controlShape = options.controlCount > 1
+    ? `${options.controlCount} successful controls with the same wire name`
+    : options.control.kind === "input"
       ? `input[type=${options.control.inputType}]`
       : "select[multiple]";
   return {
@@ -300,6 +305,7 @@ function controlCodecMismatchDiagnostic(options: {
     facts: {
       actionId: options.actionId,
       controlKind: options.control.kind === "select" ? "select" : "input",
+      ...(options.controlCount > 1 ? { controlCount: options.controlCount } : {}),
       controlType: options.control.inputType,
       decoderKind: "text",
       fieldName: options.fieldName,

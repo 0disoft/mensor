@@ -26,5 +26,5 @@ for (const mutation of mutationCatalog) {
   }
 }
 
-const report = createMutationBenchmarkReport(cases, "0.0.21");
+const report = createMutationBenchmarkReport(cases, "0.0.22");
 process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

@@ -89,6 +89,57 @@ test("rejects unsupported form codecs", async () => {
   assert.equal(result.ok, false);
 });
 
+test("rejects form bindings that do not have one schema-owned identity", async () => {
+  const text = await fixtureText(
+    "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
+  );
+  const value = JSON.parse(text);
+  value.actions[0].input.formCodec.bindings.push({
+    name: "nickname",
+    path: ["ghost"],
+    decode: { kind: "text", trim: true, empty: "allow" },
+  });
+  value.actions[0].input.formCodec.ignoredFields = [{
+    name: "title",
+    consumer: "guard",
+  }];
+
+  const result = parseFeatureContract(JSON.stringify(value));
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.deepEqual(result.issues.map((issue) => issue.instancePath), [
+      "/actions/0/input/formCodec/bindings/1/path",
+      "/actions/0/input/formCodec/ignoredFields/0/name",
+    ]);
+  }
+});
+
+test("rejects diagnostic reports with contradictory derived state", async () => {
+  const passing = JSON.parse(
+    await fixtureText("valid/tiny-tasks/expected-report.json"),
+  );
+  passing.summary.errorCount = 1;
+  const inconsistent = parseDiagnosticReport(JSON.stringify(passing));
+  assert.equal(inconsistent.ok, false);
+
+  const failed = JSON.parse(
+    await fixtureText("invalid/form-field-missing/expected-report.json"),
+  );
+  failed.status = "passed";
+  failed.diagnostics[0].range = {
+    start: { line: 2, character: 0 },
+    end: { line: 1, character: 0 },
+  };
+  const invalidRange = parseDiagnosticReport(JSON.stringify(failed));
+  assert.equal(invalidRange.ok, false);
+  if (!invalidRange.ok) {
+    assert.deepEqual(invalidRange.issues.map((issue) => issue.instancePath), [
+      "/status",
+      "/diagnostics/0/range",
+    ]);
+  }
+});
+
 test("requires code-specific diagnostic facts", async () => {
   const text = await fixtureText(
     "invalid/form-field-missing/expected-report.json",

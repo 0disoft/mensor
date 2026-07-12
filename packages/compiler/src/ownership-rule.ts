@@ -5,6 +5,7 @@ import type {
 } from "@mensor/contract";
 
 import { projectOwnershipRuleRange } from "./locations.js";
+import { findFeatureOwner, sortFeatureRoots } from "./feature-roots.js";
 import { assertRelativePosixPath, compareText, InputFailure } from "./paths.js";
 
 export interface FeatureOwnerFact {
@@ -20,9 +21,7 @@ export function checkOwnershipRules(options: {
   readonly discoveredFiles: readonly string[];
 }): readonly Diagnostic[] {
   validateRules(options.rules);
-  const features = [...options.features].sort(
-    (left, right) => right.root.length - left.root.length || compareText(left.root, right.root),
-  );
+  const features = sortFeatureRoots(options.features);
   const diagnostics: FileOwnershipMismatchDiagnostic[] = [];
   options.rules.forEach((rule, ruleIndex) => {
     const expectedSlot = assertRelativePosixPath(
@@ -33,7 +32,7 @@ export function checkOwnershipRules(options: {
       if (!rule.suffixes.some((suffix) => file.endsWith(suffix))) {
         continue;
       }
-      const feature = features.find((candidate) => file.startsWith(`${candidate.root}/`));
+      const feature = findFeatureOwner(file, features);
       if (feature === undefined) {
         diagnostics.push(
           ownershipDiagnostic({

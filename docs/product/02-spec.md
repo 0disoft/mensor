@@ -181,6 +181,15 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 20. Authoritative command-trial evidence derives the adapter, execution
     descriptor, report, and fingerprint from one command configuration. Invalid
     execution configuration fails before mutation.
+21. Handler exports must exist in the runtime value namespace; type-only and
+    ambient declarations do not satisfy executable handler contracts.
+22. Active boundaries analyze literal ESM and CommonJS module edges, reject
+    computed runtime targets, and classify nested files against their longest
+    declared feature root.
+23. Static form facts implement disabled-fieldset submission semantics and
+    reject repeated successful controls for scalar text bindings.
+24. Feature and diagnostic-report parsers reject cross-field contradictions in
+    binding ownership, summary counts, status, and source ranges.
 
 ## Deferred Decisions
 

@@ -236,6 +236,7 @@ export interface FormActionMismatchDiagnostic {
 export interface FormControlCodecMismatchFacts {
   readonly actionId: string;
   readonly controlKind: "input" | "select";
+  readonly controlCount?: number;
   readonly controlType: string;
   readonly decoderKind: "text";
   readonly fieldName: string;

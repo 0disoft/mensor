@@ -13,12 +13,35 @@ export default class Handler {}
 
   assert.deepEqual(fact.syntaxErrors, []);
   assert.equal(fact.hasExportStar, false);
-  assert.deepEqual(fact.exports.map((entry) => entry.name), [
-    "createTask",
-    "default",
-    "first",
-    "renamed",
-    "second",
+  assert.deepEqual(fact.exports.map((entry) => [entry.name, entry.kind]), [
+    ["createTask", "value"],
+    ["default", "value"],
+    ["first", "value"],
+    ["renamed", "value"],
+    ["second", "value"],
+  ]);
+});
+
+test("distinguishes runtime exports from type-only and ambient declarations", () => {
+  const fact = extractModuleFact(`export type createTask = () => void;
+export interface Handler {}
+export declare function ambientHandler(): void;
+export enum RuntimeEnum { Ready }
+export interface merged {}
+export const merged = 1;
+export type { Contract } from "./contract.js";
+export { type Shape, runtimeValue } from "./mixed.js";
+`, "handler.ts");
+
+  assert.deepEqual(fact.exports.map((entry) => [entry.name, entry.kind]), [
+    ["Contract", "type"],
+    ["Handler", "type"],
+    ["RuntimeEnum", "value"],
+    ["Shape", "type"],
+    ["ambientHandler", "type"],
+    ["createTask", "type"],
+    ["merged", "value"],
+    ["runtimeValue", "value"],
   ]);
 });
 
@@ -29,7 +52,7 @@ test("separates explicit namespace exports from unresolved export stars", () => 
   );
 
   assert.equal(fact.hasExportStar, true);
-  assert.deepEqual(fact.exports.map((entry) => entry.name), ["named"]);
+  assert.deepEqual(fact.exports.map((entry) => [entry.name, entry.kind]), [["named", "value"]]);
 });
 
 test("reports parser diagnostics without executing source", () => {
@@ -38,22 +61,27 @@ test("reports parser diagnostics without executing source", () => {
   assert.ok(fact.syntaxErrors.length > 0);
 });
 
-test("extracts static, type-only, literal dynamic, and unsupported dynamic imports", () => {
+test("extracts ESM and CommonJS runtime edges and rejects computed targets", () => {
   const fact = extractModuleFact(`import value from "./value.js";
 import type { Shape } from "./shape.js";
 export type { Contract } from "./contract.js";
 void import("./lazy.js");
 void import(runtimeTarget);
+const commonjs = require("./commonjs.cjs");
+require.resolve("./resolved.js");
+require(runtimeTarget);
 `, "browser.ts");
 
   assert.deepEqual(
     fact.imports.map((entry) => [entry.specifier, entry.edgeKind]),
     [
+      ["./commonjs.cjs", "runtime"],
       ["./contract.js", "type"],
       ["./lazy.js", "runtime"],
+      ["./resolved.js", "runtime"],
       ["./shape.js", "type"],
       ["./value.js", "runtime"],
     ],
   );
-  assert.equal(fact.unsupportedDynamicImports.length, 1);
+  assert.equal(fact.unsupportedDynamicImports.length, 2);
 });

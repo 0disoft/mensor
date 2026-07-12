@@ -10,6 +10,7 @@ import type {
 } from "@mensor/contract";
 
 import { readProjectFile } from "./filesystem.js";
+import { findFeatureOwner, sortFeatureRoots } from "./feature-roots.js";
 import { projectBoundaryRange } from "./locations.js";
 import { compareText, InputFailure } from "./paths.js";
 import { extractModuleFact, type ModuleFact } from "./typescript-source.js";
@@ -48,9 +49,11 @@ export async function checkImportBoundaries(options: {
     .filter(isSourceFile)
     .sort(compareText);
   const discovered = new Set(sourceFiles);
-  const featureRoots = options.featureContractPaths
-    .map((contract) => path.posix.dirname(contract))
-    .sort(compareText);
+  const featureRoots = sortFeatureRoots(
+    options.featureContractPaths.map((contract) => ({
+      root: path.posix.dirname(contract),
+    })),
+  );
   const parsed = new Map<string, ModuleFact>();
   for (const file of sourceFiles) {
     const sourceText = await readProjectFile(options.root, file, options.maxFileBytes);
@@ -334,14 +337,14 @@ function validateBoundaries(
 
 function classifyProjectRole(
   file: string,
-  featureRoots: readonly string[],
+  featureRoots: readonly { readonly root: string }[],
   fileRoles: readonly FileRoleContract[],
 ): string {
-  const featureRoot = featureRoots.find((root) => file.startsWith(`${root}/`));
-  if (featureRoot === undefined) {
+  const feature = findFeatureOwner(file, featureRoots);
+  if (feature === undefined) {
     return "unclassified";
   }
-  const featureFile = file.slice(featureRoot.length + 1);
+  const featureFile = file.slice(feature.root.length + 1);
   return fileRoles.find((entry) =>
     featureFile.startsWith(`${entry.withinFeature}/`),
   )?.role ?? "unclassified";

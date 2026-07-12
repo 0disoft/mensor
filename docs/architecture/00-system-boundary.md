@@ -41,6 +41,10 @@ JSONC contract       TypeScript/JavaScript       static HTML
 
 Parsing libraries may produce ASTs, but parser-specific objects stop at the
 extraction boundary. Rules receive only Mensor-owned serializable facts.
+TypeScript source is parsed once into facts that distinguish runtime and type
+exports, literal ESM and CommonJS edges, and computed runtime targets. Feature
+ownership and role classification share longest-root-first resolution so the
+same file cannot acquire different owners in separate rules.
 
 ## Dependency Direction
 

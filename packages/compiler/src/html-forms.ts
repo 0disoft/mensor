@@ -86,7 +86,7 @@ export function extractFormFacts(html: string): readonly FormFact[] {
 function unsupportedControlFact(
   element: DefaultTreeAdapterTypes.Element,
 ): readonly UnsupportedFormControlFact[] {
-  if (attribute(element, "disabled") !== null) {
+  if (isEffectivelyDisabled(element)) {
     return [];
   }
   const name = attribute(element, "name") ?? "";
@@ -188,7 +188,7 @@ function isFormControl(element: DefaultTreeAdapterTypes.Element): boolean {
 function isSuccessfulFieldCandidate(
   element: DefaultTreeAdapterTypes.Element,
 ): boolean {
-  if (attribute(element, "disabled") !== null || element.tagName === "button") {
+  if (isEffectivelyDisabled(element) || element.tagName === "button") {
     return false;
   }
   if (element.tagName !== "input") {
@@ -196,6 +196,44 @@ function isSuccessfulFieldCandidate(
   }
   const type = (attribute(element, "type") ?? "text").toLowerCase();
   return !["button", "file", "image", "reset", "submit"].includes(type);
+}
+
+function isEffectivelyDisabled(element: DefaultTreeAdapterTypes.Element): boolean {
+  if (attribute(element, "disabled") !== null) {
+    return true;
+  }
+  let parent = element.parentNode;
+  while (parent !== null) {
+    if (
+      "tagName" in parent &&
+      parent.tagName === "fieldset" &&
+      attribute(parent, "disabled") !== null
+    ) {
+      const firstLegend = parent.childNodes.find(
+        (child): child is DefaultTreeAdapterTypes.Element =>
+          "tagName" in child && child.tagName === "legend",
+      );
+      if (firstLegend === undefined || !isDescendantOf(element, firstLegend)) {
+        return true;
+      }
+    }
+    parent = "parentNode" in parent ? parent.parentNode : null;
+  }
+  return false;
+}
+
+function isDescendantOf(
+  element: DefaultTreeAdapterTypes.Element,
+  ancestor: DefaultTreeAdapterTypes.Element,
+): boolean {
+  let parent = element.parentNode;
+  while (parent !== null) {
+    if (parent === ancestor) {
+      return true;
+    }
+    parent = "parentNode" in parent ? parent.parentNode : null;
+  }
+  return false;
 }
 
 function associatedForm(

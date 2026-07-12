@@ -55,7 +55,9 @@ export async function checkFeatureHandlers(options: {
         projectFile,
       );
     }
-    if (module.exports.some((entry) => entry.name === action.handler.export)) {
+    if (module.exports.some(
+      (entry) => entry.kind === "value" && entry.name === action.handler.export,
+    )) {
       continue;
     }
     if (module.hasExportStar) {

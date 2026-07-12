@@ -61,13 +61,23 @@ silently coerced through that decoder, so the compiler emits
 Named file inputs, named submitters, and submitter-specific method or action
 overrides are represented as unsupported control facts and emit
 `form.control_unsupported`. Handler source is parsed without execution; a
-missing explicit export emits `handler.export_missing`.
+missing explicit runtime value export emits `handler.export_missing`. Type-only
+and ambient declarations do not satisfy a handler contract.
 
 `ProjectContract.boundaries` declares project-owned role policies. `direct`
 checks only edges originating in a configured role; `transitive` follows the
-normalized local module graph. Type-only imports are included. Violations emit
-`module.boundary_violation`, while computed dynamic imports emit
+normalized local module graph. ESM and literal CommonJS edges are included,
+as are type-only imports. Violations emit `module.boundary_violation`, while
+computed runtime imports emit
 `module.dynamic_import_unsupported` when reached by an active boundary.
+
+Scalar text bindings own exactly one schema property and one successful wire
+value producer. Duplicate controls, checkbox or repeated-value shapes, and
+binding or ignored-field ownership conflicts fail closed. Controls disabled by
+a fieldset are excluded, except for descendants of its first legend.
+
+Diagnostic reports are semantically validated after schema validation. Status,
+summary counts, and ordered source ranges must agree with their diagnostics.
 
 `ProjectContract.ownershipRules` maps explicit filename suffixes to a test or
 i18n slot inside each feature. The compiler emits `file.ownership_mismatch` for

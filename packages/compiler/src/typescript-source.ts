@@ -1,10 +1,11 @@
 import ts from "@typescript/typescript6";
 
-import type { SourcePosition, SourceRange } from "@mensor/contract";
+import type { SourceRange } from "@mensor/contract";
 
 import { compareText } from "./paths.js";
 
 export interface ModuleExportFact {
+  readonly kind: "type" | "value";
   readonly name: string;
   readonly range: SourceRange;
 }
@@ -27,22 +28,6 @@ export function extractModuleFact(
   sourceText: string,
   fileName: string,
 ): ModuleFact {
-  const diagnostics = ts.transpileModule(sourceText, {
-    fileName,
-    reportDiagnostics: true,
-    compilerOptions: {
-      allowJs: true,
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-  }).diagnostics ?? [];
-  const syntaxErrors = diagnostics
-    .filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error)
-    .map((diagnostic) =>
-      ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
-    )
-    .sort(compareText);
-
   const sourceFile = ts.createSourceFile(
     fileName,
     sourceText,
@@ -50,6 +35,13 @@ export function extractModuleFact(
     true,
     scriptKind(fileName),
   );
+  const parseDiagnostics = (sourceFile as ts.SourceFile & {
+    readonly parseDiagnostics: readonly ts.Diagnostic[];
+  }).parseDiagnostics;
+  const syntaxErrors = parseDiagnostics
+    .filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error)
+    .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))
+    .sort(compareText);
   const exports: ModuleExportFact[] = [];
   const imports: ModuleImportFact[] = [];
   const unsupportedDynamicImports: SourceRange[] = [];
@@ -58,13 +50,12 @@ export function extractModuleFact(
     if (ts.isExportDeclaration(statement) && statement.exportClause === undefined) {
       hasExportStar = true;
     }
-    collectStatementExports(statement, sourceFile, sourceText, exports);
-    collectStaticImport(statement, sourceFile, sourceText, imports);
+    collectStatementExports(statement, sourceFile, exports);
+    collectStaticImport(statement, sourceFile, imports);
   }
-  collectDynamicImports(
+  collectRuntimeCalls(
     sourceFile,
     sourceFile,
-    sourceText,
     imports,
     unsupportedDynamicImports,
   );
@@ -80,14 +71,13 @@ export function extractModuleFact(
 function collectStaticImport(
   statement: ts.Statement,
   sourceFile: ts.SourceFile,
-  sourceText: string,
   imports: ModuleImportFact[],
 ): void {
   if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
     imports.push({
       edgeKind: importDeclarationIsTypeOnly(statement) ? "type" : "runtime",
       specifier: statement.moduleSpecifier.text,
-      range: nodeRange(statement.moduleSpecifier, sourceFile, sourceText),
+      range: nodeRange(statement.moduleSpecifier, sourceFile),
     });
     return;
   }
@@ -99,7 +89,7 @@ function collectStaticImport(
     imports.push({
       edgeKind: statement.isTypeOnly ? "type" : "runtime",
       specifier: statement.moduleSpecifier.text,
-      range: nodeRange(statement.moduleSpecifier, sourceFile, sourceText),
+      range: nodeRange(statement.moduleSpecifier, sourceFile),
     });
     return;
   }
@@ -112,35 +102,46 @@ function collectStaticImport(
     imports.push({
       edgeKind: statement.isTypeOnly ? "type" : "runtime",
       specifier: statement.moduleReference.expression.text,
-      range: nodeRange(statement.moduleReference.expression, sourceFile, sourceText),
+      range: nodeRange(statement.moduleReference.expression, sourceFile),
     });
   }
 }
 
-function collectDynamicImports(
+function collectRuntimeCalls(
   node: ts.Node,
   sourceFile: ts.SourceFile,
-  sourceText: string,
   imports: ModuleImportFact[],
   unsupported: SourceRange[],
 ): void {
-  if (
-    ts.isCallExpression(node) &&
-    node.expression.kind === ts.SyntaxKind.ImportKeyword
-  ) {
+  if (ts.isCallExpression(node) && isRuntimeImportCall(node)) {
     const argument = node.arguments[0];
     if (argument !== undefined && ts.isStringLiteral(argument)) {
       imports.push({
         edgeKind: "runtime",
         specifier: argument.text,
-        range: nodeRange(argument, sourceFile, sourceText),
+        range: nodeRange(argument, sourceFile),
       });
     } else {
-      unsupported.push(nodeRange(node, sourceFile, sourceText));
+      unsupported.push(nodeRange(node, sourceFile));
     }
   }
   node.forEachChild((child) =>
-    collectDynamicImports(child, sourceFile, sourceText, imports, unsupported),
+    collectRuntimeCalls(child, sourceFile, imports, unsupported),
+  );
+}
+
+function isRuntimeImportCall(node: ts.CallExpression): boolean {
+  if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+    return true;
+  }
+  if (ts.isIdentifier(node.expression) && node.expression.text === "require") {
+    return true;
+  }
+  return (
+    ts.isPropertyAccessExpression(node.expression) &&
+    ts.isIdentifier(node.expression.expression) &&
+    node.expression.expression.text === "require" &&
+    node.expression.name.text === "resolve"
   );
 }
 
@@ -175,19 +176,19 @@ function uniqueImports(imports: readonly ModuleImportFact[]): readonly ModuleImp
 function collectStatementExports(
   statement: ts.Statement,
   sourceFile: ts.SourceFile,
-  sourceText: string,
   exports: ModuleExportFact[],
 ): void {
   if (ts.isExportAssignment(statement) && !statement.isExportEquals) {
-    exports.push({ name: "default", range: nodeRange(statement, sourceFile, sourceText) });
+    exports.push({ kind: "value", name: "default", range: nodeRange(statement, sourceFile) });
     return;
   }
   if (ts.isExportDeclaration(statement)) {
     if (statement.exportClause !== undefined && ts.isNamedExports(statement.exportClause)) {
       for (const element of statement.exportClause.elements) {
         exports.push({
+          kind: statement.isTypeOnly || element.isTypeOnly ? "type" : "value",
           name: element.name.text,
-          range: nodeRange(element.name, sourceFile, sourceText),
+          range: nodeRange(element.name, sourceFile),
         });
       }
     } else if (
@@ -195,8 +196,9 @@ function collectStatementExports(
       ts.isNamespaceExport(statement.exportClause)
     ) {
       exports.push({
+        kind: "value",
         name: statement.exportClause.name.text,
-        range: nodeRange(statement.exportClause.name, sourceFile, sourceText),
+        range: nodeRange(statement.exportClause.name, sourceFile),
       });
     }
     return;
@@ -205,26 +207,29 @@ function collectStatementExports(
     return;
   }
   if (hasModifier(statement, ts.SyntaxKind.DefaultKeyword)) {
-    exports.push({ name: "default", range: nodeRange(statement, sourceFile, sourceText) });
+    exports.push({
+      kind: declarationHasRuntimeValue(statement) ? "value" : "type",
+      name: "default",
+      range: nodeRange(statement, sourceFile),
+    });
     return;
   }
   if (ts.isVariableStatement(statement)) {
     for (const declaration of statement.declarationList.declarations) {
-      collectBindingNames(declaration.name, sourceFile, sourceText, exports);
+      collectBindingNames(declaration.name, sourceFile, exports);
     }
     return;
   }
   if (
-    (ts.isFunctionDeclaration(statement) ||
-      ts.isClassDeclaration(statement) ||
-      ts.isInterfaceDeclaration(statement) ||
-      ts.isTypeAliasDeclaration(statement) ||
+    (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement) ||
+      ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) ||
       ts.isEnumDeclaration(statement)) &&
     statement.name !== undefined
   ) {
     exports.push({
+      kind: declarationHasRuntimeValue(statement) ? "value" : "type",
       name: statement.name.text,
-      range: nodeRange(statement.name, sourceFile, sourceText),
+      range: nodeRange(statement.name, sourceFile),
     });
   }
 }
@@ -232,18 +237,24 @@ function collectStatementExports(
 function collectBindingNames(
   name: ts.BindingName,
   sourceFile: ts.SourceFile,
-  sourceText: string,
   exports: ModuleExportFact[],
 ): void {
   if (ts.isIdentifier(name)) {
-    exports.push({ name: name.text, range: nodeRange(name, sourceFile, sourceText) });
+    exports.push({ kind: "value", name: name.text, range: nodeRange(name, sourceFile) });
     return;
   }
   for (const element of name.elements) {
     if (!ts.isOmittedExpression(element)) {
-      collectBindingNames(element.name, sourceFile, sourceText, exports);
+      collectBindingNames(element.name, sourceFile, exports);
     }
   }
+}
+
+function declarationHasRuntimeValue(statement: ts.Statement): boolean {
+  if (hasModifier(statement, ts.SyntaxKind.DeclareKeyword)) {
+    return false;
+  }
+  return !ts.isInterfaceDeclaration(statement) && !ts.isTypeAliasDeclaration(statement);
 }
 
 function hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
@@ -255,34 +266,19 @@ function hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
 function uniqueExports(exports: readonly ModuleExportFact[]): readonly ModuleExportFact[] {
   const byName = new Map<string, ModuleExportFact>();
   for (const entry of exports) {
-    if (!byName.has(entry.name)) {
+    const existing = byName.get(entry.name);
+    if (existing === undefined || (existing.kind === "type" && entry.kind === "value")) {
       byName.set(entry.name, entry);
     }
   }
   return [...byName.values()].sort((left, right) => compareText(left.name, right.name));
 }
 
-function nodeRange(
-  node: ts.Node,
-  sourceFile: ts.SourceFile,
-  sourceText: string,
-): SourceRange {
+function nodeRange(node: ts.Node, sourceFile: ts.SourceFile): SourceRange {
   return {
-    start: positionAt(sourceText, node.getStart(sourceFile)),
-    end: positionAt(sourceText, node.getEnd()),
+    start: sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)),
+    end: sourceFile.getLineAndCharacterOfPosition(node.getEnd()),
   };
-}
-
-function positionAt(text: string, offset: number): SourcePosition {
-  let line = 0;
-  let lineStart = 0;
-  for (let index = 0; index < offset; index += 1) {
-    if (text.charCodeAt(index) === 10) {
-      line += 1;
-      lineStart = index + 1;
-    }
-  }
-  return { line, character: offset - lineStart };
 }
 
 function scriptKind(fileName: string): ts.ScriptKind {

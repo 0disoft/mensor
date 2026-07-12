@@ -442,6 +442,7 @@
         "controlKind": {
           "enum": ["input", "select"]
         },
+        "controlCount": { "type": "integer", "minimum": 2 },
         "controlType": {
           "type": "string"
         },
