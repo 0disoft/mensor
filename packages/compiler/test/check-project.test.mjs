@@ -333,6 +333,51 @@ test("fails closed when discovery exceeds the configured file limit", async () =
   }
 });
 
+test("fails closed when discovery exceeds the aggregate byte limit", async () => {
+  const result = await checkProject({
+    root: path.join(fixtureRoot, "valid/tiny-tasks"),
+    limits: { maxTotalBytes: 1 },
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.failure.kind, "filesystem");
+    assert.equal(result.failure.code, "discovery.total_bytes_limit_exceeded");
+    assert.equal(result.failure.file, "src");
+  }
+});
+
+test("fails closed when discovery exceeds the directory depth limit", async () => {
+  const result = await checkProject({
+    root: path.join(fixtureRoot, "valid/tiny-tasks"),
+    limits: { maxDepth: 0 },
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.failure.kind, "filesystem");
+    assert.equal(result.failure.code, "discovery.depth_limit_exceeded");
+    assert.equal(result.failure.file, "src/features");
+  }
+});
+
+test("rejects invalid aggregate discovery limits", async () => {
+  for (const [limits, code] of [
+    [{ maxTotalBytes: 0 }, "limits.max_total_bytes_invalid"],
+    [{ maxDepth: -1 }, "limits.max_depth_invalid"],
+  ]) {
+    const result = await checkProject({
+      root: path.join(fixtureRoot, "valid/tiny-tasks"),
+      limits,
+    });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.failure.kind, "configuration");
+      assert.equal(result.failure.code, code);
+    }
+  }
+});
+
 test("rejects an empty producer version before creating an invalid report", async () => {
   const result = await checkProject({
     root: path.join(fixtureRoot, "valid/tiny-tasks"),

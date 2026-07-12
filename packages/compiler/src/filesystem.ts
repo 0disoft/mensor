@@ -64,12 +64,23 @@ export async function discoverProjectFiles(
   root: string,
   sourceRoot: string,
   maxFiles: number,
+  maxTotalBytes: number,
+  maxDepth: number,
 ): Promise<readonly string[]> {
   const safeSourceRoot = assertRelativePosixPath(sourceRoot, "sourceRoot");
   await assertPathHasNoSymlink(root, safeSourceRoot, true);
   const files: string[] = [];
+  let totalBytes = 0;
 
-  async function visit(relativeDirectory: string): Promise<void> {
+  async function visit(relativeDirectory: string, depth: number): Promise<void> {
+    if (depth > maxDepth) {
+      throw new InputFailure(
+        "filesystem",
+        "discovery.depth_limit_exceeded",
+        `Source discovery exceeded the configured directory depth limit of ${maxDepth}.`,
+        relativeDirectory,
+      );
+    }
     let entries;
     try {
       entries = await readdir(fromProjectPath(root, relativeDirectory), {
@@ -91,7 +102,7 @@ export async function discoverProjectFiles(
         continue;
       }
       if (entry.isDirectory()) {
-        await visit(relativeEntry);
+        await visit(relativeEntry, depth + 1);
       } else if (entry.isFile()) {
         files.push(relativeEntry);
         if (files.length > maxFiles) {
@@ -102,11 +113,31 @@ export async function discoverProjectFiles(
             safeSourceRoot,
           );
         }
+        let stats;
+        try {
+          stats = await lstat(fromProjectPath(root, relativeEntry));
+        } catch (error) {
+          throw filesystemFailure(
+            error,
+            "file.unreadable",
+            `Cannot inspect project file ${JSON.stringify(relativeEntry)}.`,
+            relativeEntry,
+          );
+        }
+        totalBytes += stats.size;
+        if (totalBytes > maxTotalBytes) {
+          throw new InputFailure(
+            "filesystem",
+            "discovery.total_bytes_limit_exceeded",
+            `Source discovery exceeded the configured total byte limit of ${maxTotalBytes}.`,
+            safeSourceRoot,
+          );
+        }
       }
     }
   }
 
-  await visit(safeSourceRoot);
+  await visit(safeSourceRoot, 0);
   return files;
 }
 

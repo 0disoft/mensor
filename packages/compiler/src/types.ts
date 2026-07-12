@@ -7,6 +7,8 @@ export interface CheckProjectOptions {
   readonly limits?: {
     readonly maxFiles?: number;
     readonly maxFileBytes?: number;
+    readonly maxTotalBytes?: number;
+    readonly maxDepth?: number;
   };
 }
 

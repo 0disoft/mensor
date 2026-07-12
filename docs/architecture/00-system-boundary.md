@@ -65,8 +65,10 @@ source or config, invoke package loaders, follow symlinks outside the root,
 access the network, or include source literals in canonical diagnostics.
 
 All configured paths are root-relative. Absolute paths, `..` escapes, and
-symlink escapes fail closed. File count, file size, and parser nesting limits
-must be explicit before untrusted CI use is claimed.
+symlink escapes fail closed. Source discovery has explicit file-count,
+per-file byte, aggregate byte, and directory-depth limits. Parser nesting
+limits remain parser-owned and must be explicit before support for more complex
+authoring formats is claimed.
 
 ## Adapter Boundary
 

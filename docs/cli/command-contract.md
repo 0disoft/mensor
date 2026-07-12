@@ -22,6 +22,9 @@ mensor check [root] [--config <path>] [--json]
 - `--json` selects the canonical machine-readable report.
 - Paths supplied through flags must resolve inside `root`.
 - Environment variables do not alter contract or rule behavior in the MVP.
+- The CLI applies compiler defaults of 10,000 discovered files, 1 MiB per
+  source file, 64 MiB across the discovered source tree, and 64 directory
+  levels below `sourceRoot`.
 
 `compile`, `fix`, `watch`, `init`, and plugin commands are not part of the MVP.
 
@@ -62,7 +65,7 @@ The failure envelope is:
   "schemaVersion": 1,
   "producer": {
     "name": "mensor",
-    "version": "0.0.25"
+    "version": "0.0.26"
   },
   "status": "error",
   "failure": {

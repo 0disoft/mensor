@@ -35,6 +35,8 @@ import type {
 const defaultConfigFile = "mensor.project.jsonc";
 const defaultMaxFiles = 10_000;
 const defaultMaxFileBytes = 1_048_576;
+const defaultMaxTotalBytes = 67_108_864;
+const defaultMaxDepth = 64;
 const defaultProducerVersion = "0.0.0";
 
 export async function checkProject(
@@ -51,6 +53,8 @@ export async function checkProject(
     }
     const maxFiles = options.limits?.maxFiles ?? defaultMaxFiles;
     const maxFileBytes = options.limits?.maxFileBytes ?? defaultMaxFileBytes;
+    const maxTotalBytes = options.limits?.maxTotalBytes ?? defaultMaxTotalBytes;
+    const maxDepth = options.limits?.maxDepth ?? defaultMaxDepth;
     if (!Number.isSafeInteger(maxFiles) || maxFiles < 1) {
       return failure({
         kind: "configuration",
@@ -63,6 +67,20 @@ export async function checkProject(
         kind: "configuration",
         code: "limits.max_file_bytes_invalid",
         message: "limits.maxFileBytes must be a positive safe integer.",
+      });
+    }
+    if (!Number.isSafeInteger(maxTotalBytes) || maxTotalBytes < 1) {
+      return failure({
+        kind: "configuration",
+        code: "limits.max_total_bytes_invalid",
+        message: "limits.maxTotalBytes must be a positive safe integer.",
+      });
+    }
+    if (!Number.isSafeInteger(maxDepth) || maxDepth < 0) {
+      return failure({
+        kind: "configuration",
+        code: "limits.max_depth_invalid",
+        message: "limits.maxDepth must be a non-negative safe integer.",
       });
     }
     const root = await assertProjectRoot(options.root);
@@ -82,6 +100,8 @@ export async function checkProject(
       root,
       project.sourceRoot,
       maxFiles,
+      maxTotalBytes,
+      maxDepth,
     );
     const discovered = new Set(discoveredFiles);
     const diagnostics: Diagnostic[] = [];
