@@ -11,6 +11,11 @@ export type {
   CommandAgentSuiteCase,
   RunCommandAgentSuiteOptions,
 } from "./command-suite.js";
+export { createVerifiedWorkspaceProvider } from "./verified-workspace-provider.js";
+export type {
+  VerifiedBaseline,
+  VerifiedWorkspaceProviderOptions,
+} from "./verified-workspace-provider.js";
 export {
   createAgentTrialEvidence,
   createCommandExecutionDescriptor,

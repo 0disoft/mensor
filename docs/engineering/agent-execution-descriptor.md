@@ -63,3 +63,9 @@ runs every attempt in a caller-provided fresh workspace that is disposed even
 on failure. It remains serial so command trials cannot compete for shared host
 budgets. The workspace provider and external sandbox must enforce isolation
 outside the Node.js process.
+
+The repository-provided `createVerifiedWorkspaceProvider` pins each baseline to
+a canonical snapshot digest, rejects symbolic links and special files, verifies
+the copy, and deletes only live paths it created below its temporary root.
+Callers should use this provider for controlled fixture suites instead of an ad
+hoc copy callback.

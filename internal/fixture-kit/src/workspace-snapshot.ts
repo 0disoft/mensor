@@ -42,6 +42,16 @@ export function compareWorkspaceSnapshots(
   });
 }
 
+export function workspaceSnapshotDigest(snapshot: WorkspaceSnapshot): string {
+  const entries = Object.entries(snapshot).sort(([left], [right]) =>
+    compareText(left, right),
+  );
+  if (JSON.stringify(entries.map(([file]) => file)) !== JSON.stringify(Object.keys(snapshot))) {
+    throw new Error("Workspace snapshot paths must use canonical ordering.");
+  }
+  return createHash("sha256").update(JSON.stringify(entries), "utf8").digest("hex");
+}
+
 async function walk(
   root: string,
   relativeDirectory: string,
@@ -64,14 +74,14 @@ async function walk(
     const absolutePath = path.join(directory, entry.name);
     const stat = await lstat(absolutePath);
     if (stat.isSymbolicLink()) {
-      continue;
+      throw new Error(`Workspace snapshot does not permit symbolic links: ${relativePath}`);
     }
     if (stat.isDirectory()) {
       await walk(root, relativePath, depth + 1, limits, budget, snapshot);
       continue;
     }
     if (!stat.isFile()) {
-      continue;
+      throw new Error(`Workspace snapshot does not permit special files: ${relativePath}`);
     }
     budget.files += 1;
     if (budget.files > limits.maxFiles) {

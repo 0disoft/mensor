@@ -202,6 +202,9 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     environment, and process limits without serializing their raw values.
 29. Package validation starts from clean build output and rejects generated
     files that do not map to the current source and schema graph.
+30. Controlled evaluation baselines are pinned by canonical workspace digest;
+    symlinks, special files, source drift, copy drift, and foreign cleanup paths
+    fail closed.
 
 ## Deferred Decisions
 
