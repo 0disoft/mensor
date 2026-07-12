@@ -66,6 +66,18 @@ test("mutation applications are byte-identical across absolute roots", async () 
   }
 });
 
+test("rejects concurrent mutations against one workspace", async () => {
+  await withFixture("tiny-tasks", async (root) => {
+    const results = await Promise.allSettled([
+      runMutationCheck(root, "form-field-missing"),
+      runMutationCheck(root, "form-action-mismatch"),
+    ]);
+    assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+    const rejected = results.find((result) => result.status === "rejected");
+    assert.match(String(rejected?.reason), /already in use/);
+  });
+});
+
 test("builds a deterministic serializable benchmark report", async () => {
   const reports = [];
   for (let run = 0; run < 2; run += 1) {

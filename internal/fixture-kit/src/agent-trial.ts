@@ -1,19 +1,22 @@
-import { createHash } from "node:crypto";
-import { readdir, readFile } from "node:fs/promises";
-import * as path from "node:path";
 import type { DiagnosticReport } from "@mensor/contract";
 
 import {
   captureRepairBaseline,
-  evaluateRepair,
+  evaluateRepairInLeasedWorkspace,
 } from "./repair-evaluation.js";
 import {
   mutationCatalog,
-  runMutationCheck,
+  runMutationCheckInLeasedWorkspace,
   type MutationBaselineId,
   type MutationFileChange,
   type MutationId,
 } from "./mutations.js";
+import { withWorkspaceLease } from "./workspace-lease.js";
+import {
+  captureWorkspaceSnapshot,
+  compareWorkspaceSnapshots,
+  type WorkspaceSnapshotLimits,
+} from "./workspace-snapshot.js";
 
 export interface AgentTrialContext {
   readonly root: string;
@@ -38,6 +41,7 @@ export interface RunAgentTrialOptions {
   readonly protectedFiles: readonly string[];
   readonly adapter: AgentTrialAdapter;
   readonly semanticCheck: () => boolean | Promise<boolean>;
+  readonly snapshotLimits?: Partial<WorkspaceSnapshotLimits>;
 }
 
 export type AgentTrialFailureCategory =
@@ -97,14 +101,23 @@ export interface AgentTrialReport {
 export async function runAgentTrial(
   options: RunAgentTrialOptions,
 ): Promise<AgentTrialResult> {
+  return withWorkspaceLease(options.root, () => runAgentTrialInLeasedWorkspace(options));
+}
+
+async function runAgentTrialInLeasedWorkspace(
+  options: RunAgentTrialOptions,
+): Promise<AgentTrialResult> {
   assertIdentifier("trialId", options.trialId);
   const baseline = await captureRepairBaseline({
     root: options.root,
     protectedFiles: options.protectedFiles,
   });
-  const checkedMutation = await runMutationCheck(options.root, options.mutationId);
+  const checkedMutation = await runMutationCheckInLeasedWorkspace(
+    options.root,
+    options.mutationId,
+  );
   const mutation = checkedMutation.benchmarkCase;
-  const mutatedSnapshot = await snapshotWorkspace(options.root);
+  const mutatedSnapshot = await captureWorkspaceSnapshot(options.root, options.snapshotLimits);
 
   let adapterCompleted = false;
   let rounds = 0;
@@ -128,13 +141,14 @@ export async function runAgentTrial(
     }
   }
 
-  const evaluation = await evaluateRepair({
+  const agentSnapshot = await captureWorkspaceSnapshot(options.root, options.snapshotLimits);
+  const repairChanges = compareWorkspaceSnapshots(mutatedSnapshot, agentSnapshot);
+  const evaluation = await evaluateRepairInLeasedWorkspace({
     root: options.root,
     baseline,
     semanticCheck: options.semanticCheck,
+    ...(options.snapshotLimits === undefined ? {} : { snapshotLimits: options.snapshotLimits }),
   });
-  const repairedSnapshot = await snapshotWorkspace(options.root);
-  const repairChanges = compareSnapshots(mutatedSnapshot, repairedSnapshot);
   const failureCategory = classifyFailure({
     detectionPassed: mutation.detectionPassed,
     adapterCompleted,
@@ -500,53 +514,6 @@ function requireCatalogValue(
 
 function sameStrings(left: readonly string[], right: readonly string[]): boolean {
   return left.length === right.length && left.every((item, index) => item === right[index]);
-}
-
-type WorkspaceSnapshot = Readonly<Record<string, string>>;
-
-async function snapshotWorkspace(root: string): Promise<WorkspaceSnapshot> {
-  const snapshot: Record<string, string> = {};
-  await walk(root, "", snapshot);
-  return snapshot;
-}
-
-async function walk(
-  root: string,
-  relativeDirectory: string,
-  snapshot: Record<string, string>,
-): Promise<void> {
-  const directory = path.join(root, ...relativeDirectory.split("/").filter(Boolean));
-  const entries = (await readdir(directory, { withFileTypes: true })).sort((left, right) =>
-    compareText(left.name, right.name),
-  );
-  for (const entry of entries) {
-    if (entry.isSymbolicLink()) {
-      continue;
-    }
-    const relativePath = relativeDirectory.length === 0
-      ? entry.name
-      : `${relativeDirectory}/${entry.name}`;
-    if (entry.isDirectory()) {
-      await walk(root, relativePath, snapshot);
-    } else if (entry.isFile()) {
-      const bytes = await readFile(path.join(directory, entry.name));
-      snapshot[relativePath] = createHash("sha256").update(bytes).digest("hex");
-    }
-  }
-}
-
-function compareSnapshots(
-  before: WorkspaceSnapshot,
-  after: WorkspaceSnapshot,
-): readonly MutationFileChange[] {
-  const files = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort(compareText);
-  return files.flatMap((file) => {
-    const beforeSha256 = before[file] ?? null;
-    const afterSha256 = after[file] ?? null;
-    return beforeSha256 === afterSha256
-      ? []
-      : [{ file, beforeSha256, afterSha256 }];
-  });
 }
 
 function compareText(left: string, right: string): number {

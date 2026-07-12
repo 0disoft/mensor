@@ -385,6 +385,17 @@ test("fails closed on timeout, output overflow, invalid output, and exit failure
   });
 });
 
+test("does not wait for escaped descendants that retain command pipes", async () => {
+  await withFixture(async (root) => {
+    const startedAt = performance.now();
+    await assert.rejects(
+      adapter("escaped-pipe", { timeoutMs: 100 })(context(root)),
+      /timeout/,
+    );
+    assert.ok(performance.now() - startedAt < 500);
+  });
+});
+
 test("rejects oversized protocol input before running the command", async () => {
   await withFixture(async (root) => {
     const command = createCommandAgentAdapter({

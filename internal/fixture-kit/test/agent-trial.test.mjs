@@ -188,6 +188,53 @@ test("preserves higher-risk final-state evidence when an adapter throws", async 
   });
 });
 
+test("attributes repair changes before semantic evaluation and rejects later mutation", async () => {
+  await withFixture(async (root) => {
+    const result = await runAgentTrial({
+      trialId: "semantic-toctou-1",
+      root,
+      mutationId: "form-field-missing",
+      protectedFiles,
+      adapter: async () => {
+        await restoreTitle(root);
+        return { rounds: 1 };
+      },
+      semanticCheck: async () => {
+        const file = path.join(root, ...template.split("/"));
+        const html = await readFile(file, "utf8");
+        await writeFile(file, html.replace('action="/tasks"', 'action="/late-change"'), "utf8");
+        return true;
+      },
+    });
+
+    assert.equal(result.repaired, false);
+    assert.equal(result.checkPassed, false);
+    assert.equal(result.semanticCheckPassed, false);
+    assert.equal(result.failureCategory, "semantic-regression");
+    assert.deepEqual(result.repairChanges.map((change) => change.file), [template]);
+  });
+});
+
+test("fails closed when an agent exceeds workspace snapshot limits", async () => {
+  await withFixture(async (root) => {
+    await assert.rejects(
+      runAgentTrial({
+        trialId: "snapshot-budget-1",
+        root,
+        mutationId: "form-field-missing",
+        protectedFiles,
+        adapter: async () => {
+          await writeFile(path.join(root, "oversized.bin"), "x".repeat(8_192), "utf8");
+          return { rounds: 1 };
+        },
+        semanticCheck: () => true,
+        snapshotLimits: { maxFileBytes: 4_096 },
+      }),
+      /snapshot file exceeded its byte limit/,
+    );
+  });
+});
+
 test("builds deterministic any-trial and all-trials metrics", async () => {
   const trials = [];
   for (const [trialId, repairs] of [

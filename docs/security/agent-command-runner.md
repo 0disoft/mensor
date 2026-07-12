@@ -20,8 +20,10 @@ general process API.
   transcript.
 - Combined stdout and stderr have a byte limit.
 - Execution has a bounded timeout.
-- Timeout and output overflow terminate the process group on POSIX and the
-  process tree through `taskkill` on Windows.
+- Timeout and output overflow terminate the original process group on POSIX and
+  request process-tree termination through `taskkill` on Windows. Command pipes
+  are detached at the limit so an escaped descendant cannot delay adapter
+  return merely by retaining inherited stdout or stderr handles.
 
 ## Output Boundary
 
@@ -50,8 +52,10 @@ were reviewed or contained no secrets.
 
 ## Remaining Boundary
 
-The runner does not provide an OS sandbox, network namespace, filesystem
+The runner does not provide an OS sandbox, PID namespace, Windows Job Object,
+network namespace, filesystem
 allowlist, token broker, provider authentication, or cost limit. A real
 provider command must run in an external sandbox with separately controlled
 credentials and network access before its results can support a repair-rate
-claim.
+claim. A descendant that creates a new process group or session may outlive the
+adapter; process-group termination is defense in depth, not an isolation proof.

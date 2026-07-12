@@ -1,4 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
 import path from "node:path";
 
 const mode = process.argv[2];
@@ -56,6 +57,19 @@ if (
   process.stderr.write("provider command failure details");
   process.exitCode = 4;
 } else if (mode === "hang") {
+  setInterval(() => {}, 1_000);
+} else if (mode === "escaped-pipe") {
+  const child = spawn(
+    process.execPath,
+    ["-e", "setTimeout(() => {}, 1500)"],
+    {
+      cwd: path.dirname(process.execPath),
+      detached: true,
+      env: {},
+      stdio: "inherit",
+    },
+  );
+  child.unref();
   setInterval(() => {}, 1_000);
 } else {
   process.exitCode = 5;

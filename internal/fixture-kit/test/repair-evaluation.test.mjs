@@ -85,6 +85,28 @@ test("rejects a checker-clean repair that deletes feature semantics", async () =
   });
 });
 
+test("rejects semantic checks that mutate the evaluated workspace", async () => {
+  await withFixture(async (root) => {
+    const baseline = await captureRepairBaseline({ root, protectedFiles });
+    await addTitleControl(root);
+    const evaluation = await evaluateRepair({
+      root,
+      baseline,
+      semanticCheck: async () => {
+        const file = path.join(root, ...template.split("/"));
+        const html = await readFile(file, "utf8");
+        await writeFile(file, html.replace('action="/tasks"', 'action="/changed"'), "utf8");
+        return true;
+      },
+    });
+
+    assert.equal(evaluation.success, false);
+    assert.equal(evaluation.checkPassed, false);
+    assert.equal(evaluation.semanticCheckPassed, false);
+    assert.deepEqual(evaluation.diagnosticCodes, ["form.action_mismatch"]);
+  });
+});
+
 async function addTitleControl(root) {
   const file = path.join(root, ...template.split("/"));
   const html = await readFile(file, "utf8");

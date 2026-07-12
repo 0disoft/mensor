@@ -15,6 +15,12 @@ records the initial diagnostics, invokes the adapter, reruns the compiler,
 executes an application-owned semantic oracle, and compares workspace digests
 before and after the repair attempt.
 
+Mutating entrypoints acquire an exclusive process-local lease for the canonical
+workspace root. Snapshots use streaming hashes with bounded file count, file
+size, aggregate bytes, and directory depth. Agent changes are captured before
+the semantic oracle; oracle side effects or drift during final compiler and
+protected-file verification fail the trial.
+
 The adapter context retains the complete compiler-owned diagnostic report.
 Command adapters receive its file, range, facts, related locations, repair
 strategy, and preservation constraints through bounded stdin. A diagnostic
@@ -79,3 +85,6 @@ For command-backed trials, `runCommandAgentTrial` owns the complete
 configuration-to-evidence path. Adapter and descriptor validation completes
 before mutation, so invalid process configuration cannot leave a mutated trial
 that looks like an attempted repair.
+
+The lease does not coordinate separate OS processes. Real evaluation workers
+must still receive isolated temporary roots from their scheduler or sandbox.

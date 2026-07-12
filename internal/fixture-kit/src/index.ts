@@ -15,6 +15,7 @@ export {
   runMutationCheck,
   runMutationCase,
 } from "./mutations.js";
+export type { WorkspaceSnapshotLimits } from "./workspace-snapshot.js";
 export {
   agentTrialFailureCategories,
   createAgentTrialReport,

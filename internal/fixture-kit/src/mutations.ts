@@ -4,6 +4,7 @@ import * as path from "node:path";
 
 import { checkProject } from "@mensor/compiler";
 import type { DiagnosticReport } from "@mensor/contract";
+import { withWorkspaceLease } from "./workspace-lease.js";
 
 export type MutationId =
   | "browser-direct-server-import"
@@ -103,6 +104,13 @@ export async function applyMutation(
   root: string,
   mutationId: MutationId,
 ): Promise<MutationApplication> {
+  return withWorkspaceLease(root, () => applyMutationInLeasedWorkspace(root, mutationId));
+}
+
+export async function applyMutationInLeasedWorkspace(
+  root: string,
+  mutationId: MutationId,
+): Promise<MutationApplication> {
   const definition = mutationCatalog.find((item) => item.id === mutationId);
   if (definition === undefined) {
     throw new Error(`Unknown mutation: ${mutationId}`);
@@ -147,7 +155,14 @@ export async function runMutationCheck(
   root: string,
   mutationId: MutationId,
 ): Promise<MutationCheckResult> {
-  const application = await applyMutation(root, mutationId);
+  return withWorkspaceLease(root, () => runMutationCheckInLeasedWorkspace(root, mutationId));
+}
+
+export async function runMutationCheckInLeasedWorkspace(
+  root: string,
+  mutationId: MutationId,
+): Promise<MutationCheckResult> {
+  const application = await applyMutationInLeasedWorkspace(root, mutationId);
   const result = await checkProject({
     root,
     producerVersion: "0.0.0-mutation-benchmark",

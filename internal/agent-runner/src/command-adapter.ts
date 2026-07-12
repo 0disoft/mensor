@@ -114,7 +114,7 @@ async function runCommand(
 
   const completion = new Promise<number>((resolve, reject) => {
     child.once("error", reject);
-    child.once("close", (code) => resolve(code ?? 1));
+    child.once("exit", (code) => resolve(code ?? 1));
     const capture = (chunk: Buffer): void => {
       outputBytes += chunk.length;
       if (outputBytes > options.maxOutputBytes && terminationReason === null) {
@@ -197,10 +197,14 @@ function parseOutput(bytes: Buffer): AgentTrialAdapterResult {
 }
 
 function terminateProcessTree(child: ChildProcessWithoutNullStreams): void {
+  child.stdin.destroy();
+  child.stdout.destroy();
+  child.stderr.destroy();
   if (child.pid === undefined) {
     return;
   }
   if (process.platform === "win32") {
+    child.kill("SIGKILL");
     const systemRoot = process.env["SystemRoot"] ?? "C:\\Windows";
     const taskkill = path.join(systemRoot, "System32", "taskkill.exe");
     const killer = spawn(taskkill, ["/PID", String(child.pid), "/T", "/F"], {

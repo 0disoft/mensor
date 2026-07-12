@@ -190,6 +190,11 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     reject repeated successful controls for scalar text bindings.
 24. Feature and diagnostic-report parsers reject cross-field contradictions in
     binding ownership, summary counts, status, and source ranges.
+25. Mutating evaluation APIs reject concurrent use of one workspace, attribute
+    agent changes before semantic evaluation, and revalidate the post-oracle
+    final state.
+26. Evaluation snapshots use streaming hashes and explicit file, byte,
+    aggregate-byte, and depth limits; exceeding a limit fails closed.
 
 ## Deferred Decisions
 

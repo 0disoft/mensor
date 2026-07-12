@@ -3,6 +3,12 @@ import { readFile } from "node:fs/promises";
 import * as path from "node:path";
 
 import { checkProject } from "@mensor/compiler";
+import {
+  captureWorkspaceSnapshot,
+  compareWorkspaceSnapshots,
+  type WorkspaceSnapshotLimits,
+} from "./workspace-snapshot.js";
+import { withWorkspaceLease } from "./workspace-lease.js";
 
 export interface CaptureRepairBaselineOptions {
   readonly root: string;
@@ -17,6 +23,7 @@ export interface EvaluateRepairOptions {
   readonly root: string;
   readonly baseline: RepairBaseline;
   readonly semanticCheck: () => boolean | Promise<boolean>;
+  readonly snapshotLimits?: Partial<WorkspaceSnapshotLimits>;
 }
 
 export interface RepairEvaluation {
@@ -41,10 +48,16 @@ export async function captureRepairBaseline(
 export async function evaluateRepair(
   options: EvaluateRepairOptions,
 ): Promise<RepairEvaluation> {
-  const result = await checkProject({
-    root: options.root,
-    producerVersion: "0.0.0-repair-eval",
-  });
+  return withWorkspaceLease(options.root, () => evaluateRepairInLeasedWorkspace(options));
+}
+
+export async function evaluateRepairInLeasedWorkspace(
+  options: EvaluateRepairOptions,
+): Promise<RepairEvaluation> {
+  const beforeSemantic = await captureWorkspaceSnapshot(options.root, options.snapshotLimits);
+  const semanticResult = await options.semanticCheck();
+  const afterSemantic = await captureWorkspaceSnapshot(options.root, options.snapshotLimits);
+  const result = await checkProject({ root: options.root, producerVersion: "0.0.0-repair-eval" });
   const diagnosticCodes = result.ok
     ? result.report.diagnostics.map((diagnostic) => diagnostic.code)
     : [result.failure.code];
@@ -58,7 +71,10 @@ export async function evaluateRepair(
       protectedFilesChanged.push(file);
     }
   }
-  const semanticCheckPassed = await options.semanticCheck();
+  const afterVerification = await captureWorkspaceSnapshot(options.root, options.snapshotLimits);
+  const semanticCheckPassed = semanticResult &&
+    compareWorkspaceSnapshots(beforeSemantic, afterSemantic).length === 0 &&
+    compareWorkspaceSnapshots(afterSemantic, afterVerification).length === 0;
   return {
     success:
       checkPassed &&
