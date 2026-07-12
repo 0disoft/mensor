@@ -17,11 +17,17 @@ fixtures/
   valid/
   invalid/
   compound/
+examples/
+  dogfood-tasks/
 ```
 
 The contract, compiler, CLI, fixture-kit, and agent-runner packages are current.
 Each package was introduced with a complete vertical slice. Empty packages
 reserved for a possible runtime, adapter, SDK, or formatter are forbidden.
+
+`examples/dogfood-tasks` is a dependency-free runnable application, not a
+workspace package. It proves the compiler contract and application semantics
+against the same source and contributes a digest-pinned mutation baseline.
 
 ## Package Ownership
 

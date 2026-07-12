@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dogfood Tasks</title>
+  </head>
+  <body>
+    <main>
+      <h1>Tasks</h1>
+      <form id="create-task" method="post" action="/tasks">
+        <label>
+          Task
+          <input name="title" type="text" required="required" maxlength="120" />
+        </label>
+        <button type="submit">Add task</button>
+      </form>
+      <ul><!-- TASK_ITEMS --></ul>
+    </main>
+  </body>
+</html>

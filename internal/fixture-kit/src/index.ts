@@ -11,6 +11,7 @@ export type {
 export {
   applyMutation,
   createMutationBenchmarkReport,
+  mutationBaselineIds,
   mutationCatalog,
   runMutationCheck,
   runMutationCase,

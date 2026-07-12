@@ -42,6 +42,28 @@ for (const fixture of fixtures) {
   );
 }
 
+assertSuccess(
+  parseProjectContract(await readFile(new URL(
+    "../examples/dogfood-tasks/mensor.project.jsonc",
+    import.meta.url,
+  ), "utf8")),
+  "examples/dogfood-tasks/mensor.project.jsonc",
+);
+assertSuccess(
+  parseFeatureContract(await readFile(new URL(
+    "../examples/dogfood-tasks/src/features/tasks/feature.mensor.jsonc",
+    import.meta.url,
+  ), "utf8")),
+  "examples/dogfood-tasks/src/features/tasks/feature.mensor.jsonc",
+);
+assertSuccess(
+  parseDiagnosticReport(await readFile(new URL(
+    "../examples/dogfood-tasks/expected-report.json",
+    import.meta.url,
+  ), "utf8")),
+  "examples/dogfood-tasks/expected-report.json",
+);
+
 function assertSuccess(result, label) {
   if (!result.ok) {
     throw new Error(`${label} failed validation: ${JSON.stringify(result.issues)}`);

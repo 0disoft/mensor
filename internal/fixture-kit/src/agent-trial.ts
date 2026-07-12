@@ -6,6 +6,7 @@ import {
 } from "./repair-evaluation.js";
 import {
   mutationCatalog,
+  mutationBaselineIds,
   runMutationCheckInLeasedWorkspace,
   type MutationBaselineId,
   type MutationFileChange,
@@ -416,8 +417,6 @@ function validateRepairChanges(value: unknown, label: string): readonly Mutation
 }
 
 const mutationCatalogIds = mutationCatalog.map((definition) => definition.id);
-const mutationBaselineIds = ["layered-tasks", "tiny-tasks"] as const;
-
 function requireRecord(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(`${label} must be an object.`);

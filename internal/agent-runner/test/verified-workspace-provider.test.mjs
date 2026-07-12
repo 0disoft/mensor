@@ -17,6 +17,9 @@ const tinyTasks = fileURLToPath(
 const layeredTasks = fileURLToPath(
   new URL("../../../fixtures/valid/layered-tasks/", import.meta.url),
 );
+const dogfoodTasks = fileURLToPath(
+  new URL("../../../examples/dogfood-tasks/", import.meta.url),
+);
 
 test("creates a digest-verified workspace and disposes it exactly once", async () => {
   const temporaryRoot = await mkdtemp(path.join(tmpdir(), "mensor-provider-parent-"));
@@ -87,6 +90,10 @@ test("rejects symbolic links in a baseline snapshot", async (context) => {
 
 async function baselines() {
   return {
+    "dogfood-tasks": {
+      root: dogfoodTasks,
+      snapshotSha256: workspaceSnapshotDigest(await captureWorkspaceSnapshot(dogfoodTasks)),
+    },
     "layered-tasks": {
       root: layeredTasks,
       snapshotSha256: workspaceSnapshotDigest(await captureWorkspaceSnapshot(layeredTasks)),

@@ -16,7 +16,7 @@ for (const mutation of mutationCatalog) {
   const root = await mkdtemp(path.join(tmpdir(), "mensor-mutation-benchmark-"));
   try {
     await cp(
-      path.join(repositoryRoot, "fixtures", "valid", mutation.baselineId),
+      baselineRoot(mutation.baselineId),
       root,
       { recursive: true },
     );
@@ -26,5 +26,11 @@ for (const mutation of mutationCatalog) {
   }
 }
 
-const report = createMutationBenchmarkReport(cases, "0.0.28");
+function baselineRoot(baselineId) {
+  return baselineId === "dogfood-tasks"
+    ? path.join(repositoryRoot, "examples", "dogfood-tasks")
+    : path.join(repositoryRoot, "fixtures", "valid", baselineId);
+}
+
+const report = createMutationBenchmarkReport(cases, "0.0.29");
 process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

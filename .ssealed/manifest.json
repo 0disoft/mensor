@@ -1,7 +1,7 @@
 {
   "tool": "ssealed",
   "version": "0.6.11",
-  "generatedAt": "2026-07-12T09:17:36.145Z",
+  "generatedAt": "2026-07-12T09:36:20.916Z",
   "scope": "general",
   "profile": "monorepo",
   "addons": [
@@ -222,13 +222,13 @@
     },
     {
       "path": "docs/cli/command-contract.md",
-      "checksum": "sha256:3f478f141bc8e90cc8e800e4ef85fc10f37d98942fa8567204a088d542483427",
+      "checksum": "sha256:7f6cce5484addc0bb2ec6a0e391b3b947ca525919d7e38a85ecee9f5cebce545",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:27c3b100ca1684d15c735acbfeafa98f00c1efc64d164fa961074a1b5ffc4a74",
-      "acceptedChecksum": "sha256:3f478f141bc8e90cc8e800e4ef85fc10f37d98942fa8567204a088d542483427",
+      "acceptedChecksum": "sha256:7f6cce5484addc0bb2ec6a0e391b3b947ca525919d7e38a85ecee9f5cebce545",
       "generatedChecksum": "sha256:27c3b100ca1684d15c735acbfeafa98f00c1efc64d164fa961074a1b5ffc4a74"
     },
     {
@@ -288,13 +288,13 @@
     },
     {
       "path": "docs/monorepo/workspace-boundaries.md",
-      "checksum": "sha256:391de00c969de2a3923d30d93f674f04a815dc97cff953551a5b47a98546b470",
+      "checksum": "sha256:13e9e025dfdf3bec349f81ab4b86f7318e4d94c889af746a508a1d0cf6a7cc22",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:94fc26c336b4ffac45d24000d8b1fdb23ae4491add391830401d25a609cf5e3b",
-      "acceptedChecksum": "sha256:391de00c969de2a3923d30d93f674f04a815dc97cff953551a5b47a98546b470",
+      "acceptedChecksum": "sha256:13e9e025dfdf3bec349f81ab4b86f7318e4d94c889af746a508a1d0cf6a7cc22",
       "generatedChecksum": "sha256:94fc26c336b4ffac45d24000d8b1fdb23ae4491add391830401d25a609cf5e3b"
     },
     {
@@ -321,13 +321,13 @@
     },
     {
       "path": "docs/product/02-spec.md",
-      "checksum": "sha256:ceac5c6e4f0f86f14b2454934fad8f2e61a41bb242b96f27abb727e88f9d2dd8",
+      "checksum": "sha256:f0dc562e13a4d20b5e2d258a5878570193d9198fc0a7c9e6e740d47521e23f9b",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:a4b9ccd412af5252824341199977718a3cfddf59d3ebf2bc293ef3ffea3a862b",
-      "acceptedChecksum": "sha256:ceac5c6e4f0f86f14b2454934fad8f2e61a41bb242b96f27abb727e88f9d2dd8",
+      "acceptedChecksum": "sha256:f0dc562e13a4d20b5e2d258a5878570193d9198fc0a7c9e6e740d47521e23f9b",
       "generatedChecksum": "sha256:a4b9ccd412af5252824341199977718a3cfddf59d3ebf2bc293ef3ffea3a862b"
     },
     {
@@ -343,24 +343,24 @@
     },
     {
       "path": "package.json",
-      "checksum": "sha256:c2289283392763c45d2e0a19e5a8c2ab695c82ee69a1c0b6e7d38167b8deee7d",
+      "checksum": "sha256:465f60906b6e22fb66bbe96c46fae4c069e7a683cb31a221e2de61eb0ffdefa4",
       "kind": "runner",
       "ownership": "project-owned",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:44087c2e1c46f097ef3938a430169b92bf73ebc6dffa11c0ce0b4717e710d6b5",
-      "acceptedChecksum": "sha256:c2289283392763c45d2e0a19e5a8c2ab695c82ee69a1c0b6e7d38167b8deee7d",
+      "acceptedChecksum": "sha256:465f60906b6e22fb66bbe96c46fae4c069e7a683cb31a221e2de61eb0ffdefa4",
       "generatedChecksum": "sha256:44087c2e1c46f097ef3938a430169b92bf73ebc6dffa11c0ce0b4717e710d6b5"
     },
     {
       "path": "README.md",
-      "checksum": "sha256:6484a419a5d080f291edd904979f3f27b9bb0d2898b4c78eaaa10252a3f80ed1",
+      "checksum": "sha256:6f0c90c1358a3cad2af46667606688654fa5763a796155cde36f74c26b4be85a",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:3bef7cfe1e91b9dc6037886fec447eb1de846966d7e58056b5831239ba39f3ee",
-      "acceptedChecksum": "sha256:6484a419a5d080f291edd904979f3f27b9bb0d2898b4c78eaaa10252a3f80ed1",
+      "acceptedChecksum": "sha256:6f0c90c1358a3cad2af46667606688654fa5763a796155cde36f74c26b4be85a",
       "generatedChecksum": "sha256:3bef7cfe1e91b9dc6037886fec447eb1de846966d7e58056b5831239ba39f3ee"
     },
     {

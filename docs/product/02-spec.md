@@ -205,6 +205,9 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 30. Controlled evaluation baselines are pinned by canonical workspace digest;
     symlinks, special files, source drift, copy drift, and foreign cleanup paths
     fail closed.
+31. A runnable server-rendered dogfood application independently passes the
+    compiler, GET/POST semantic tests, malformed-form rejection, and HTML
+    escaping, and contributes a dedicated mutation baseline.
 
 ## Deferred Decisions
 

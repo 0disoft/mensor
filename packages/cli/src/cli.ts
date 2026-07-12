@@ -8,7 +8,7 @@ import type {
   RunCliOptions,
 } from "./types.js";
 
-export const cliVersion = "0.0.28";
+export const cliVersion = "0.0.29";
 
 const helpText = `Usage: mensor check [root] [--config <path>] [--json]
 

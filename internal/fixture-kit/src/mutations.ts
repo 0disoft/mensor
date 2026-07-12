@@ -10,6 +10,7 @@ export type MutationId =
   | "browser-direct-server-import"
   | "browser-dynamic-import"
   | "browser-transitive-server-import"
+  | "dogfood-form-field-missing"
   | "form-action-mismatch"
   | "form-control-codec-mismatch"
   | "form-field-missing"
@@ -20,7 +21,13 @@ export type MutationId =
   | "ownership-test-outside-slot"
   | "route-direct-database-import";
 
-export type MutationBaselineId = "layered-tasks" | "tiny-tasks";
+export const mutationBaselineIds = [
+  "dogfood-tasks",
+  "layered-tasks",
+  "tiny-tasks",
+] as const;
+
+export type MutationBaselineId = (typeof mutationBaselineIds)[number];
 
 export interface MutationDefinition {
   readonly id: MutationId;
@@ -77,6 +84,7 @@ export const mutationCatalog: readonly MutationDefinition[] = [
   definition("browser-direct-server-import", "module.boundary_violation", "layered-tasks", browser),
   definition("browser-dynamic-import", "module.dynamic_import_unsupported", "layered-tasks", browser),
   definition("browser-transitive-server-import", "module.boundary_violation", "layered-tasks", shared),
+  definition("dogfood-form-field-missing", "form.field_missing", "dogfood-tasks", template),
   definition("form-action-mismatch", "form.action_mismatch", "tiny-tasks", template),
   definition("form-control-codec-mismatch", "form.control_codec_mismatch", "tiny-tasks", template),
   definition("form-field-missing", "form.field_missing", "tiny-tasks", template),
@@ -241,6 +249,12 @@ function mutateSource(mutationId: MutationId, source: string): string {
       return replaceExactly(source, 'action="/tasks"', 'action="/wrong-tasks"');
     case "form-control-codec-mismatch":
       return replaceExactly(source, 'name="title" type="text"', 'name="title" type="checkbox"');
+    case "dogfood-form-field-missing":
+      return replaceExactly(
+        source,
+        '          <input name="title" type="text" required="required" maxlength="120" />\n',
+        "",
+      );
     case "form-field-missing":
       return replaceExactly(
         source,

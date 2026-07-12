@@ -4,6 +4,7 @@ import * as path from "node:path";
 
 import {
   captureWorkspaceSnapshot,
+  mutationBaselineIds,
   workspaceSnapshotDigest,
   type MutationBaselineId,
   type WorkspaceSnapshotLimits,
@@ -93,7 +94,7 @@ async function copyDirectoryContents(source: string, destination: string): Promi
 function validateBaselines(
   baselines: Readonly<Record<MutationBaselineId, VerifiedBaseline>>,
 ): void {
-  for (const baselineId of ["layered-tasks", "tiny-tasks"] as const) {
+  for (const baselineId of mutationBaselineIds) {
     const baseline = baselines[baselineId];
     if (typeof baseline?.root !== "string" || baseline.root.length === 0) {
       throw new Error(`Baseline ${baselineId} must declare a root.`);

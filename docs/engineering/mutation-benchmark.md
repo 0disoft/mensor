@@ -17,9 +17,11 @@ prompt, or transcript.
 
 ## Current Golden Corpus
 
-The golden corpus contains twelve deterministic mutations derived from two
-valid baselines. `tiny-tasks` owns form and handler mutations. `layered-tasks`
-owns browser, shared, route, database, test, and i18n boundary mutations:
+The golden corpus contains thirteen deterministic mutations derived from three
+valid baselines. `tiny-tasks` owns synthetic form and handler mutations.
+`layered-tasks` owns browser, shared, route, database, test, and i18n boundary
+mutations. `dogfood-tasks` contributes a missing-field mutation against a
+runnable server-rendered application:
 
 - form action mismatch;
 - form control and codec mismatch;
@@ -32,6 +34,7 @@ owns browser, shared, route, database, test, and i18n boundary mutations:
 - a direct route-to-database import;
 - a test moved outside its owned slot; and
 - an i18n file moved outside every feature.
+- a required field removed from the runnable dogfood form.
 
 Every mutation identifies its baseline, must produce exactly its declared
 diagnostic set, and must be byte-identical when applied under different

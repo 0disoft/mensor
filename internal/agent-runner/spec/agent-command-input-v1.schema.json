@@ -12,6 +12,7 @@
         "browser-direct-server-import",
         "browser-dynamic-import",
         "browser-transitive-server-import",
+        "dogfood-form-field-missing",
         "form-action-mismatch",
         "form-control-codec-mismatch",
         "form-field-missing",
@@ -24,7 +25,7 @@
       ]
     },
     "baselineId": {
-      "enum": ["layered-tasks", "tiny-tasks"]
+      "enum": ["dogfood-tasks", "layered-tasks", "tiny-tasks"]
     },
     "diagnosticReport": {
       "$ref": "diagnostic-report-v1.schema.json"

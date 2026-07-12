@@ -16,6 +16,9 @@ import {
 const fixtureRoot = fileURLToPath(
   new URL("../../../fixtures/valid/", import.meta.url),
 );
+const dogfoodRoot = fileURLToPath(
+  new URL("../../../examples/dogfood-tasks/", import.meta.url),
+);
 
 test("each mutation produces its one declared diagnostic", async () => {
   for (const mutation of mutationCatalog) {
@@ -95,8 +98,8 @@ test("builds a deterministic serializable benchmark report", async () => {
     `${JSON.stringify(reports[1], null, 2)}\n`,
   );
   assert.deepEqual(reports[0].summary, {
-    caseCount: 12,
-    detectionPassedCount: 12,
+    caseCount: 13,
+    detectionPassedCount: 13,
     detectionFailedCount: 0,
   });
   assert.deepEqual(
@@ -107,7 +110,11 @@ test("builds a deterministic serializable benchmark report", async () => {
 
 async function copyFixture(baselineId) {
   const root = await mkdtemp(path.join(tmpdir(), "mensor-mutation-"));
-  await cp(path.join(fixtureRoot, baselineId), root, { recursive: true });
+  await cp(
+    baselineId === "dogfood-tasks" ? dogfoodRoot : path.join(fixtureRoot, baselineId),
+    root,
+    { recursive: true },
+  );
   return root;
 }
 

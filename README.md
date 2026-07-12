@@ -3,6 +3,9 @@
 Mensor is a working name for a deterministic contract checker for
 agent-edited, server-rendered HTML applications.
 
+The runnable [`examples/dogfood-tasks`](examples/dogfood-tasks/) application
+keeps compiler checks tied to real GET/POST behavior instead of fixtures alone.
+
 The project turns architectural knowledge that normally lives in a maintainer's
 head into machine-readable project contracts. It links static HTML forms,
 action input contracts, source-file roles, import boundaries, and feature
