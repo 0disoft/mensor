@@ -195,6 +195,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     final state.
 26. Evaluation snapshots use streaming hashes and explicit file, byte,
     aggregate-byte, and depth limits; exceeding a limit fails closed.
+27. Execution fingerprints commit to the validated executable, arguments,
+    environment, and process limits without serializing their raw values.
 
 ## Deferred Decisions
 

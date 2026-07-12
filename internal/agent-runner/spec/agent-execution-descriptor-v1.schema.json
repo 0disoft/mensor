@@ -37,7 +37,7 @@
     "environment": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["runner", "platform", "architecture", "nodeVersion", "isolation", "networkControl"],
+      "required": ["runner", "platform", "architecture", "nodeVersion", "commandSpecSha256", "isolation", "networkControl"],
       "properties": {
         "runner": { "const": "local-command" },
         "platform": {
@@ -57,6 +57,7 @@
         },
         "architecture": { "$ref": "#/$defs/name" },
         "nodeVersion": { "$ref": "#/$defs/name" },
+        "commandSpecSha256": { "$ref": "#/$defs/sha256" },
         "isolation": { "const": "process-only" },
         "networkControl": { "const": "not-enforced" }
       }

@@ -1,4 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { createHash } from "node:crypto";
 import * as path from "node:path";
 import { TextDecoder } from "node:util";
 
@@ -31,6 +32,15 @@ export function createCommandAgentAdapter(
 ): AgentTrialAdapter {
   const normalized = validateOptions(options);
   return async (context) => runCommand(normalized, context);
+}
+
+export function commandSpecificationDigest(
+  options: CommandAgentAdapterOptions,
+): string {
+  const normalized = validateOptions(options);
+  return createHash("sha256")
+    .update(JSON.stringify(normalized), "utf8")
+    .digest("hex");
 }
 
 interface ValidatedOptions {

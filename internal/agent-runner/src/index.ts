@@ -1,4 +1,7 @@
-export { createCommandAgentAdapter } from "./command-adapter.js";
+export {
+  commandSpecificationDigest,
+  createCommandAgentAdapter,
+} from "./command-adapter.js";
 export type { CommandAgentAdapterOptions } from "./command-adapter.js";
 export { runCommandAgentTrial } from "./command-trial.js";
 export type { RunCommandAgentTrialOptions } from "./command-trial.js";

@@ -6,7 +6,10 @@ import {
   type AgentTrialReport,
 } from "@mensor/fixture-kit";
 
-import type { CommandAgentAdapterOptions } from "./command-adapter.js";
+import {
+  commandSpecificationDigest,
+  type CommandAgentAdapterOptions,
+} from "./command-adapter.js";
 
 export interface AgentExecutionArtifactRef {
   readonly id: string;
@@ -44,6 +47,7 @@ export interface AgentExecutionDescriptor {
     readonly platform: NodeJS.Platform;
     readonly architecture: string;
     readonly nodeVersion: string;
+    readonly commandSpecSha256: string;
     readonly isolation: "process-only";
     readonly networkControl: "not-enforced";
   };
@@ -86,6 +90,7 @@ export function createCommandExecutionDescriptor(
       platform: process.platform,
       architecture: requireName(process.arch, "architecture"),
       nodeVersion: requireName(process.versions.node, "nodeVersion"),
+      commandSpecSha256: commandSpecificationDigest(command),
       isolation: "process-only",
       networkControl: "not-enforced",
     },
@@ -208,7 +213,7 @@ export function validateAgentExecutionDescriptor(value: unknown): AgentExecution
   const environment = requireRecord(descriptor["environment"], "environment");
   requireExactKeys(
     environment,
-    ["runner", "platform", "architecture", "nodeVersion", "isolation", "networkControl"],
+    ["runner", "platform", "architecture", "nodeVersion", "commandSpecSha256", "isolation", "networkControl"],
     "environment",
   );
   const limits = requireRecord(descriptor["limits"], "limits");
@@ -235,6 +240,10 @@ export function validateAgentExecutionDescriptor(value: unknown): AgentExecution
       platform: requirePlatform(environment["platform"]),
       architecture: requireName(environment["architecture"], "architecture"),
       nodeVersion: requireName(environment["nodeVersion"], "nodeVersion"),
+      commandSpecSha256: requireDigest(
+        environment["commandSpecSha256"],
+        "commandSpecSha256",
+      ),
       isolation: requireConstant(environment["isolation"], "process-only", "isolation"),
       networkControl: requireConstant(
         environment["networkControl"],

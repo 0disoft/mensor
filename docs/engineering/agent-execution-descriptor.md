@@ -15,12 +15,17 @@ execution fingerprint matches.
 - adapter, prompt, toolset, and dataset IDs, revisions, and SHA-256 references;
 - runner kind, platform, architecture, Node version, isolation, and network
   control; and
+- a SHA-256 commitment to the validated executable path, argument list,
+  environment map, and enforced command limits; and
 - timeout, input-byte, and output-byte limits enforced by the command runner.
 
 The descriptor omits executable paths, arguments, environment names and
 values, credentials, raw prompts, source text, transcripts, timestamps, and
-hostnames. SHA-256 references are comparison keys, not redaction or provenance
-proof. The producer must hash reviewed canonical artifact bytes.
+hostnames. Command values are included only in the canonical digest, so changing
+the actual process specification starts a new cohort. SHA-256 references are
+comparison keys, not redaction or provenance proof. Low-entropy secret values
+can still be guessed from a digest and must not be published as evidence inputs.
+The producer must hash reviewed canonical artifact bytes.
 
 ## Evidence Envelope
 

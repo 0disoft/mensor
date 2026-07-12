@@ -45,6 +45,11 @@ validated trial report. The descriptor records artifact hashes and enforced
 limits without copying executable paths, arguments, environment values,
 credentials, prompts, source, transcripts, or provider output.
 
+The descriptor also records a SHA-256 commitment to the validated command
+specification. This prevents accidental cohort merging when executable,
+arguments, environment, or limits drift, but it is not a safe publication
+mechanism for guessable low-entropy secrets.
+
 The descriptor deliberately records `process-only` isolation and
 `not-enforced` network control. Callers cannot relabel the current runner as a
 sandbox. Artifact hashes are identifiers, not proof that the referenced bytes

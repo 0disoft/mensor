@@ -166,6 +166,21 @@ test("fingerprints every declared execution contract", () => {
   assert.match(executionFingerprint(first), /^[a-f0-9]{64}$/);
   assert.equal(executionFingerprint(first), executionFingerprint(identical));
   assert.notEqual(executionFingerprint(first), executionFingerprint(second));
+
+  const differentArgs = createCommandExecutionDescriptor(metadata(), {
+    ...commandOptions(),
+    args: [fakeAgent, "environment"],
+  });
+  const differentEnvironment = createCommandExecutionDescriptor(metadata(), {
+    ...commandOptions(),
+    environment: { EVAL_SENTINEL: "different-value" },
+  });
+  assert.notEqual(executionFingerprint(first), executionFingerprint(differentArgs));
+  assert.notEqual(executionFingerprint(first), executionFingerprint(differentEnvironment));
+  assert.notEqual(
+    first.environment.commandSpecSha256,
+    differentArgs.environment.commandSpecSha256,
+  );
 });
 
 test("binds a canonical report to one execution fingerprint", async () => {
