@@ -1,6 +1,6 @@
 {
   "name": "mensor-workspace",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.11.0",
@@ -11,7 +11,7 @@
     "format": "node scripts/check-text-format.mjs",
     "lint": "node scripts/check-workspace-structure.mjs",
     "typecheck": "tsc6 -b --pretty false",
-    "build": "tsc6 -b --pretty false",
+    "build": "node scripts/clean-build-output.mjs && tsc6 -b --pretty false",
     "test": "pnpm run build && node --test packages/contract/test/*.test.mjs packages/compiler/test/*.test.mjs packages/cli/test/*.test.mjs internal/fixture-kit/test/*.test.mjs internal/agent-runner/test/*.test.mjs",
     "contract": "pnpm run build && node scripts/validate-contract-fixtures.mjs",
     "migration-check": "pnpm run build && node scripts/check-schema-revisions.mjs",

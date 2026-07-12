@@ -84,6 +84,14 @@ paths, environment values, prompts, transcripts, or credentials into reports.
 The high-level command-trial entrypoint constructs process behavior and evidence
 from one options object before any fixture mutation occurs.
 
+## Build Artifact Boundary
+
+Every workspace build removes known output directories before invoking the
+TypeScript project graph. Published package allowlists include only generated
+source and schema directories. Package smoke compares those outputs with the
+current source graph before packing, so deleted or renamed source cannot survive
+as stale distributable code.
+
 ## Dependency Rules
 
 ```text

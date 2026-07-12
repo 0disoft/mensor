@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -19,6 +19,7 @@ try {
   await mkdir(consumerRoot, { recursive: true });
   const packageNames = ["contract", "compiler", "cli"];
   for (const packageName of packageNames) {
+    await assertBuildOutputMatchesSource(packageName);
     await run(
       pnpmExecutable ? pnpmEntrypoint : process.execPath,
       [
@@ -105,6 +106,54 @@ try {
   );
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });
+}
+
+async function assertBuildOutputMatchesSource(packageName) {
+  const packageRoot = path.join(repositoryRoot, "packages", packageName);
+  const sourceFiles = (await listFiles(path.join(packageRoot, "src")))
+    .filter((file) => file.endsWith(".ts"));
+  const expected = new Set(sourceFiles.flatMap((file) => {
+    const stem = file.slice(0, -3);
+    return [
+      `${stem}.d.ts`,
+      `${stem}.d.ts.map`,
+      `${stem}.js`,
+      `${stem}.js.map`,
+    ];
+  }));
+  const actual = new Set(await listFiles(path.join(packageRoot, "dist", "src")));
+  assert.deepEqual(
+    [...actual].sort(),
+    [...expected].sort(),
+    `${packageName} build output must exactly match its source graph`,
+  );
+  if (packageName === "contract") {
+    const expectedSpecs = (await listFiles(path.join(packageRoot, "spec")))
+      .filter((file) => file.endsWith(".json"))
+      .sort();
+    const actualSpecs = (await listFiles(path.join(packageRoot, "dist", "spec")))
+      .filter((file) => file.endsWith(".json"))
+      .sort();
+    assert.deepEqual(actualSpecs, expectedSpecs, "contract schema output must match source specs");
+  }
+}
+
+async function listFiles(root, relativeDirectory = "") {
+  const directory = path.join(root, ...relativeDirectory.split("/").filter(Boolean));
+  const entries = (await readdir(directory, { withFileTypes: true }))
+    .sort((left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0);
+  const files = [];
+  for (const entry of entries) {
+    const relativePath = relativeDirectory.length === 0
+      ? entry.name
+      : `${relativeDirectory}/${entry.name}`;
+    if (entry.isDirectory()) {
+      files.push(...await listFiles(root, relativePath));
+    } else if (entry.isFile()) {
+      files.push(relativePath);
+    }
+  }
+  return files;
 }
 
 async function runMensor(cwd, fixture) {

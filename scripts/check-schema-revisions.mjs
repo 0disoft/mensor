@@ -1,6 +1,10 @@
 import { readFile } from "node:fs/promises";
 
-import { parseJsonc } from "../packages/contract/dist/src/index.js";
+import {
+  parseDiagnosticReport,
+  parseFeatureContract,
+  parseProjectContract,
+} from "../packages/contract/dist/src/index.js";
 
 const schemaRoot = new URL("../packages/contract/spec/", import.meta.url);
 const fixtures = [
@@ -63,15 +67,13 @@ for (const file of [
 }
 
 for (const fixture of fixtures) {
-  const parsed = parseJsonc(
-    await readFile(new URL(fixture, import.meta.url), "utf8"),
-  );
-  if (!parsed.ok || typeof parsed.value !== "object" || parsed.value === null) {
-    throw new Error(`${fixture} must contain valid JSONC object data.`);
-  }
-  const value = parsed.value;
-  const version = value.version ?? value.schemaVersion;
-  if (version !== 1) {
-    throw new Error(`${fixture} must use schema revision 1.`);
+  const text = await readFile(new URL(fixture, import.meta.url), "utf8");
+  const parsed = fixture.endsWith("expected-report.json")
+    ? parseDiagnosticReport(text)
+    : fixture.endsWith("feature.mensor.jsonc")
+      ? parseFeatureContract(text)
+      : parseProjectContract(text);
+  if (!parsed.ok) {
+    throw new Error(`${fixture} must satisfy its revision-1 parser contract.`);
   }
 }

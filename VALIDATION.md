@@ -37,7 +37,13 @@ for narrower evidence.
 `package-smoke` builds and packs the contract, compiler, and CLI packages,
 forces those local tarballs into an isolated consumer while allowing normal
 resolution of public third-party dependencies, and verifies the installed CLI
-against both a valid and an invalid fixture.
+against both a valid and an invalid fixture. Build output is cleaned first and
+must exactly match the current source graph before packaging.
+
+`migration-check` currently validates immutable revision-1 schema identifiers
+and runs every maintained contract and report fixture through its exact parser.
+No revision-to-revision migration exists yet; the name is the stable scaffold
+gate, not a claim that a migration engine has shipped.
 
 `benchmark` emits the deterministic mutation-detection report. It does not run
 an agent and must not be reported as repair-rate evidence.

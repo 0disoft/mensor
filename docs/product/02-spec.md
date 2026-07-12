@@ -197,6 +197,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     aggregate-byte, and depth limits; exceeding a limit fails closed.
 27. Execution fingerprints commit to the validated executable, arguments,
     environment, and process limits without serializing their raw values.
+28. Package validation starts from clean build output and rejects generated
+    files that do not map to the current source and schema graph.
 
 ## Deferred Decisions
 

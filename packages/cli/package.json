@@ -1,13 +1,13 @@
 {
   "name": "@mensor/cli",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "private": true,
   "type": "module",
   "sideEffects": false,
   "engines": {
     "node": ">=22"
   },
-  "files": ["dist"],
+  "files": ["dist/src"],
   "bin": {
     "mensor": "./dist/src/bin.js"
   },
