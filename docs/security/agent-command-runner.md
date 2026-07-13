@@ -82,3 +82,15 @@ workspace mount and explicit CPU, memory, PID, I/O, and timeout limits. It is a
 validated plan, not runtime attestation. Until descriptor v2 records engine and
 enforcement evidence, materialized Docker commands remain ineligible for public
 repair-rate claims.
+
+## Runtime Attestation
+
+`docker-sandbox-runtime-attestation/v1` binds a plan digest to normalized Docker
+engine, image, security, mount, temporary-filesystem, credential-injection, and
+resource-limit observations. It excludes workspace paths, container IDs,
+timestamps, command arguments, environment values, and raw inspection output.
+
+The attestation parser proves canonical structure and plan consistency only. It
+does not prove who collected the observations. Until an atomic runner owns
+container launch, inspect collection, cleanup, and attestation creation, this
+artifact cannot remove any public repair-rate blocker.

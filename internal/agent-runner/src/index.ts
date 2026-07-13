@@ -32,6 +32,17 @@ export type {
   DockerSandboxPlan,
   DockerSandboxPlanOptions,
 } from "./docker-sandbox-plan.js";
+export {
+  createDockerSandboxRuntimeAttestation,
+  dockerSandboxRuntimeAttestationDigest,
+  parseDockerSandboxRuntimeAttestation,
+  serializeDockerSandboxRuntimeAttestation,
+  validateDockerSandboxRuntimeAttestation,
+} from "./docker-sandbox-attestation.js";
+export type {
+  DockerSandboxRuntimeAttestation,
+  DockerSandboxRuntimeObservation,
+} from "./docker-sandbox-attestation.js";
 export type {
   AgentEvidenceAssessment,
   PublicRepairRateBlocker,

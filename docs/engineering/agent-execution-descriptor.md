@@ -51,6 +51,13 @@ toolset, dataset, adapter, platform, runtime, isolation, network-control, or
 limit change starts a new comparison cohort. Cost and latency need separate
 bounded measurement contracts and are not inferred from this descriptor.
 
+Descriptor v2 is intentionally not defined yet. The runner first defines a
+canonical Docker runtime attestation that separates intended sandbox controls
+from observed controls. The current attestation API validates normalized input;
+it does not own or authenticate Docker inspection. A future atomic sandbox
+runner must launch, observe, clean up, and attest before descriptor v2 can use
+that evidence or change public repair-rate eligibility.
+
 `mergeAgentTrialEvidence` is the only supported cohort merger. It validates
 every input again, requires byte-identical descriptors and fingerprints,
 requires one report producer version, rejects duplicate trial IDs and empty

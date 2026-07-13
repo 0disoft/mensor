@@ -214,6 +214,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 33. A future container adapter starts from a canonical networkless Docker plan
     with immutable images, non-root execution, one workspace mount, read-only
     root, dropped capabilities, and bounded CPU, memory, PID, I/O, and time.
+34. The private agent runner can bind one Docker sandbox plan to a canonical
+    runtime attestation only when normalized engine, image, mount, security,
+    credential, temporary-filesystem, and resource observations match that
+    plan. This structure alone is not trusted execution evidence.
 
 ## Deferred Decisions
 
