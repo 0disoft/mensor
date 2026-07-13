@@ -5,12 +5,14 @@ import {
   type DockerSandboxPlan,
 } from "./docker-sandbox-plan.js";
 
+export interface DockerSandboxCollectorRef {
+  readonly id: string;
+  readonly revision: string;
+  readonly sha256: string;
+}
+
 export interface DockerSandboxRuntimeObservation {
-  readonly collector: {
-    readonly id: string;
-    readonly revision: string;
-    readonly sha256: string;
-  };
+  readonly collector: DockerSandboxCollectorRef;
   readonly engineVersion: string;
   readonly architecture: string;
   readonly imageId: string;
@@ -41,11 +43,7 @@ export interface DockerSandboxRuntimeAttestation {
   readonly schemaVersion: 1;
   readonly kind: "docker-networkless-runtime";
   readonly planSha256: string;
-  readonly collector: {
-    readonly id: string;
-    readonly revision: string;
-    readonly sha256: string;
-  };
+  readonly collector: DockerSandboxCollectorRef;
   readonly engine: {
     readonly name: "docker";
     readonly version: string;
@@ -224,7 +222,9 @@ export function dockerSandboxRuntimeAttestationDigest(
     .digest("hex");
 }
 
-function validateCollector(value: unknown): DockerSandboxRuntimeAttestation["collector"] {
+export function validateDockerSandboxCollectorRef(
+  value: unknown,
+): DockerSandboxCollectorRef {
   const collector = requireRecord(value, "collector");
   requireKeys(collector, ["id", "revision", "sha256"], "collector");
   return {
@@ -232,6 +232,10 @@ function validateCollector(value: unknown): DockerSandboxRuntimeAttestation["col
     revision: requireName(collector["revision"], "collector.revision"),
     sha256: requireDigest(collector["sha256"], "collector.sha256"),
   };
+}
+
+function validateCollector(value: unknown): DockerSandboxCollectorRef {
+  return validateDockerSandboxCollectorRef(value);
 }
 
 function requireRecord(value: unknown, label: string): Record<string, unknown> {

@@ -94,3 +94,16 @@ The attestation parser proves canonical structure and plan consistency only. It
 does not prove who collected the observations. Until an atomic runner owns
 container launch, inspect collection, cleanup, and attestation creation, this
 artifact cannot remove any public repair-rate blocker.
+
+## Atomic Lifecycle
+
+`runDockerSandbox` owns the fixed `validate`, `create`, `inspect`, `attest`,
+`start`, and `remove` sequence around an injected execution port. Inspection
+must pass before start. Every handle returned by a successful create is sent to
+remove exactly once, and cleanup failure prevents a success result. Execution
+and cleanup use separate bounded abort signals.
+
+The port receives no ambient credentials from the runner and raw port errors
+are replaced with fixed lifecycle errors. The repository does not ship a Docker
+daemon adapter. A port must honor abort signals and preserve the lifecycle
+contract before its output can be treated as executed sandbox evidence.

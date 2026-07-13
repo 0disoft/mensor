@@ -40,9 +40,19 @@ export {
   validateDockerSandboxRuntimeAttestation,
 } from "./docker-sandbox-attestation.js";
 export type {
+  DockerSandboxCollectorRef,
   DockerSandboxRuntimeAttestation,
   DockerSandboxRuntimeObservation,
 } from "./docker-sandbox-attestation.js";
+export { validateDockerSandboxCollectorRef } from "./docker-sandbox-attestation.js";
+export { runDockerSandbox } from "./docker-sandbox-runner.js";
+export type {
+  DockerSandboxExecutionPort,
+  DockerSandboxExecutionResult,
+  DockerSandboxInspection,
+  DockerSandboxRunResult,
+  RunDockerSandboxOptions,
+} from "./docker-sandbox-runner.js";
 export type {
   AgentEvidenceAssessment,
   PublicRepairRateBlocker,

@@ -58,6 +58,11 @@ it does not own or authenticate Docker inspection. A future atomic sandbox
 runner must launch, observe, clean up, and attest before descriptor v2 can use
 that evidence or change public repair-rate eligibility.
 
+The current injected-port lifecycle makes those stages atomic from the runner's
+perspective, but it is not a Docker daemon implementation. Descriptor v2 also
+requires a concrete adapter that honors abort signals and proves the inspected
+container is the one that executes and is removed.
+
 `mergeAgentTrialEvidence` is the only supported cohort merger. It validates
 every input again, requires byte-identical descriptors and fingerprints,
 requires one report producer version, rejects duplicate trial IDs and empty

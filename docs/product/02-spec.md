@@ -218,6 +218,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     runtime attestation only when normalized engine, image, mount, security,
     credential, temporary-filesystem, and resource observations match that
     plan. This structure alone is not trusted execution evidence.
+35. Docker sandbox orchestration uses one fixed validate, create, inspect,
+    attest, start, and cleanup workflow. It starts only after inspection passes,
+    attempts bounded cleanup after every successful create, and does not claim
+    a Docker daemon adapter or executed sandbox evidence.
 
 ## Deferred Decisions
 
