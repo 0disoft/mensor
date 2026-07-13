@@ -54,6 +54,7 @@ export type {
   RunDockerSandboxOptions,
 } from "./docker-sandbox-runner.js";
 export {
+  dockerSandboxConformanceReportDigest,
   dockerSandboxConformanceCaseIds,
   parseDockerSandboxConformanceReport,
   runDockerSandboxConformance,
@@ -65,6 +66,18 @@ export type {
   DockerSandboxConformanceReport,
   RunDockerSandboxConformanceOptions,
 } from "./docker-sandbox-conformance.js";
+export {
+  createSandboxExecutionDescriptor,
+  parseSandboxExecutionDescriptor,
+  sandboxExecutionFingerprint,
+  serializeSandboxExecutionDescriptor,
+  validateSandboxExecutionDescriptor,
+  validateSandboxExecutionDescriptorBindings,
+} from "./sandbox-execution-descriptor.js";
+export type {
+  SandboxExecutionDescriptor,
+  SandboxExecutionMetadata,
+} from "./sandbox-execution-descriptor.js";
 export type {
   AgentEvidenceAssessment,
   PublicRepairRateBlocker,

@@ -118,3 +118,15 @@ plan, and expected-output digests plus derived case outcomes.
 This checks behavior visible through the injected port. It cannot prove that a
 port faithfully represented Docker daemon state or removed the real container,
 so a conformant report does not change repair-rate eligibility.
+
+## Execution Descriptor v2
+
+Descriptor v2 commits to the canonical plan, runtime attestation, and port
+conformance digests. Sandbox adapter and collector identities must agree with
+their evidence artifacts, and observed engine, image, and limits must agree
+with the attestation and plan.
+
+The descriptor labels this `port-conformance-only`. Standalone parsing checks
+shape and ordering; evidence consumers must run binding validation with all
+referenced artifacts. Descriptor v2 is not accepted by the current v1 evidence
+assessment and cannot enable a public repair-rate claim.

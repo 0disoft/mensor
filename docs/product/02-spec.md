@@ -226,6 +226,9 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     success, timeout, output-limit, and nonzero-exit cases. The canonical report
     records digests and derived outcomes without claiming independent Docker
     daemon verification.
+37. Execution descriptor v2 binds the Docker plan, runtime attestation, and port
+    conformance report into one fingerprinted cohort while explicitly retaining
+    a port-conformance-only evidence level and no public repair-rate eligibility.
 
 ## Deferred Decisions
 

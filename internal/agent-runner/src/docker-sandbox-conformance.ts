@@ -127,6 +127,14 @@ export function serializeDockerSandboxConformanceReport(
   return `${JSON.stringify(validateDockerSandboxConformanceReport(report), null, 2)}\n`;
 }
 
+export function dockerSandboxConformanceReportDigest(
+  report: DockerSandboxConformanceReport,
+): string {
+  return createHash("sha256")
+    .update(serializeDockerSandboxConformanceReport(report), "utf8")
+    .digest("hex");
+}
+
 export function validateDockerSandboxConformanceReport(
   value: unknown,
 ): DockerSandboxConformanceReport {

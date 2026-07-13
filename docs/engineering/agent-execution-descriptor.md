@@ -51,22 +51,18 @@ toolset, dataset, adapter, platform, runtime, isolation, network-control, or
 limit change starts a new comparison cohort. Cost and latency need separate
 bounded measurement contracts and are not inferred from this descriptor.
 
-Descriptor v2 is intentionally not defined yet. The runner first defines a
-canonical Docker runtime attestation that separates intended sandbox controls
-from observed controls. The current attestation API validates normalized input;
-it does not own or authenticate Docker inspection. A future atomic sandbox
-runner must launch, observe, clean up, and attest before descriptor v2 can use
-that evidence or change public repair-rate eligibility.
+Descriptor v2 binds plan, runtime-attestation, and port-conformance digests plus
+sandbox adapter and collector identities. The injected-port lifecycle makes
+launch, observation, execution, and cleanup atomic from the runner's
+perspective, but it is not a Docker daemon implementation. Port conformance
+shows only behavior visible through that API and cannot prove daemon state or
+actual container removal.
 
-The current injected-port lifecycle makes those stages atomic from the runner's
-perspective, but it is not a Docker daemon implementation. Descriptor v2 also
-requires a concrete adapter that honors abort signals and proves the inspected
-container is the one that executes and is removed.
-
-A canonical port-conformance report can show that the adapter follows success
-and failure behavior visible through the execution port. Descriptor v2 may bind
-that report digest later, but must not treat it as independent daemon-state or
-container-removal proof.
+`parseSandboxExecutionDescriptor` validates standalone shape only. Evidence
+consumers must also call `validateSandboxExecutionDescriptorBindings` with the
+canonical artifacts. The descriptor therefore remains
+`port-conformance-only`; the v1 trial-evidence envelope and cohort merger do not
+accept descriptor v2, and public repair-rate eligibility does not change.
 
 `mergeAgentTrialEvidence` is the only supported cohort merger. It validates
 every input again, requires byte-identical descriptors and fingerprints,

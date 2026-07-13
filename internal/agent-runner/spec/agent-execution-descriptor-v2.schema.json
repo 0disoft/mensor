@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-execution-descriptor-v2.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "descriptorId", "agent", "artifacts", "environment", "limits"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "descriptorId": { "$ref": "#/$defs/identifier" },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "modelId", "modelRevision"],
+      "properties": {
+        "providerId": { "$ref": "#/$defs/name" },
+        "modelId": { "$ref": "#/$defs/name" },
+        "modelRevision": { "anyOf": [{ "$ref": "#/$defs/name" }, { "type": "null" }] }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "prompt", "toolset", "dataset", "sandboxAdapter", "collector"],
+      "properties": {
+        "adapter": { "$ref": "#/$defs/artifact" },
+        "prompt": { "$ref": "#/$defs/artifact" },
+        "toolset": { "$ref": "#/$defs/artifact" },
+        "dataset": { "$ref": "#/$defs/artifact" },
+        "sandboxAdapter": { "$ref": "#/$defs/artifact" },
+        "collector": { "$ref": "#/$defs/artifact" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner", "planSha256", "runtimeAttestationSha256", "portConformanceSha256", "engine", "image", "isolation", "networkControl", "evidenceLevel"],
+      "properties": {
+        "runner": { "const": "docker-sandbox" },
+        "planSha256": { "$ref": "#/$defs/digest" },
+        "runtimeAttestationSha256": { "$ref": "#/$defs/digest" },
+        "portConformanceSha256": { "$ref": "#/$defs/digest" },
+        "engine": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version", "operatingSystem", "architecture"],
+          "properties": {
+            "name": { "const": "docker" },
+            "version": { "$ref": "#/$defs/name" },
+            "operatingSystem": { "const": "linux" },
+            "architecture": { "$ref": "#/$defs/name" }
+          }
+        },
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reference", "id"],
+          "properties": {
+            "reference": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._/-]*@sha256:[a-f0-9]{64}$" },
+            "id": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+          }
+        },
+        "isolation": { "const": "container-observed" },
+        "networkControl": { "const": "observed-none" },
+        "evidenceLevel": { "const": "port-conformance-only" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeoutMs", "maxInputBytes", "maxOutputBytes", "memoryMiB", "cpuCount", "pidsLimit"],
+      "properties": {
+        "timeoutMs": { "type": "integer", "minimum": 1, "maximum": 300000 },
+        "maxInputBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "maxOutputBytes": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+        "memoryMiB": { "type": "integer", "minimum": 64, "maximum": 16384 },
+        "cpuCount": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "pidsLimit": { "type": "integer", "minimum": 16, "maximum": 4096 }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:+/-]{0,127}$" },
+    "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "revision", "sha256"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "revision": { "$ref": "#/$defs/name" },
+        "sha256": { "$ref": "#/$defs/digest" }
+      }
+    }
+  }
+}
