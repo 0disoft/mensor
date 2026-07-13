@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "docker-sandbox-plan-commitment-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "dockerExecutableSha256", "image", "agent", "security", "limits"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "docker-networkless-commitment" },
+    "dockerExecutableSha256": { "$ref": "#/$defs/digest" },
+    "image": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._/-]*@sha256:[a-f0-9]{64}$" },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executable", "argsSha256"],
+      "properties": {
+        "executable": { "type": "string", "pattern": "^/[^\\u0000]*$" },
+        "argsSha256": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["network", "rootFilesystem", "workspaceMount", "capabilities", "privilegeEscalation", "credentials", "user"],
+      "properties": {
+        "network": { "const": "none" },
+        "rootFilesystem": { "const": "read-only" },
+        "workspaceMount": { "const": "read-write-only" },
+        "capabilities": { "const": "none" },
+        "privilegeEscalation": { "const": "disabled" },
+        "credentials": { "const": "none" },
+        "user": { "const": "65532:65532" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeoutMs", "maxInputBytes", "maxOutputBytes", "memoryMiB", "cpuCount", "pidsLimit"],
+      "properties": {
+        "timeoutMs": { "type": "integer", "minimum": 1, "maximum": 300000 },
+        "maxInputBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "maxOutputBytes": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+        "memoryMiB": { "type": "integer", "minimum": 64, "maximum": 16384 },
+        "cpuCount": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "pidsLimit": { "type": "integer", "minimum": 16, "maximum": 4096 }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

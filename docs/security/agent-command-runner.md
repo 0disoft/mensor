@@ -79,9 +79,14 @@ configuration label on the local runner.
 The internal Docker planner accepts only immutable image digests and derives a
 networkless, non-root, read-only, capability-free command with one writable
 workspace mount and explicit CPU, memory, PID, I/O, and timeout limits. It is a
-validated plan, not runtime attestation. Until descriptor v2 records engine and
-enforcement evidence, materialized Docker commands remain ineligible for public
-repair-rate claims.
+validated plan, not runtime attestation.
+
+`docker-sandbox-plan-commitment/v1` is the portable form of that plan. It hashes
+the absolute host Docker executable path and the complete agent argument list
+separately while retaining the image, container executable, derived security
+settings, and limits. Runtime artifacts use the commitment digest rather than
+hashing or embedding the raw plan. These hashes prove equality only; low-entropy
+paths and arguments may still be guessed and must never contain credentials.
 
 ## Runtime Attestation
 
@@ -121,7 +126,7 @@ so a conformant report does not change repair-rate eligibility.
 
 ## Execution Descriptor v2
 
-Descriptor v2 commits to the canonical plan, runtime attestation, and port
+Descriptor v2 commits to the publish-safe plan commitment, runtime attestation, and port
 conformance digests. Sandbox adapter and collector identities must agree with
 their evidence artifacts, and observed engine, image, and limits must agree
 with the attestation and plan.

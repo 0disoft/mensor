@@ -20,9 +20,9 @@ Security fields are derived and cannot be caller-edited.
 
 Materialization produces a shell-free Docker CLI command for one absolute
 workspace. It does not execute Docker and does not create eligible repair-rate
-evidence. A future descriptor v2 must fingerprint the stable plan separately
-from the dynamic workspace path and attest the Docker engine and successful
-runtime enforcement.
+evidence. Descriptor v2 fingerprints a publish-safe commitment to the stable
+plan separately from the dynamic workspace path and binds Docker engine and
+runtime-enforcement observations through their own artifacts.
 
 ## Consequences
 

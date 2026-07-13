@@ -31,6 +31,7 @@ test("binds plan, attestation, and port conformance into descriptor v2", async (
   assert.match(sandboxExecutionFingerprint(descriptor), /^[a-f0-9]{64}$/);
   assert.deepEqual(parseSandboxExecutionDescriptor(serialized), descriptor);
   assert.equal(serialized.includes("C:\\workspace"), false);
+  assert.equal(serialized.includes("private-agent-argument"), false);
   assert.equal(serialized.includes("container-1"), false);
 });
 
@@ -218,6 +219,7 @@ function planOptions() {
     dockerExecutable: "C:\\Program Files\\Docker\\docker.exe",
     image: `ghcr.io/0disoft/mensor-agent@sha256:${"a".repeat(64)}`,
     agentExecutable: "/usr/local/bin/mensor-agent",
+    agentArgs: ["private-agent-argument"],
     timeoutMs: 20,
     maxInputBytes: 8_192,
     maxOutputBytes: 16_384,

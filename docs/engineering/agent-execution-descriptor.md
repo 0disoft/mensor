@@ -51,8 +51,11 @@ toolset, dataset, adapter, platform, runtime, isolation, network-control, or
 limit change starts a new comparison cohort. Cost and latency need separate
 bounded measurement contracts and are not inferred from this descriptor.
 
-Descriptor v2 binds plan, runtime-attestation, and port-conformance digests plus
-sandbox adapter and collector identities. The injected-port lifecycle makes
+Descriptor v2 binds a publish-safe plan-commitment digest,
+runtime-attestation digest, and port-conformance digest plus sandbox adapter and
+collector identities. The plan commitment replaces the host Docker executable
+path and agent arguments with separate SHA-256 values; those hashes are
+comparison keys, not encryption. The injected-port lifecycle makes
 launch, observation, execution, and cleanup atomic from the runner's
 perspective, but it is not a Docker daemon implementation. Port conformance
 shows only behavior visible through that API and cannot prove daemon state or

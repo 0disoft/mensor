@@ -229,6 +229,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 37. Execution descriptor v2 binds the Docker plan, runtime attestation, and port
     conformance report into one fingerprinted cohort while explicitly retaining
     a port-conformance-only evidence level and no public repair-rate eligibility.
+38. Portable Docker plan commitments retain immutable execution and isolation
+    facts while replacing the absolute host executable path and raw agent
+    arguments with separate SHA-256 commitments. Any path or argument drift
+    changes the plan digest without copying those values into evidence.
 
 ## Deferred Decisions
 

@@ -25,11 +25,17 @@ export {
 } from "./evidence-assessment.js";
 export {
   createDockerSandboxPlan,
+  createDockerSandboxPlanCommitment,
+  dockerSandboxPlanCommitmentDigest,
   dockerSandboxPlanDigest,
   materializeDockerSandboxCommand,
+  parseDockerSandboxPlanCommitment,
+  serializeDockerSandboxPlanCommitment,
+  validateDockerSandboxPlanCommitment,
 } from "./docker-sandbox-plan.js";
 export type {
   DockerSandboxPlan,
+  DockerSandboxPlanCommitment,
   DockerSandboxPlanOptions,
 } from "./docker-sandbox-plan.js";
 export {
