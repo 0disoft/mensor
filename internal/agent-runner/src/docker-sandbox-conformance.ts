@@ -6,8 +6,11 @@ import {
 } from "./docker-sandbox-attestation.js";
 import {
   createDockerSandboxPlan,
+  dockerSandboxPlanCommitmentDigest,
   dockerSandboxPlanDigest,
+  validateDockerSandboxPlanCommitment,
   type DockerSandboxPlan,
+  type DockerSandboxPlanCommitment,
 } from "./docker-sandbox-plan.js";
 import {
   runDockerSandbox,
@@ -199,6 +202,38 @@ export function validateDockerSandboxConformanceReport(
   return canonical;
 }
 
+export function validateDockerSandboxConformanceReportBindings(
+  report: DockerSandboxConformanceReport,
+  commitment: DockerSandboxPlanCommitment,
+): DockerSandboxConformanceReport {
+  const validatedReport = validateDockerSandboxConformanceReport(report);
+  const validatedCommitment = validateDockerSandboxPlanCommitment(commitment);
+  if (
+    validatedReport.probe.basePlanSha256 !==
+      dockerSandboxPlanCommitmentDigest(validatedCommitment) ||
+    validatedReport.probe.image !== validatedCommitment.image ||
+    validatedReport.probe.executable !== validatedCommitment.agent.executable
+  ) {
+    throw new Error("Docker conformance report does not bind the base plan commitment.");
+  }
+  for (const item of validatedReport.cases) {
+    const expectedPlanSha256 = dockerSandboxPlanCommitmentDigest({
+      ...validatedCommitment,
+      agent: {
+        ...validatedCommitment.agent,
+        argsSha256: digestText(JSON.stringify([
+          "mensor-docker-conformance/v1",
+          item.id,
+        ])),
+      },
+    });
+    if (item.planSha256 !== expectedPlanSha256) {
+      throw new Error(`Docker conformance case ${item.id} does not bind its probe plan.`);
+    }
+  }
+  return validatedReport;
+}
+
 function createDockerSandboxConformanceReport(options: {
   readonly adapter: DockerSandboxCollectorRef;
   readonly plan: DockerSandboxPlan;
@@ -284,6 +319,10 @@ function expectedFailure(id: DockerSandboxConformanceCaseId, error: unknown): bo
 
 function digestBytes(value: Uint8Array): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function digestText(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
 function bytesEqual(left: Uint8Array, right: Uint8Array): boolean {

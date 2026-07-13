@@ -44,6 +44,7 @@ export {
   parseDockerSandboxRuntimeAttestation,
   serializeDockerSandboxRuntimeAttestation,
   validateDockerSandboxRuntimeAttestation,
+  validateDockerSandboxRuntimeAttestationBindings,
 } from "./docker-sandbox-attestation.js";
 export type {
   DockerSandboxCollectorRef,
@@ -66,6 +67,7 @@ export {
   runDockerSandboxConformance,
   serializeDockerSandboxConformanceReport,
   validateDockerSandboxConformanceReport,
+  validateDockerSandboxConformanceReportBindings,
 } from "./docker-sandbox-conformance.js";
 export type {
   DockerSandboxConformanceCaseId,
@@ -79,11 +81,20 @@ export {
   serializeSandboxExecutionDescriptor,
   validateSandboxExecutionDescriptor,
   validateSandboxExecutionDescriptorBindings,
+  validateSandboxExecutionDescriptorEvidenceBindings,
 } from "./sandbox-execution-descriptor.js";
 export type {
   SandboxExecutionDescriptor,
   SandboxExecutionMetadata,
 } from "./sandbox-execution-descriptor.js";
+export {
+  createSandboxAgentTrialEvidence,
+  mergeSandboxAgentTrialEvidence,
+  parseSandboxAgentTrialEvidence,
+  serializeSandboxAgentTrialEvidence,
+  validateSandboxAgentTrialEvidence,
+} from "./sandbox-trial-evidence.js";
+export type { SandboxAgentTrialEvidence } from "./sandbox-trial-evidence.js";
 export type {
   AgentEvidenceAssessment,
   PublicRepairRateBlocker,

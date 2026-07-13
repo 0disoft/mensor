@@ -1,8 +1,11 @@
 import { createHash } from "node:crypto";
 
 import {
+  dockerSandboxPlanCommitmentDigest,
   dockerSandboxPlanDigest,
+  validateDockerSandboxPlanCommitment,
   type DockerSandboxPlan,
+  type DockerSandboxPlanCommitment,
 } from "./docker-sandbox-plan.js";
 
 export interface DockerSandboxCollectorRef {
@@ -196,6 +199,25 @@ export function validateDockerSandboxRuntimeAttestation(
     throw new Error("Docker sandbox runtime attestation must use canonical field ordering.");
   }
   return canonical;
+}
+
+export function validateDockerSandboxRuntimeAttestationBindings(
+  attestation: DockerSandboxRuntimeAttestation,
+  commitment: DockerSandboxPlanCommitment,
+): DockerSandboxRuntimeAttestation {
+  const validatedAttestation = validateDockerSandboxRuntimeAttestation(attestation);
+  const validatedCommitment = validateDockerSandboxPlanCommitment(commitment);
+  if (
+    validatedAttestation.planSha256 !==
+      dockerSandboxPlanCommitmentDigest(validatedCommitment) ||
+    validatedAttestation.image.reference !== validatedCommitment.image ||
+    validatedAttestation.limits.memoryMiB !== validatedCommitment.limits.memoryMiB ||
+    validatedAttestation.limits.cpuCount !== validatedCommitment.limits.cpuCount ||
+    validatedAttestation.limits.pidsLimit !== validatedCommitment.limits.pidsLimit
+  ) {
+    throw new Error("Docker sandbox runtime attestation does not bind the plan commitment.");
+  }
+  return validatedAttestation;
 }
 
 export function parseDockerSandboxRuntimeAttestation(text: string): DockerSandboxRuntimeAttestation {

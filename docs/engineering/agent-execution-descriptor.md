@@ -63,9 +63,22 @@ actual container removal.
 
 `parseSandboxExecutionDescriptor` validates standalone shape only. Evidence
 consumers must also call `validateSandboxExecutionDescriptorBindings` with the
-canonical artifacts. The descriptor therefore remains
+private canonical plan and referenced artifacts, or
+`validateSandboxExecutionDescriptorEvidenceBindings` with the publish-safe plan
+commitment and referenced artifacts. The descriptor therefore remains
 `port-conformance-only`; the v1 trial-evidence envelope and cohort merger do not
 accept descriptor v2, and public repair-rate eligibility does not change.
+
+`agent-trial-evidence/v2` embeds descriptor v2, the plan commitment, runtime
+attestation, port-conformance report, and one canonical trial report. Parsing
+recomputes every digest and cross-artifact binding, including attested limits
+and the derived plan digest for every conformance case. The v2 cohort merger
+requires byte-identical execution and sandbox artifacts.
+
+The v2 envelope is still a binding container, not an execution receipt. No
+current constructor owns sandbox execution, trial-report production, and
+envelope creation as one atomic operation. A caller can supply an unrelated but
+valid report, so v2 evidence cannot support a public repair-rate claim yet.
 
 `mergeAgentTrialEvidence` is the only supported cohort merger. It validates
 every input again, requires byte-identical descriptors and fingerprints,

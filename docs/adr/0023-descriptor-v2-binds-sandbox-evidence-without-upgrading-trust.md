@@ -29,5 +29,6 @@ cross-artifact identities are recomputed.
 - Sandbox evidence drift starts a new execution fingerprint.
 - A forged but well-shaped digest fails binding validation when artifacts are
   supplied.
-- Descriptor v2 does not change public repair-rate eligibility and is not yet
-  accepted by the v1 trial-evidence envelope or cohort merger.
+- Descriptor v2 does not change public repair-rate eligibility and remains
+  incompatible with the v1 trial-evidence envelope and cohort merger. The v2
+  envelope owns its separate sandbox-artifact binding contract.

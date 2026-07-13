@@ -135,3 +135,17 @@ The descriptor labels this `port-conformance-only`. Standalone parsing checks
 shape and ordering; evidence consumers must run binding validation with all
 referenced artifacts. Descriptor v2 is not accepted by the current v1 evidence
 assessment and cannot enable a public repair-rate claim.
+
+## Trial Evidence v2
+
+`agent-trial-evidence/v2` carries descriptor v2, the publish-safe plan
+commitment, runtime attestation, port-conformance report, and canonical trial
+report. Validation recomputes descriptor and artifact digests, checks attested
+resource limits against the commitment, and derives every conformance case plan
+from the public commitment. Artifacts from different plans fail closed.
+
+The envelope omits host executable paths, raw agent arguments, workspace paths,
+container handles, raw inspection output, and process output. It does not prove
+that the embedded report came from the embedded sandbox artifacts because no
+current runner creates both atomically. Public repair-rate eligibility remains
+false until that execution boundary exists and is independently attested.

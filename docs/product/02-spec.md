@@ -233,6 +233,11 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     facts while replacing the absolute host executable path and raw agent
     arguments with separate SHA-256 commitments. Any path or argument drift
     changes the plan digest without copying those values into evidence.
+39. Trial evidence v2 embeds one descriptor, publish-safe plan commitment,
+    runtime attestation, port-conformance report, and canonical trial report.
+    Parsing rejects fingerprint, attested-limit, base-plan, case-plan, adapter,
+    collector, or cohort drift without claiming the report was atomically
+    produced by that sandbox.
 
 ## Deferred Decisions
 

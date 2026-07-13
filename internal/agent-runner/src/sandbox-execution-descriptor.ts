@@ -3,17 +3,23 @@ import { createHash } from "node:crypto";
 import {
   dockerSandboxRuntimeAttestationDigest,
   validateDockerSandboxRuntimeAttestation,
+  validateDockerSandboxRuntimeAttestationBindings,
   type DockerSandboxCollectorRef,
   type DockerSandboxRuntimeAttestation,
 } from "./docker-sandbox-attestation.js";
 import {
   dockerSandboxConformanceReportDigest,
   validateDockerSandboxConformanceReport,
+  validateDockerSandboxConformanceReportBindings,
   type DockerSandboxConformanceReport,
 } from "./docker-sandbox-conformance.js";
 import {
+  createDockerSandboxPlanCommitment,
+  dockerSandboxPlanCommitmentDigest,
   dockerSandboxPlanDigest,
+  validateDockerSandboxPlanCommitment,
   type DockerSandboxPlan,
+  type DockerSandboxPlanCommitment,
 } from "./docker-sandbox-plan.js";
 import type { AgentExecutionArtifactRef } from "./execution-descriptor.js";
 
@@ -128,13 +134,37 @@ export function validateSandboxExecutionDescriptorBindings(
   attestation: DockerSandboxRuntimeAttestation,
   conformance: DockerSandboxConformanceReport,
 ): SandboxExecutionDescriptor {
-  const validated = validateSandboxExecutionDescriptor(descriptor);
   const planSha256 = dockerSandboxPlanDigest(plan);
-  const validatedAttestation = validateDockerSandboxRuntimeAttestation(attestation);
-  const validatedConformance = validateDockerSandboxConformanceReport(conformance);
-  if (validatedAttestation.planSha256 !== planSha256) {
+  const commitment = createDockerSandboxPlanCommitment(plan);
+  const validated = validateSandboxExecutionDescriptorEvidenceBindings(
+    descriptor,
+    commitment,
+    attestation,
+    conformance,
+  );
+  if (validated.environment.planSha256 !== planSha256) {
     throw new Error("Sandbox runtime attestation does not bind the execution plan.");
   }
+  return validated;
+}
+
+export function validateSandboxExecutionDescriptorEvidenceBindings(
+  descriptor: SandboxExecutionDescriptor,
+  commitment: DockerSandboxPlanCommitment,
+  attestation: DockerSandboxRuntimeAttestation,
+  conformance: DockerSandboxConformanceReport,
+): SandboxExecutionDescriptor {
+  const validated = validateSandboxExecutionDescriptor(descriptor);
+  const validatedCommitment = validateDockerSandboxPlanCommitment(commitment);
+  const planSha256 = dockerSandboxPlanCommitmentDigest(validatedCommitment);
+  const validatedAttestation = validateDockerSandboxRuntimeAttestationBindings(
+    attestation,
+    validatedCommitment,
+  );
+  const validatedConformance = validateDockerSandboxConformanceReportBindings(
+    conformance,
+    validatedCommitment,
+  );
   if (!validatedConformance.summary.conformant) {
     throw new Error("Sandbox execution descriptor requires a conformant port report.");
   }
@@ -152,7 +182,7 @@ export function validateSandboxExecutionDescriptorBindings(
       dockerSandboxConformanceReportDigest(validatedConformance) ||
     JSON.stringify(validated.environment.engine) !== JSON.stringify(validatedAttestation.engine) ||
     JSON.stringify(validated.environment.image) !== JSON.stringify(validatedAttestation.image) ||
-    JSON.stringify(validated.limits) !== JSON.stringify(plan.limits)
+    JSON.stringify(validated.limits) !== JSON.stringify(validatedCommitment.limits)
   ) {
     throw new Error("Sandbox execution descriptor does not match its bound evidence.");
   }

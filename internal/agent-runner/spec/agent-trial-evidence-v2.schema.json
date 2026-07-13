@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-trial-evidence-v2.schema.json",
+  "title": "Mensor Sandbox Agent Trial Evidence v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "executionFingerprint", "execution", "artifacts", "report"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "executionFingerprint": { "$ref": "#/$defs/digest" },
+    "execution": { "$ref": "agent-execution-descriptor-v2.schema.json" },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planCommitment", "runtimeAttestation", "portConformance"],
+      "properties": {
+        "planCommitment": { "$ref": "docker-sandbox-plan-commitment-v1.schema.json" },
+        "runtimeAttestation": { "$ref": "docker-sandbox-runtime-attestation-v1.schema.json" },
+        "portConformance": { "$ref": "docker-sandbox-conformance-report-v1.schema.json" }
+      }
+    },
+    "report": { "$ref": "agent-trial-report-v1.schema.json" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}
