@@ -64,3 +64,12 @@ provider command must run in an external sandbox with separately controlled
 credentials and network access before its results can support a repair-rate
 claim. A descendant that creates a new process group or session may outlive the
 adapter; process-group termination is defense in depth, not an isolation proof.
+
+## Claim Assessment
+
+`agent-evidence-assessment/v1` derives the only supported claim level for the
+current runner: `protocol-integrity-only`. It marks public repair-rate
+eligibility false and records missing filesystem, process, network, and
+credential enforcement. Callers cannot override those facts. Supporting public
+metrics requires a new descriptor revision backed by an actual sandbox, not a
+configuration label on the local runner.

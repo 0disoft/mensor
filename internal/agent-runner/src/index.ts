@@ -17,6 +17,17 @@ export type {
   VerifiedWorkspaceProviderOptions,
 } from "./verified-workspace-provider.js";
 export {
+  assessAgentTrialEvidence,
+  parseAgentEvidenceAssessment,
+  publicRepairRateBlockers,
+  serializeAgentEvidenceAssessment,
+  validateAgentEvidenceAssessment,
+} from "./evidence-assessment.js";
+export type {
+  AgentEvidenceAssessment,
+  PublicRepairRateBlocker,
+} from "./evidence-assessment.js";
+export {
   createAgentTrialEvidence,
   createCommandExecutionDescriptor,
   executionFingerprint,

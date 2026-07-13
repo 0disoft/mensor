@@ -32,5 +32,5 @@ function baselineRoot(baselineId) {
     : path.join(repositoryRoot, "fixtures", "valid", baselineId);
 }
 
-const report = createMutationBenchmarkReport(cases, "0.0.30");
+const report = createMutationBenchmarkReport(cases, "0.0.31");
 process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

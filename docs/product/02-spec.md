@@ -208,6 +208,9 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 31. A runnable server-rendered dogfood application independently passes the
     compiler, GET/POST semantic tests, malformed-form rejection, and HTML
     escaping, and contributes a dedicated mutation baseline.
+32. Local command evidence derives a canonical claim assessment that blocks
+    public repair-rate eligibility until filesystem, process, network, and
+    credential enforcement are independently attested.
 
 ## Deferred Decisions
 

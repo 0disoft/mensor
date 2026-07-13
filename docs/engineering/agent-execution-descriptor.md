@@ -57,6 +57,12 @@ requires one report producer version, rejects duplicate trial IDs and empty
 cohorts, and derives the combined report from trial records. Input ordering
 does not change canonical output.
 
+`assessAgentTrialEvidence` derives a separate claim boundary from validated
+evidence. Descriptor v1 can prove protocol integrity but cannot support a
+public repair-rate claim because filesystem, process, network, and credential
+enforcement are not attested. The assessment is canonical and callers cannot
+override eligibility or remove blockers.
+
 `runCommandAgentSuite` is the repeated-evaluation entrypoint. It validates the
 whole plan before requesting a workspace, assigns deterministic trial IDs, and
 runs every attempt in a caller-provided fresh workspace that is disposed even
