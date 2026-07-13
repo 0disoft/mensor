@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "docker-sandbox-conformance-report-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "adapter", "probe", "cases", "summary"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "docker-sandbox-execution-port/v1" },
+    "adapter": { "$ref": "#/$defs/artifact" },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "image", "executable", "basePlanSha256", "successOutputSha256"],
+      "properties": {
+        "protocol": { "const": "mensor-docker-conformance/v1" },
+        "image": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._/-]*@sha256:[a-f0-9]{64}$" },
+        "executable": { "type": "string", "pattern": "^/[^\\u0000]*$" },
+        "basePlanSha256": { "$ref": "#/$defs/digest" },
+        "successOutputSha256": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        { "$ref": "#/$defs/successCase" },
+        { "$ref": "#/$defs/timeoutCase" },
+        { "$ref": "#/$defs/outputLimitCase" },
+        { "$ref": "#/$defs/nonzeroExitCase" }
+      ],
+      "items": false
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caseCount", "passedCount", "failedCount", "conformant"],
+      "properties": {
+        "caseCount": { "const": 4 },
+        "passedCount": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "failedCount": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "conformant": { "type": "boolean" }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:+/-]{0,127}$" },
+    "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "revision", "sha256"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "revision": { "$ref": "#/$defs/name" },
+        "sha256": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "caseBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "planSha256", "passed"],
+      "properties": {
+        "id": { "enum": ["success", "timeout", "output-limit", "nonzero-exit"] },
+        "planSha256": { "$ref": "#/$defs/digest" },
+        "passed": { "type": "boolean" }
+      }
+    },
+    "successCase": { "allOf": [{ "$ref": "#/$defs/caseBase" }, { "type": "object", "properties": { "id": { "const": "success" } }, "required": ["id"] }] },
+    "timeoutCase": { "allOf": [{ "$ref": "#/$defs/caseBase" }, { "type": "object", "properties": { "id": { "const": "timeout" } }, "required": ["id"] }] },
+    "outputLimitCase": { "allOf": [{ "$ref": "#/$defs/caseBase" }, { "type": "object", "properties": { "id": { "const": "output-limit" } }, "required": ["id"] }] },
+    "nonzeroExitCase": { "allOf": [{ "$ref": "#/$defs/caseBase" }, { "type": "object", "properties": { "id": { "const": "nonzero-exit" } }, "required": ["id"] }] }
+  }
+}

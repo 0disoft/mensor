@@ -63,6 +63,11 @@ perspective, but it is not a Docker daemon implementation. Descriptor v2 also
 requires a concrete adapter that honors abort signals and proves the inspected
 container is the one that executes and is removed.
 
+A canonical port-conformance report can show that the adapter follows success
+and failure behavior visible through the execution port. Descriptor v2 may bind
+that report digest later, but must not treat it as independent daemon-state or
+container-removal proof.
+
 `mergeAgentTrialEvidence` is the only supported cohort merger. It validates
 every input again, requires byte-identical descriptors and fingerprints,
 requires one report producer version, rejects duplicate trial IDs and empty

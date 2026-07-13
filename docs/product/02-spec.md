@@ -222,6 +222,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     attest, start, and cleanup workflow. It starts only after inspection passes,
     attempts bounded cleanup after every successful create, and does not claim
     a Docker daemon adapter or executed sandbox evidence.
+36. Docker execution ports can be checked with one immutable probe across
+    success, timeout, output-limit, and nonzero-exit cases. The canonical report
+    records digests and derived outcomes without claiming independent Docker
+    daemon verification.
 
 ## Deferred Decisions
 

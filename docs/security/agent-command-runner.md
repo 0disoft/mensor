@@ -107,3 +107,14 @@ The port receives no ambient credentials from the runner and raw port errors
 are replaced with fixed lifecycle errors. The repository does not ship a Docker
 daemon adapter. A port must honor abort signals and preserve the lifecycle
 contract before its output can be treated as executed sandbox evidence.
+
+## Port Conformance
+
+The conformance harness runs one immutable probe image in `success`, `timeout`,
+`output-limit`, and `nonzero-exit` modes. Each mode must pass through the atomic
+lifecycle and produce one create/remove pair. Reports contain only artifact,
+plan, and expected-output digests plus derived case outcomes.
+
+This checks behavior visible through the injected port. It cannot prove that a
+port faithfully represented Docker daemon state or removed the real container,
+so a conformant report does not change repair-rate eligibility.

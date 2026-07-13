@@ -53,6 +53,18 @@ export type {
   DockerSandboxRunResult,
   RunDockerSandboxOptions,
 } from "./docker-sandbox-runner.js";
+export {
+  dockerSandboxConformanceCaseIds,
+  parseDockerSandboxConformanceReport,
+  runDockerSandboxConformance,
+  serializeDockerSandboxConformanceReport,
+  validateDockerSandboxConformanceReport,
+} from "./docker-sandbox-conformance.js";
+export type {
+  DockerSandboxConformanceCaseId,
+  DockerSandboxConformanceReport,
+  RunDockerSandboxConformanceOptions,
+} from "./docker-sandbox-conformance.js";
 export type {
   AgentEvidenceAssessment,
   PublicRepairRateBlocker,
