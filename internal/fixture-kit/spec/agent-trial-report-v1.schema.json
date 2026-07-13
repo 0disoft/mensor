@@ -34,16 +34,20 @@
     },
     "mutationId": {
       "enum": [
+        "browser-commonjs-server-require",
         "browser-direct-server-import",
         "browser-dynamic-import",
         "browser-transitive-server-import",
+        "dogfood-disabled-fieldset",
         "dogfood-form-field-missing",
+        "dogfood-repeated-scalar-control",
         "form-action-mismatch",
         "form-control-codec-mismatch",
         "form-field-missing",
         "form-field-unexpected",
         "form-method-mismatch",
         "handler-export-missing",
+        "handler-type-only-export",
         "ownership-i18n-outside-feature",
         "ownership-test-outside-slot",
         "route-direct-database-import"

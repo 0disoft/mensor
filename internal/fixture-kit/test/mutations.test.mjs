@@ -98,8 +98,8 @@ test("builds a deterministic serializable benchmark report", async () => {
     `${JSON.stringify(reports[1], null, 2)}\n`,
   );
   assert.deepEqual(reports[0].summary, {
-    caseCount: 13,
-    detectionPassedCount: 13,
+    caseCount: 17,
+    detectionPassedCount: 17,
     detectionFailedCount: 0,
   });
   assert.deepEqual(

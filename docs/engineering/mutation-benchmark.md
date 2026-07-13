@@ -17,7 +17,7 @@ prompt, or transcript.
 
 ## Current Golden Corpus
 
-The golden corpus contains thirteen deterministic mutations derived from three
+The golden corpus contains seventeen deterministic mutations derived from three
 valid baselines. `tiny-tasks` owns synthetic form and handler mutations.
 `layered-tasks` owns browser, shared, route, database, test, and i18n boundary
 mutations. `dogfood-tasks` contributes a missing-field mutation against a
@@ -35,6 +35,10 @@ runnable server-rendered application:
 - a test moved outside its owned slot; and
 - an i18n file moved outside every feature.
 - a required field removed from the runnable dogfood form.
+- a browser CommonJS import reaching a server module;
+- a runtime handler replaced by a type-only declaration;
+- a required control disabled through fieldset inheritance; and
+- duplicate successful controls bound to one scalar field.
 
 Every mutation identifies its baseline, must produce exactly its declared
 diagnostic set, and must be byte-identical when applied under different

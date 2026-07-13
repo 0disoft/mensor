@@ -7,16 +7,20 @@ import type { DiagnosticReport } from "@mensor/contract";
 import { withWorkspaceLease } from "./workspace-lease.js";
 
 export type MutationId =
+  | "browser-commonjs-server-require"
   | "browser-direct-server-import"
   | "browser-dynamic-import"
   | "browser-transitive-server-import"
   | "dogfood-form-field-missing"
+  | "dogfood-disabled-fieldset"
+  | "dogfood-repeated-scalar-control"
   | "form-action-mismatch"
   | "form-control-codec-mismatch"
   | "form-field-missing"
   | "form-field-unexpected"
   | "form-method-mismatch"
   | "handler-export-missing"
+  | "handler-type-only-export"
   | "ownership-i18n-outside-feature"
   | "ownership-test-outside-slot"
   | "route-direct-database-import";
@@ -81,16 +85,20 @@ const ownedMessages = "src/features/tasks/i18n/tasks.messages.json";
 const unownedMessages = "src/translations/tasks.messages.json";
 
 export const mutationCatalog: readonly MutationDefinition[] = [
+  definition("browser-commonjs-server-require", "module.boundary_violation", "layered-tasks", browser),
   definition("browser-direct-server-import", "module.boundary_violation", "layered-tasks", browser),
   definition("browser-dynamic-import", "module.dynamic_import_unsupported", "layered-tasks", browser),
   definition("browser-transitive-server-import", "module.boundary_violation", "layered-tasks", shared),
+  definition("dogfood-disabled-fieldset", "form.field_missing", "dogfood-tasks", template),
   definition("dogfood-form-field-missing", "form.field_missing", "dogfood-tasks", template),
+  definition("dogfood-repeated-scalar-control", "form.control_codec_mismatch", "dogfood-tasks", template),
   definition("form-action-mismatch", "form.action_mismatch", "tiny-tasks", template),
   definition("form-control-codec-mismatch", "form.control_codec_mismatch", "tiny-tasks", template),
   definition("form-field-missing", "form.field_missing", "tiny-tasks", template),
   definition("form-field-unexpected", "form.field_unexpected", "tiny-tasks", template),
   definition("form-method-mismatch", "form.method_mismatch", "tiny-tasks", template),
   definition("handler-export-missing", "handler.export_missing", "tiny-tasks", handler),
+  definition("handler-type-only-export", "handler.export_missing", "tiny-tasks", handler),
   definition(
     "ownership-i18n-outside-feature",
     "file.ownership_mismatch",
@@ -227,6 +235,12 @@ function definition(
 
 function mutateSource(mutationId: MutationId, source: string): string {
   switch (mutationId) {
+    case "browser-commonjs-server-require":
+      return replaceExactly(
+        source,
+        "void taskLabel;",
+        'void taskLabel;\nconst secret = require("../server/secret.js");\nvoid secret;',
+      );
     case "browser-direct-server-import":
       return replaceExactly(
         source,
@@ -255,6 +269,18 @@ function mutateSource(mutationId: MutationId, source: string): string {
         '          <input name="title" type="text" required="required" maxlength="120" />\n',
         "",
       );
+    case "dogfood-disabled-fieldset":
+      return replaceExactly(
+        source,
+        '          <input name="title" type="text" required="required" maxlength="120" />',
+        '          <fieldset disabled>\n            <input name="title" type="text" required="required" maxlength="120" />\n          </fieldset>',
+      );
+    case "dogfood-repeated-scalar-control":
+      return replaceExactly(
+        source,
+        '          <input name="title" type="text" required="required" maxlength="120" />',
+        '          <input name="title" type="text" required="required" maxlength="120" />\n          <input name="title" type="text" />',
+      );
     case "form-field-missing":
       return replaceExactly(
         source,
@@ -271,6 +297,12 @@ function mutateSource(mutationId: MutationId, source: string): string {
       return replaceExactly(source, 'method="post"', 'method="get"');
     case "handler-export-missing":
       return replaceExactly(source, "export function createTask", "export function renamedCreateTask");
+    case "handler-type-only-export":
+      return replaceExactly(
+        source,
+        "export function createTask(): void {\n  // Synthetic fixture handler. The compiler must discover, not execute, it.\n}\n",
+        "export type createTask = () => void;\n",
+      );
     case "ownership-i18n-outside-feature":
     case "ownership-test-outside-slot":
       throw new Error(`Move mutation cannot be applied as source replacement: ${mutationId}`);
