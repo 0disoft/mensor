@@ -61,10 +61,12 @@ export async function runDockerSandbox(
 ): Promise<DockerSandboxRunResult> {
   dockerSandboxPlanDigest(options.plan);
   const collector = validateDockerSandboxCollectorRef(options.collector);
-  const workspaceRoot = validateWorkspaceRoot(options.workspaceRoot);
+  const workspaceRoot = validateDockerSandboxWorkspaceRoot(options.workspaceRoot);
   const input = validateInput(options.input, options.plan.limits.maxInputBytes);
-  validatePort(options.port);
-  const cleanupTimeoutMs = validateCleanupTimeout(options.cleanupTimeoutMs ?? 10_000);
+  validateDockerSandboxExecutionPort(options.port);
+  const cleanupTimeoutMs = validateDockerSandboxCleanupTimeout(
+    options.cleanupTimeoutMs ?? 10_000,
+  );
 
   const executionController = new AbortController();
   const executionTimeout = setTimeout(
@@ -219,7 +221,7 @@ function validateInput(value: Uint8Array, maxInputBytes: number): Uint8Array {
   return new Uint8Array(value);
 }
 
-function validateWorkspaceRoot(value: string): string {
+export function validateDockerSandboxWorkspaceRoot(value: string): string {
   if (!path.isAbsolute(value) || value.includes("\0")) {
     throw new Error("Docker sandbox workspace root must be an absolute path without NUL.");
   }
@@ -232,14 +234,16 @@ function validateHandle(value: string): void {
   }
 }
 
-function validateCleanupTimeout(value: number): number {
+export function validateDockerSandboxCleanupTimeout(value: number): number {
   if (!Number.isSafeInteger(value) || value < 100 || value > 30_000) {
     throw new Error("Docker sandbox cleanup timeout must be an integer from 100 to 30000 milliseconds.");
   }
   return value;
 }
 
-function validatePort(value: DockerSandboxExecutionPort): void {
+export function validateDockerSandboxExecutionPort(
+  value: DockerSandboxExecutionPort,
+): DockerSandboxExecutionPort {
   if (
     typeof value !== "object" || value === null ||
     typeof value.create !== "function" ||
@@ -249,6 +253,7 @@ function validatePort(value: DockerSandboxExecutionPort): void {
   ) {
     throw new Error("Docker sandbox execution port is incomplete.");
   }
+  return value;
 }
 
 function compareText(left: string, right: string): number {

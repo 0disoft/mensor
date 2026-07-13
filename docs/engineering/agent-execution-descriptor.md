@@ -75,10 +75,23 @@ recomputes every digest and cross-artifact binding, including attested limits
 and the derived plan digest for every conformance case. The v2 cohort merger
 requires byte-identical execution and sandbox artifacts.
 
-The v2 envelope is still a binding container, not an execution receipt. No
-current constructor owns sandbox execution, trial-report production, and
-envelope creation as one atomic operation. A caller can supply an unrelated but
-valid report, so v2 evidence cannot support a public repair-rate claim yet.
+Hand-built v2 envelopes remain binding containers rather than execution
+receipts. `runSandboxAgentTrial` is the authoritative single-trial constructor:
+it validates all static execution inputs before mutation, uses the sandbox as
+the trial adapter, captures that invocation's runtime attestation, derives the
+final-state report, and creates the descriptor and envelope in one workflow.
+
+`sandbox-agent-trial-outcome/v1` separates evidence creation from infrastructure
+failure. `ok: true` means canonical evidence was created, not that the agent
+repaired the mutation. The embedded report owns the repair verdict. `ok: false`
+contains only a bounded stage, category, and optional canonical report; raw port
+errors, paths, handles, output, and inspection data are omitted. Cleanup or
+binding failure never returns partial evidence.
+
+The atomic constructor still consumes an injected port and a precomputed
+conformance report. It cannot independently prove daemon fidelity, so its
+evidence remains `port-conformance-only` and cannot support a public repair-rate
+claim.
 
 `mergeAgentTrialEvidence` is the only supported cohort merger. It validates
 every input again, requires byte-identical descriptors and fingerprints,

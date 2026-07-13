@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sandbox-agent-trial-outcome-v1.schema.json",
+  "title": "Mensor Sandbox Agent Trial Outcome v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "ok", "evidence"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "ok": { "const": true },
+        "evidence": { "$ref": "agent-trial-evidence-v2.schema.json" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "ok", "stage", "category", "report"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "ok": { "const": false },
+        "stage": {
+          "enum": ["prepare", "create", "inspect", "execute", "cleanup", "verify"]
+        },
+        "category": {
+          "enum": [
+            "invalid-configuration",
+            "trial-setup-failed",
+            "sandbox-create-failed",
+            "sandbox-inspection-failed",
+            "sandbox-execution-failed",
+            "sandbox-cleanup-failed",
+            "verification-failed"
+          ]
+        },
+        "report": {
+          "anyOf": [
+            { "$ref": "agent-trial-report-v1.schema.json" },
+            { "type": "null" }
+          ]
+        }
+      }
+    }
+  ]
+}

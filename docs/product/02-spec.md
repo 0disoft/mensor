@@ -238,6 +238,11 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     Parsing rejects fingerprint, attested-limit, base-plan, case-plan, adapter,
     collector, or cohort drift without claiming the report was atomically
     produced by that sandbox.
+40. The authoritative sandbox trial runner validates static inputs before
+    mutation, owns sandbox execution through final-state report and evidence
+    construction, and returns either canonical evidence or a redacted staged
+    failure. Cleanup and binding failures cannot produce partial evidence, and
+    evidence success remains distinct from repair success.
 
 ## Deferred Decisions
 

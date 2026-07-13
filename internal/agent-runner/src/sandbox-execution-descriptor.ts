@@ -87,25 +87,24 @@ export function createSandboxExecutionDescriptor(
   attestation: DockerSandboxRuntimeAttestation,
   conformance: DockerSandboxConformanceReport,
 ): SandboxExecutionDescriptor {
+  const validatedMetadata = validateSandboxExecutionMetadata(metadata);
   const validatedAttestation = validateDockerSandboxRuntimeAttestation(attestation);
   const validatedConformance = validateDockerSandboxConformanceReport(conformance);
   const descriptor: SandboxExecutionDescriptor = {
     schemaVersion: 2,
-    descriptorId: requireIdentifier(metadata.descriptorId, "descriptorId"),
+    descriptorId: validatedMetadata.descriptorId,
     agent: {
-      providerId: requireName(metadata.providerId, "providerId"),
-      modelId: requireName(metadata.modelId, "modelId"),
-      modelRevision: metadata.modelRevision === null
-        ? null
-        : requireName(metadata.modelRevision, "modelRevision"),
+      providerId: validatedMetadata.providerId,
+      modelId: validatedMetadata.modelId,
+      modelRevision: validatedMetadata.modelRevision,
     },
     artifacts: {
-      adapter: validateArtifactRef(metadata.adapter, "adapter"),
-      prompt: validateArtifactRef(metadata.prompt, "prompt"),
-      toolset: validateArtifactRef(metadata.toolset, "toolset"),
-      dataset: validateArtifactRef(metadata.dataset, "dataset"),
-      sandboxAdapter: validateArtifactRef(metadata.sandboxAdapter, "sandboxAdapter"),
-      collector: validateArtifactRef(metadata.collector, "collector"),
+      adapter: validatedMetadata.adapter,
+      prompt: validatedMetadata.prompt,
+      toolset: validatedMetadata.toolset,
+      dataset: validatedMetadata.dataset,
+      sandboxAdapter: validatedMetadata.sandboxAdapter,
+      collector: validatedMetadata.collector,
     },
     environment: {
       runner: "docker-sandbox",
@@ -126,6 +125,25 @@ export function createSandboxExecutionDescriptor(
     validatedAttestation,
     validatedConformance,
   );
+}
+
+export function validateSandboxExecutionMetadata(
+  metadata: SandboxExecutionMetadata,
+): SandboxExecutionMetadata {
+  return {
+    descriptorId: requireIdentifier(metadata.descriptorId, "descriptorId"),
+    providerId: requireName(metadata.providerId, "providerId"),
+    modelId: requireName(metadata.modelId, "modelId"),
+    modelRevision: metadata.modelRevision === null
+      ? null
+      : requireName(metadata.modelRevision, "modelRevision"),
+    adapter: validateArtifactRef(metadata.adapter, "adapter"),
+    prompt: validateArtifactRef(metadata.prompt, "prompt"),
+    toolset: validateArtifactRef(metadata.toolset, "toolset"),
+    dataset: validateArtifactRef(metadata.dataset, "dataset"),
+    sandboxAdapter: validateArtifactRef(metadata.sandboxAdapter, "sandboxAdapter"),
+    collector: validateArtifactRef(metadata.collector, "collector"),
+  };
 }
 
 export function validateSandboxExecutionDescriptorBindings(

@@ -145,7 +145,19 @@ resource limits against the commitment, and derives every conformance case plan
 from the public commitment. Artifacts from different plans fail closed.
 
 The envelope omits host executable paths, raw agent arguments, workspace paths,
-container handles, raw inspection output, and process output. It does not prove
-that the embedded report came from the embedded sandbox artifacts because no
-current runner creates both atomically. Public repair-rate eligibility remains
-false until that execution boundary exists and is independently attested.
+container handles, raw inspection output, and process output.
+
+`runSandboxAgentTrial` is the authoritative atomic constructor. It validates
+the plan, conformance, metadata, port, workspace, cleanup budget, and producer
+before mutation; then owns sandbox invocation, final-state verification,
+report creation, and envelope construction. Cleanup or final binding failure
+returns no evidence.
+
+Its canonical failure receipt contains only a stage, category, and optional
+validated trial report. Raw port errors are never copied. A successful outcome
+means evidence creation succeeded, while the embedded report determines whether
+the agent repaired the mutation.
+
+The injected port is still a trust boundary and the repository still ships no
+Docker daemon adapter. Atomic construction therefore does not establish daemon
+fidelity or public repair-rate eligibility.

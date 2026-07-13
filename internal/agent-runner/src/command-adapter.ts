@@ -1,7 +1,7 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { createHash } from "node:crypto";
 import * as path from "node:path";
-import { TextDecoder } from "node:util";
+import { TextDecoder, TextEncoder } from "node:util";
 
 import { parseDiagnosticReport, type DiagnosticReport } from "@mensor/contract";
 
@@ -99,17 +99,7 @@ async function runCommand(
   options: ValidatedOptions,
   context: AgentTrialContext,
 ): Promise<AgentTrialAdapterResult> {
-  const diagnosticReport = validateContextReport(context);
-  const input: CommandInput = {
-    schemaVersion: 1,
-    mutationId: context.mutationId,
-    baselineId: context.baselineId,
-    diagnosticReport,
-  };
-  const inputText = `${JSON.stringify(input)}\n`;
-  if (Buffer.byteLength(inputText, "utf8") > options.maxInputBytes) {
-    throw new Error("Agent command input exceeded its input limit.");
-  }
+  const input = createAgentCommandInput(context, options.maxInputBytes);
   const child = spawn(options.executable, options.args, {
     cwd: context.root,
     env: { ...options.environment },
@@ -149,7 +139,7 @@ async function runCommand(
   }, options.timeoutMs);
   timeout.unref();
 
-  child.stdin.end(inputText, "utf8");
+  child.stdin.end(input);
   const exitCode = await completion.finally(() => clearTimeout(timeout));
   if (terminationReason === "timeout") {
     throw new Error("Agent command exceeded its timeout.");
@@ -160,7 +150,32 @@ async function runCommand(
   if (exitCode !== 0) {
     throw new Error("Agent command exited unsuccessfully.");
   }
-  return parseOutput(Buffer.concat(stdout));
+  return parseAgentCommandOutput(Buffer.concat(stdout));
+}
+
+export function createAgentCommandInput(
+  context: AgentTrialContext,
+  maxInputBytes: number,
+): Uint8Array {
+  const diagnosticReport = validateContextReport(context);
+  const input: CommandInput = {
+    schemaVersion: 1,
+    mutationId: context.mutationId,
+    baselineId: context.baselineId,
+    diagnosticReport,
+  };
+  const bytes = new TextEncoder().encode(`${JSON.stringify(input)}\n`);
+  if (
+    !Number.isSafeInteger(maxInputBytes) ||
+    maxInputBytes < 1 ||
+    maxInputBytes > 65_536
+  ) {
+    throw new Error("Agent command input limit must be an integer from 1 to 65536 bytes.");
+  }
+  if (bytes.byteLength > maxInputBytes) {
+    throw new Error("Agent command input exceeded its input limit.");
+  }
+  return bytes;
 }
 
 function validateContextReport(context: AgentTrialContext): DiagnosticReport {
@@ -178,7 +193,10 @@ function validateContextReport(context: AgentTrialContext): DiagnosticReport {
   return parsed.value;
 }
 
-function parseOutput(bytes: Buffer): AgentTrialAdapterResult {
+export function parseAgentCommandOutput(bytes: Uint8Array): AgentTrialAdapterResult {
+  if (!(bytes instanceof Uint8Array)) {
+    throw new Error("Agent command output must be bytes.");
+  }
   let value: unknown;
   try {
     const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);

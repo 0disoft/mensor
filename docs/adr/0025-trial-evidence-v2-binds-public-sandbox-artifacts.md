@@ -36,7 +36,7 @@ IDs and derives merged metrics from the canonical trial records.
 - Attestation-limit drift and conformance base/case-plan drift fail closed.
 - Host Docker paths, raw agent arguments, workspace paths, container handles,
   and raw inspection output remain outside the envelope.
-- The envelope binds supplied artifacts; it does not prove the trial report was
-  produced by that sandbox. Public repair-rate eligibility stays false until an
-  atomic sandbox trial runner owns execution, report creation, and envelope
-  construction.
+- Hand-built envelopes bind supplied artifacts but do not prove report origin.
+  The authoritative atomic runner must own mutation, sandbox execution, report
+  creation, and envelope construction. Public repair-rate eligibility still
+  stays false until the injected port has independent daemon-level evidence.

@@ -1,6 +1,8 @@
 export {
   commandSpecificationDigest,
+  createAgentCommandInput,
   createCommandAgentAdapter,
+  parseAgentCommandOutput,
 } from "./command-adapter.js";
 export type { CommandAgentAdapterOptions } from "./command-adapter.js";
 export { runCommandAgentTrial } from "./command-trial.js";
@@ -52,7 +54,12 @@ export type {
   DockerSandboxRuntimeObservation,
 } from "./docker-sandbox-attestation.js";
 export { validateDockerSandboxCollectorRef } from "./docker-sandbox-attestation.js";
-export { runDockerSandbox } from "./docker-sandbox-runner.js";
+export {
+  runDockerSandbox,
+  validateDockerSandboxCleanupTimeout,
+  validateDockerSandboxExecutionPort,
+  validateDockerSandboxWorkspaceRoot,
+} from "./docker-sandbox-runner.js";
 export type {
   DockerSandboxExecutionPort,
   DockerSandboxExecutionResult,
@@ -82,6 +89,7 @@ export {
   validateSandboxExecutionDescriptor,
   validateSandboxExecutionDescriptorBindings,
   validateSandboxExecutionDescriptorEvidenceBindings,
+  validateSandboxExecutionMetadata,
 } from "./sandbox-execution-descriptor.js";
 export type {
   SandboxExecutionDescriptor,
@@ -95,6 +103,22 @@ export {
   validateSandboxAgentTrialEvidence,
 } from "./sandbox-trial-evidence.js";
 export type { SandboxAgentTrialEvidence } from "./sandbox-trial-evidence.js";
+export {
+  parseSandboxAgentTrialOutcome,
+  runSandboxAgentTrial,
+  sandboxTrialFailureCategories,
+  sandboxTrialFailureStages,
+  serializeSandboxAgentTrialOutcome,
+  validateSandboxAgentTrialOutcome,
+} from "./sandbox-trial-runner.js";
+export type {
+  RunSandboxAgentTrialOptions,
+  SandboxAgentTrialFailure,
+  SandboxAgentTrialOutcome,
+  SandboxAgentTrialSuccess,
+  SandboxTrialFailureCategory,
+  SandboxTrialFailureStage,
+} from "./sandbox-trial-runner.js";
 export type {
   AgentEvidenceAssessment,
   PublicRepairRateBlocker,
