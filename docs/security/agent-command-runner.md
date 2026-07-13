@@ -73,3 +73,12 @@ eligibility false and records missing filesystem, process, network, and
 credential enforcement. Callers cannot override those facts. Supporting public
 metrics requires a new descriptor revision backed by an actual sandbox, not a
 configuration label on the local runner.
+
+## Docker Plan
+
+The internal Docker planner accepts only immutable image digests and derives a
+networkless, non-root, read-only, capability-free command with one writable
+workspace mount and explicit CPU, memory, PID, I/O, and timeout limits. It is a
+validated plan, not runtime attestation. Until descriptor v2 records engine and
+enforcement evidence, materialized Docker commands remain ineligible for public
+repair-rate claims.

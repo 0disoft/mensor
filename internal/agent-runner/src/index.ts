@@ -23,6 +23,15 @@ export {
   serializeAgentEvidenceAssessment,
   validateAgentEvidenceAssessment,
 } from "./evidence-assessment.js";
+export {
+  createDockerSandboxPlan,
+  dockerSandboxPlanDigest,
+  materializeDockerSandboxCommand,
+} from "./docker-sandbox-plan.js";
+export type {
+  DockerSandboxPlan,
+  DockerSandboxPlanOptions,
+} from "./docker-sandbox-plan.js";
 export type {
   AgentEvidenceAssessment,
   PublicRepairRateBlocker,

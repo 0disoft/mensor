@@ -211,6 +211,9 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 32. Local command evidence derives a canonical claim assessment that blocks
     public repair-rate eligibility until filesystem, process, network, and
     credential enforcement are independently attested.
+33. A future container adapter starts from a canonical networkless Docker plan
+    with immutable images, non-root execution, one workspace mount, read-only
+    root, dropped capabilities, and bounded CPU, memory, PID, I/O, and time.
 
 ## Deferred Decisions
 
