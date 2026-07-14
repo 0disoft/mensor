@@ -1,7 +1,7 @@
 {
   "tool": "ssealed",
   "version": "0.6.11",
-  "generatedAt": "2026-07-13T10:09:57.238Z",
+  "generatedAt": "2026-07-14T02:54:39.262Z",
   "scope": "general",
   "profile": "monorepo",
   "addons": [
@@ -222,13 +222,13 @@
     },
     {
       "path": "docs/cli/command-contract.md",
-      "checksum": "sha256:d7ef33b92d74a75e0a692d0977591c137723adff0fa1f9d66fbecc2031cbfb03",
+      "checksum": "sha256:a7de024777a17e23d469e1118d268e9da1534392541ab82f8b488c981ab92f5d",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:27c3b100ca1684d15c735acbfeafa98f00c1efc64d164fa961074a1b5ffc4a74",
-      "acceptedChecksum": "sha256:d7ef33b92d74a75e0a692d0977591c137723adff0fa1f9d66fbecc2031cbfb03",
+      "acceptedChecksum": "sha256:a7de024777a17e23d469e1118d268e9da1534392541ab82f8b488c981ab92f5d",
       "generatedChecksum": "sha256:27c3b100ca1684d15c735acbfeafa98f00c1efc64d164fa961074a1b5ffc4a74"
     },
     {
@@ -321,13 +321,13 @@
     },
     {
       "path": "docs/product/02-spec.md",
-      "checksum": "sha256:7624ab84e533d46657d38658a705baee582579efc9f212626deed725ca4480d7",
+      "checksum": "sha256:dc3b17941239207084e67ece6fcfe5fb9a26d6c9d6d44306386fc955ab86cc96",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:a4b9ccd412af5252824341199977718a3cfddf59d3ebf2bc293ef3ffea3a862b",
-      "acceptedChecksum": "sha256:7624ab84e533d46657d38658a705baee582579efc9f212626deed725ca4480d7",
+      "acceptedChecksum": "sha256:dc3b17941239207084e67ece6fcfe5fb9a26d6c9d6d44306386fc955ab86cc96",
       "generatedChecksum": "sha256:a4b9ccd412af5252824341199977718a3cfddf59d3ebf2bc293ef3ffea3a862b"
     },
     {
@@ -343,13 +343,13 @@
     },
     {
       "path": "package.json",
-      "checksum": "sha256:4099333f78fac5e9994a07ba7aa04c3f6c7417a8d9b41d3d8537207b0757f024",
+      "checksum": "sha256:654e1e1b913e6466446b5ab53b5174a2f18102d0f5f4acbc1da433177370e534",
       "kind": "runner",
       "ownership": "project-owned",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:44087c2e1c46f097ef3938a430169b92bf73ebc6dffa11c0ce0b4717e710d6b5",
-      "acceptedChecksum": "sha256:4099333f78fac5e9994a07ba7aa04c3f6c7417a8d9b41d3d8537207b0757f024",
+      "acceptedChecksum": "sha256:654e1e1b913e6466446b5ab53b5174a2f18102d0f5f4acbc1da433177370e534",
       "generatedChecksum": "sha256:44087c2e1c46f097ef3938a430169b92bf73ebc6dffa11c0ce0b4717e710d6b5"
     },
     {

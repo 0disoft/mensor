@@ -243,6 +243,11 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     construction, and returns either canonical evidence or a redacted staged
     failure. Cleanup and binding failures cannot produce partial evidence, and
     evidence success remains distinct from repair success.
+41. Sandbox evidence assessment validates every v2 artifact binding while
+    refusing to infer atomic-constructor provenance from portable JSON. It
+    keeps public repair-rate eligibility false until constructor provenance,
+    credential scope, Docker daemon fidelity, and runtime observations are
+    independently attested.
 
 ## Deferred Decisions
 

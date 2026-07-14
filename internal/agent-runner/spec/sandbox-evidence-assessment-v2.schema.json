@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sandbox-evidence-assessment-v2.schema.json",
+  "title": "Mensor Sandbox Evidence Assessment v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "executionFingerprint",
+    "claimLevel",
+    "evidenceLevel",
+    "atomicConstructionProven",
+    "eligibleForPublicRepairRate",
+    "blockers"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "executionFingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "claimLevel": { "const": "sandbox-artifact-integrity-only" },
+    "evidenceLevel": { "const": "port-conformance-only" },
+    "atomicConstructionProven": { "const": false },
+    "eligibleForPublicRepairRate": { "const": false },
+    "blockers": {
+      "const": [
+        "atomic-construction-provenance-not-attested",
+        "credential-scope-not-attested",
+        "docker-daemon-fidelity-not-attested",
+        "runtime-observation-provenance-not-attested"
+      ]
+    }
+  }
+}

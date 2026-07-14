@@ -93,6 +93,14 @@ conformance report. It cannot independently prove daemon fidelity, so its
 evidence remains `port-conformance-only` and cannot support a public repair-rate
 claim.
 
+`assessSandboxAgentTrialEvidence` derives `sandbox-evidence-assessment/v2` only
+after validating every v2 artifact binding. The assessment proves canonical
+artifact integrity, not which constructor produced the bytes. It therefore sets
+`atomicConstructionProven` to false and retains blockers for construction
+provenance, credential scope, Docker daemon fidelity, and runtime-observation
+provenance. A caller cannot promote a hand-built envelope by changing those
+fields.
+
 `mergeAgentTrialEvidence` is the only supported cohort merger. It validates
 every input again, requires byte-identical descriptors and fingerprints,
 requires one report producer version, rejects duplicate trial IDs and empty

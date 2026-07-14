@@ -20,10 +20,15 @@ export type {
 } from "./verified-workspace-provider.js";
 export {
   assessAgentTrialEvidence,
+  assessSandboxAgentTrialEvidence,
   parseAgentEvidenceAssessment,
+  parseSandboxEvidenceAssessment,
   publicRepairRateBlockers,
+  sandboxPublicRepairRateBlockers,
   serializeAgentEvidenceAssessment,
+  serializeSandboxEvidenceAssessment,
   validateAgentEvidenceAssessment,
+  validateSandboxEvidenceAssessment,
 } from "./evidence-assessment.js";
 export {
   createDockerSandboxPlan,
@@ -122,6 +127,8 @@ export type {
 export type {
   AgentEvidenceAssessment,
   PublicRepairRateBlocker,
+  SandboxEvidenceAssessment,
+  SandboxPublicRepairRateBlocker,
 } from "./evidence-assessment.js";
 export {
   createAgentTrialEvidence,

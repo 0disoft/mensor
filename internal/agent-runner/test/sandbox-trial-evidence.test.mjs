@@ -8,12 +8,16 @@ import {
   parseAgentTrialReport,
 } from "../../fixture-kit/dist/src/index.js";
 import {
+  assessSandboxAgentTrialEvidence,
   createDockerSandboxPlanCommitment,
   createSandboxAgentTrialEvidence,
   createSandboxExecutionDescriptor,
   mergeSandboxAgentTrialEvidence,
   parseSandboxAgentTrialEvidence,
+  parseSandboxEvidenceAssessment,
+  sandboxPublicRepairRateBlockers,
   serializeSandboxAgentTrialEvidence,
+  serializeSandboxEvidenceAssessment,
 } from "../dist/src/index.js";
 import {
   metadata,
@@ -168,6 +172,51 @@ test("keeps evidence v2 schema references aligned with canonical output", async 
 
   assert.equal(evidenceSchema.$id, "agent-trial-evidence-v2.schema.json");
   assert.equal(validate(fixture.evidence), true, JSON.stringify(validate.errors));
+});
+
+test("assesses sandbox evidence without inventing atomic provenance", async () => {
+  const fixture = await boundFixture();
+  const assessment = assessSandboxAgentTrialEvidence(fixture.evidence);
+
+  assert.equal(assessment.claimLevel, "sandbox-artifact-integrity-only");
+  assert.equal(assessment.evidenceLevel, "port-conformance-only");
+  assert.equal(assessment.atomicConstructionProven, false);
+  assert.equal(assessment.eligibleForPublicRepairRate, false);
+  assert.deepEqual(assessment.blockers, sandboxPublicRepairRateBlockers);
+  assert.deepEqual(
+    parseSandboxEvidenceAssessment(
+      serializeSandboxEvidenceAssessment(assessment),
+    ),
+    assessment,
+  );
+});
+
+test("rejects forged sandbox provenance and public eligibility claims", async () => {
+  const fixture = await boundFixture();
+  const assessment = assessSandboxAgentTrialEvidence(fixture.evidence);
+
+  assert.throws(
+    () => parseSandboxEvidenceAssessment(JSON.stringify({
+      ...assessment,
+      atomicConstructionProven: true,
+      eligibleForPublicRepairRate: true,
+      blockers: [],
+    })),
+    /invalid claim boundary/,
+  );
+});
+
+test("keeps sandbox assessment v2 schema aligned with canonical output", async () => {
+  const fixture = await boundFixture();
+  const assessment = assessSandboxAgentTrialEvidence(fixture.evidence);
+  const schema = JSON.parse(await readFile(new URL(
+    "../spec/sandbox-evidence-assessment-v2.schema.json",
+    import.meta.url,
+  ), "utf8"));
+  const validate = new Ajv2020({ strict: true }).compile(schema);
+
+  assert.equal(validate(assessment), true, JSON.stringify(validate.errors));
+  assert.deepEqual(schema.properties.blockers.const, sandboxPublicRepairRateBlockers);
 });
 
 async function boundFixture(overrides = {}) {

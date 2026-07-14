@@ -161,3 +161,14 @@ the agent repaired the mutation.
 The injected port is still a trust boundary and the repository still ships no
 Docker daemon adapter. Atomic construction therefore does not establish daemon
 fidelity or public repair-rate eligibility.
+
+## Sandbox Claim Assessment
+
+`sandbox-evidence-assessment/v2` validates the complete v2 evidence envelope
+before deriving a fixed `sandbox-artifact-integrity-only` claim. It records the
+descriptor's `port-conformance-only` level but deliberately sets
+`atomicConstructionProven` to false: portable JSON cannot prove that it passed
+through the authoritative in-process constructor. Construction provenance,
+credential scope, Docker daemon fidelity, and runtime-observation provenance
+remain mandatory blockers. The parser rejects attempts to remove those
+blockers or relabel the evidence as publicly eligible.
