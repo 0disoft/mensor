@@ -194,7 +194,7 @@ function snapshot(status, labels) {
       ReadonlyRootfs: true,
       CapAdd: [],
       CapDrop: ["ALL"],
-      SecurityOpt: ["no-new-privileges:true"],
+      SecurityOpt: ["no-new-privileges=true"],
       Memory: 512 * 1024 * 1024,
       NanoCpus: 2_000_000_000,
       PidsLimit: 128,

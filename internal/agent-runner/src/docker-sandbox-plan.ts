@@ -270,7 +270,7 @@ export function materializeDockerSandboxCommand(
       "--cap-drop",
       "ALL",
       "--security-opt",
-      "no-new-privileges:true",
+      "no-new-privileges=true",
       "--pids-limit",
       String(plan.limits.pidsLimit),
       "--memory",

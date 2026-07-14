@@ -35,7 +35,7 @@ test("materializes a networkless least-privilege Docker command", () => {
     "--read-only",
     "--cap-drop",
     "ALL",
-    "no-new-privileges:true",
+    "no-new-privileges=true",
     "--pids-limit",
     "--memory",
     "--cpus",

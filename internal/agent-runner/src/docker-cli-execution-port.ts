@@ -245,7 +245,7 @@ function createCommand(
     "--cap-drop",
     "ALL",
     "--security-opt",
-    "no-new-privileges:true",
+    "no-new-privileges=true",
     "--pids-limit",
     String(plan.limits.pidsLimit),
     "--memory",
@@ -405,7 +405,9 @@ function normalizeInspection(
     snapshot.capabilitiesAdded.length !== 0 ||
     !snapshot.capabilitiesDropped.some((value) => value.toUpperCase() === "ALL") ||
     !snapshot.securityOptions.some((value) =>
-      value === "no-new-privileges" || value === "no-new-privileges:true") ||
+      value === "no-new-privileges" ||
+      value === "no-new-privileges=true" ||
+      value === "no-new-privileges:true") ||
     snapshot.mounts.length !== 1 ||
     snapshot.mounts[0]?.destination !== "/workspace" ||
     snapshot.mounts[0]?.readWrite !== true ||
