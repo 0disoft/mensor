@@ -282,7 +282,7 @@ export function materializeDockerSandboxCommand(
       "--tmpfs",
       "/tmp:rw,noexec,nosuid,size=64m",
       "--mount",
-      `type=bind,src=${root},dst=/workspace,rw`,
+      `type=bind,src=${root},dst=/workspace`,
       "--workdir",
       "/workspace",
       plan.image,

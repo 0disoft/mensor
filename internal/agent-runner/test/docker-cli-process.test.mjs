@@ -72,6 +72,18 @@ test("classifies bounded Docker CLI stderr without returning its contents", asyn
   assert.equal(JSON.stringify(result).includes("private-path"), false);
 });
 
+test("classifies unsupported writable bind syntax as a mount failure", async () => {
+  const runner = createDockerCliProcessRunner();
+  const result = await runner(command([
+    "-e",
+    "process.stderr.write(\"invalid argument for --mount: unexpected key 'rw' in 'rw'\"); process.exit(125)",
+  ]));
+
+  assert.equal(result.exitCode, 125);
+  assert.equal(result.failureCategory, "mount-invalid");
+  assert.equal(JSON.stringify(result).includes("unexpected key"), false);
+});
+
 function command(args, input = new Uint8Array()) {
   return {
     executable: process.execPath,

@@ -145,7 +145,9 @@ function classifyDockerCliFailure(stderr: string): DockerCliFailureCategory {
   }
   if (
     value.includes("invalid mount config") ||
-    value.includes("bind source path does not exist")
+    value.includes("bind source path does not exist") ||
+    value.includes("unexpected key 'rw'") ||
+    value.includes('unexpected key "rw"')
   ) {
     return "mount-invalid";
   }

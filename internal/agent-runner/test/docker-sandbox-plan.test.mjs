@@ -43,7 +43,7 @@ test("materializes a networkless least-privilege Docker command", () => {
   ]) {
     assert.ok(command.args.includes(required), required);
   }
-  assert.ok(command.args.some((argument) => argument.includes("dst=/workspace,rw")));
+  assert.ok(command.args.some((argument) => argument.endsWith("dst=/workspace")));
 });
 
 test("rejects mutable images and unsafe executable paths", () => {

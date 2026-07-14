@@ -257,7 +257,7 @@ function createCommand(
     "--tmpfs",
     "/tmp:rw,noexec,nosuid,size=64m",
     "--mount",
-    `type=bind,src=${workspaceRoot},dst=/workspace,rw`,
+    `type=bind,src=${workspaceRoot},dst=/workspace`,
     "--workdir",
     "/workspace",
     "--name",
