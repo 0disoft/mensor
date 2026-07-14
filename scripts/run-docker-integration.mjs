@@ -129,10 +129,7 @@ async function runSuccessCase(options) {
     collector: options.collector,
     workspaceRoot: options.workspaceRoot,
     input: encoder.encode("hello\n"),
-    port: createDockerCliExecutionPort({
-      environment: options.environment,
-      processRunner: options.processRunner,
-    }),
+    port: createExecutionPort(options, "success"),
     cleanupTimeoutMs: 10_000,
   });
 
@@ -162,10 +159,7 @@ async function runFailureCase(options) {
       collector: options.collector,
       workspaceRoot: options.workspaceRoot,
       input: new Uint8Array(),
-      port: createDockerCliExecutionPort({
-        environment: options.environment,
-        processRunner: options.processRunner,
-      }),
+      port: createExecutionPort(options, options.id),
       cleanupTimeoutMs: 10_000,
     }),
     (error) => error instanceof Error && error.message === options.expectedMessage,
@@ -195,6 +189,20 @@ function createPlan(dockerExecutable, options) {
     memoryMiB: 128,
     cpuCount: 1,
     pidsLimit: 32,
+  });
+}
+
+function createExecutionPort(options, caseId) {
+  return createDockerCliExecutionPort({
+    environment: options.environment,
+    processRunner: options.processRunner,
+    onDiagnostic: (diagnostic) => {
+      process.stderr.write(`${JSON.stringify({
+        source: "docker-integration",
+        caseId,
+        ...diagnostic,
+      })}\n`);
+    },
   });
 }
 

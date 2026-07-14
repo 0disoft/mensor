@@ -107,6 +107,31 @@ test("attempts bounded owned cleanup after an uncertain create failure", async (
   assert.equal(fake.calls.at(-1).args.at(-1), `mensor-${nonce}`);
 });
 
+test("reports only a bounded create failure category", async () => {
+  const plan = sandboxPlan();
+  const fake = fakeDocker(plan, {
+    createFails: true,
+    createFailureCategory: "resource-unsupported",
+  });
+  const diagnostics = [];
+  const port = createDockerCliExecutionPort({
+    processRunner: fake.runner,
+    nonceFactory: () => nonce,
+    onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+  });
+
+  await assert.rejects(
+    port.create(plan, path.resolve("workspace"), new AbortController().signal),
+    /create failed/,
+  );
+  assert.deepEqual(diagnostics, [{
+    stage: "create",
+    termination: "exited",
+    exitCode: 1,
+    failureCategory: "resource-unsupported",
+  }]);
+});
+
 function fakeDocker(plan, options = {}) {
   const calls = [];
   const events = [];
@@ -124,7 +149,12 @@ function fakeDocker(plan, options = {}) {
       const operation = command.args.slice(0, 2).join(" ");
       if (operation === "container create") {
         events.push("create");
-        return result(options.createFails ? 1 : 0, `${handle}\n`);
+        return {
+          ...result(options.createFails ? 1 : 0, `${handle}\n`),
+          ...(options.createFailureCategory === undefined
+            ? {}
+            : { failureCategory: options.createFailureCategory }),
+        };
       }
       if (operation === "container inspect") {
         events.push("inspect");

@@ -4,6 +4,7 @@ import * as path from "node:path";
 import {
   createDockerCliProcessRunner,
   type DockerCliCommandResult,
+  type DockerCliFailureCategory,
   type DockerCliProcessRunner,
 } from "./docker-cli-process.js";
 import {
@@ -40,6 +41,14 @@ export interface DockerCliExecutionPortOptions {
   readonly environment?: Readonly<Record<string, string>>;
   readonly processRunner?: DockerCliProcessRunner;
   readonly nonceFactory?: () => string;
+  readonly onDiagnostic?: (diagnostic: DockerCliDiagnostic) => void;
+}
+
+export interface DockerCliDiagnostic {
+  readonly stage: "create";
+  readonly termination: DockerCliCommandResult["termination"];
+  readonly exitCode: number;
+  readonly failureCategory: DockerCliFailureCategory;
 }
 
 interface OwnedContainer {
@@ -77,6 +86,12 @@ export function createDockerCliExecutionPort(
           maxOutputBytes: controlOutputLimitBytes,
         });
       } catch {
+        options.onDiagnostic?.({
+          stage: "create",
+          termination: "timeout",
+          exitCode: 1,
+          failureCategory: "process-spawn-failed",
+        });
         await bestEffortRemoveUnknown(
           processRunner,
           environment,
@@ -88,6 +103,12 @@ export function createDockerCliExecutionPort(
         throw new Error("Docker CLI create failed.");
       }
       if (!isSuccessful(result)) {
+        options.onDiagnostic?.({
+          stage: "create",
+          termination: result.termination,
+          exitCode: result.exitCode,
+          failureCategory: result.failureCategory ?? "other",
+        });
         await bestEffortRemoveUnknown(
           processRunner,
           environment,

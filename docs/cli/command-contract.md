@@ -65,7 +65,7 @@ The failure envelope is:
   "schemaVersion": 1,
   "producer": {
     "name": "mensor",
-    "version": "0.0.42"
+    "version": "0.0.43"
   },
   "status": "error",
   "failure": {

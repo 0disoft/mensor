@@ -127,7 +127,9 @@ container.
 The subprocess boundary closes stdin, bounds combined stdout and stderr, retains
 stdout only, honors abort signals, and attempts process-tree termination. Raw
 stderr and Docker inspection payloads are not copied into public errors or
-evidence. Inspection still has to reproduce the requested network, root
+evidence. Failed Docker commands may emit only a fixed failure category plus
+stage, termination, and exit code to the non-canonical integration log.
+Inspection still has to reproduce the requested network, root
 filesystem, user, capability, mount, tmpfs, and resource limits before start.
 
 The `docker-integration` gate explicitly preloads a digest-pinned public image,

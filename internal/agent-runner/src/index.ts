@@ -65,12 +65,14 @@ export {
 export type {
   DockerCliCommand,
   DockerCliCommandResult,
+  DockerCliFailureCategory,
   DockerCliProcessRunner,
 } from "./docker-cli-process.js";
 export {
   createDockerCliExecutionPort,
 } from "./docker-cli-execution-port.js";
 export type {
+  DockerCliDiagnostic,
   DockerCliExecutionPortOptions,
 } from "./docker-cli-execution-port.js";
 export {

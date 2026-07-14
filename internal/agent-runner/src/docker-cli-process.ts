@@ -15,7 +15,19 @@ export interface DockerCliCommandResult {
   readonly exitCode: number;
   readonly stdout: Uint8Array;
   readonly combinedOutputBytes: number;
+  readonly failureCategory?: DockerCliFailureCategory;
 }
+
+export type DockerCliFailureCategory =
+  | "daemon-unavailable"
+  | "flag-unsupported"
+  | "image-missing"
+  | "image-reference-invalid"
+  | "mount-invalid"
+  | "permission-denied"
+  | "process-spawn-failed"
+  | "resource-unsupported"
+  | "other";
 
 export type DockerCliProcessRunner = (
   command: DockerCliCommand,
@@ -43,7 +55,9 @@ async function runDockerCliProcess(
       stdio: ["pipe", "pipe", "pipe"],
     });
     const stdoutChunks: Buffer[] = [];
+    const diagnosticChunks: Buffer[] = [];
     let stdoutBytes = 0;
+    let diagnosticBytes = 0;
     let combinedOutputBytes = 0;
     let termination: DockerCliCommandResult["termination"] | null = null;
     let settled = false;
@@ -72,6 +86,12 @@ async function runDockerCliProcess(
         stdoutChunks.push(retained);
         stdoutBytes += retained.byteLength;
       }
+      if (!keep && diagnosticBytes < 4_096) {
+        const remaining = 4_096 - diagnosticBytes;
+        const retained = chunk.subarray(0, remaining);
+        diagnosticChunks.push(retained);
+        diagnosticBytes += retained.byteLength;
+      }
       if (
         combinedOutputBytes > command.maxOutputBytes &&
         termination === null
@@ -87,16 +107,63 @@ async function runDockerCliProcess(
     }
     child.stdout.on("data", (chunk: Buffer) => capture(chunk, true));
     child.stderr.on("data", (chunk: Buffer) => capture(chunk, false));
-    child.once("error", (error) => finish(() => reject(error)));
+    child.once("error", () => finish(() => resolve({
+      ...emptyResult("timeout"),
+      failureCategory: "process-spawn-failed",
+    })));
     child.once("close", (code) => finish(() => resolve({
       termination: termination ?? "exited",
       exitCode: Number.isSafeInteger(code) ? code as number : 1,
       stdout: new Uint8Array(Buffer.concat(stdoutChunks)),
       combinedOutputBytes,
+      ...(code === 0 && termination === null
+        ? {}
+        : {
+            failureCategory: classifyDockerCliFailure(
+              Buffer.concat(diagnosticChunks).toString("utf8"),
+            ),
+          }),
     })));
     child.stdin.once("error", () => undefined);
     child.stdin.end(command.input);
   });
+}
+
+function classifyDockerCliFailure(stderr: string): DockerCliFailureCategory {
+  const value = stderr.toLowerCase();
+  if (
+    value.includes("cannot connect to the docker daemon") ||
+    value.includes("is the docker daemon running")
+  ) {
+    return "daemon-unavailable";
+  }
+  if (value.includes("no such image") || value.includes("unable to find image")) {
+    return "image-missing";
+  }
+  if (value.includes("invalid reference format")) {
+    return "image-reference-invalid";
+  }
+  if (
+    value.includes("invalid mount config") ||
+    value.includes("bind source path does not exist")
+  ) {
+    return "mount-invalid";
+  }
+  if (value.includes("unknown flag") || value.includes("unknown shorthand flag")) {
+    return "flag-unsupported";
+  }
+  if (
+    value.includes("minimum memory limit") ||
+    value.includes("not supported on this platform") ||
+    value.includes("pids limit") ||
+    value.includes("nano cpus")
+  ) {
+    return "resource-unsupported";
+  }
+  if (value.includes("permission denied") || value.includes("access is denied")) {
+    return "permission-denied";
+  }
+  return "other";
 }
 
 function validateCommand(command: DockerCliCommand): void {

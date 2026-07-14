@@ -60,6 +60,18 @@ test("rejects a relative Docker CLI executable before spawning", async () => {
   );
 });
 
+test("classifies bounded Docker CLI stderr without returning its contents", async () => {
+  const runner = createDockerCliProcessRunner();
+  const result = await runner(command([
+    "-e",
+    "process.stderr.write('invalid mount config for type bind: private-path'); process.exit(125)",
+  ]));
+
+  assert.equal(result.exitCode, 125);
+  assert.equal(result.failureCategory, "mount-invalid");
+  assert.equal(JSON.stringify(result).includes("private-path"), false);
+});
+
 function command(args, input = new Uint8Array()) {
   return {
     executable: process.execPath,
