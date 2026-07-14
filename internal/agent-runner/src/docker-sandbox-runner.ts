@@ -73,7 +73,6 @@ export async function runDockerSandbox(
     () => executionController.abort(),
     options.plan.limits.timeoutMs,
   );
-  executionTimeout.unref();
   let handle: string | null = null;
   let executionFailed = false;
 
@@ -153,7 +152,6 @@ async function removeWithTimeout(
 ): Promise<void> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  timeout.unref();
   try {
     await Promise.race([
       port.remove(handle, controller.signal),
