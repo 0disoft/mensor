@@ -18,6 +18,7 @@ import {
   metadata,
   planOptions,
   sandboxEvidence,
+  testWorkspaceRoot,
 } from "./support/sandbox-evidence-fixture.mjs";
 
 test("binds plan, attestation, and port conformance into descriptor v2", async () => {
@@ -36,7 +37,7 @@ test("binds plan, attestation, and port conformance into descriptor v2", async (
   assert.match(descriptor.environment.planSha256, /^[a-f0-9]{64}$/);
   assert.match(sandboxExecutionFingerprint(descriptor), /^[a-f0-9]{64}$/);
   assert.deepEqual(parseSandboxExecutionDescriptor(serialized), descriptor);
-  assert.equal(serialized.includes("C:\\workspace"), false);
+  assert.equal(serialized.includes(testWorkspaceRoot()), false);
   assert.equal(serialized.includes("private-agent-argument"), false);
   assert.equal(serialized.includes("container-1"), false);
 });

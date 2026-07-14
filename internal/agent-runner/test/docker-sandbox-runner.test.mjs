@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import * as path from "node:path";
 import test from "node:test";
+
+const workspaceRoot = path.resolve("workspace");
 
 import {
   createDockerSandboxPlan,
@@ -13,7 +16,7 @@ test("runs create, inspect, start, and cleanup as one bounded lifecycle", async 
   const result = await runDockerSandbox({
     plan: sandboxPlan(),
     collector: collector(),
-    workspaceRoot: "C:\\workspace",
+    workspaceRoot,
     input: new TextEncoder().encode('{"schemaVersion":1}\n'),
     port,
   });
@@ -159,7 +162,7 @@ function runOptions(port) {
   return {
     plan: sandboxPlan(),
     collector: collector(),
-    workspaceRoot: "C:\\workspace",
+    workspaceRoot,
     input: new TextEncoder().encode("input\n"),
     port,
     cleanupTimeoutMs: 500,
@@ -170,7 +173,7 @@ function successfulPort(events) {
   return {
     async create(_plan, workspaceRoot) {
       events.push("create");
-      assert.equal(workspaceRoot, "C:\\workspace");
+      assert.equal(workspaceRoot, path.resolve("workspace"));
       return "container-1";
     },
     async inspect() {
@@ -196,7 +199,7 @@ function successfulPort(events) {
 
 function sandboxPlan(overrides = {}) {
   return createDockerSandboxPlan({
-    dockerExecutable: "C:\\Program Files\\Docker\\docker.exe",
+    dockerExecutable: path.resolve("docker"),
     image: `ghcr.io/0disoft/mensor-agent@sha256:${"a".repeat(64)}`,
     agentExecutable: "/usr/local/bin/mensor-agent",
     timeoutMs: overrides.timeoutMs ?? 30_000,

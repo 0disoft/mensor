@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import * as path from "node:path";
 import test from "node:test";
 
 import { Ajv2020 } from "ajv/dist/2020.js";
@@ -29,7 +30,7 @@ test("runs every required port probe and emits a canonical conformant report", a
     conformant: true,
   });
   assert.deepEqual(parseDockerSandboxConformanceReport(serialized), report);
-  assert.equal(serialized.includes("C:\\workspace"), false);
+  assert.equal(serialized.includes(path.resolve("workspace")), false);
   assert.equal(serialized.includes("container-"), false);
   assert.equal(serialized.includes("provider detail"), false);
 });
@@ -84,7 +85,7 @@ function options(port) {
     adapter: artifact("docker-port", "v1", "a"),
     collector: artifact("docker-inspect-normalizer", "v1", "b"),
     plan: basePlan(),
-    workspaceRoot: "C:\\workspace",
+    workspaceRoot: path.resolve("workspace"),
     input: new TextEncoder().encode("input\n"),
     expectedSuccessOutput: successOutput,
     port,
@@ -162,7 +163,7 @@ function successfulExecution() {
 
 function basePlan() {
   return createDockerSandboxPlan({
-    dockerExecutable: "C:\\Program Files\\Docker\\docker.exe",
+    dockerExecutable: path.resolve("docker"),
     image: `ghcr.io/0disoft/mensor-conformance@sha256:${"c".repeat(64)}`,
     agentExecutable: "/usr/local/bin/mensor-conformance",
     timeoutMs: 20,

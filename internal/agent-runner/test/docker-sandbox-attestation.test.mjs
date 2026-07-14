@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import * as path from "node:path";
 import test from "node:test";
 
 import { Ajv2020 } from "ajv/dist/2020.js";
@@ -20,8 +21,7 @@ test("creates canonical runtime evidence bound to one Docker plan", () => {
   assert.equal(attestation.planSha256, dockerSandboxPlanDigest(plan));
   assert.deepEqual(parseDockerSandboxRuntimeAttestation(serialized), attestation);
   assert.match(dockerSandboxRuntimeAttestationDigest(attestation), /^[a-f0-9]{64}$/);
-  assert.equal(serialized.includes("C:\\workspace"), false);
-  assert.equal(serialized.includes("docker.exe"), false);
+  assert.equal(serialized.includes(path.resolve("docker")), false);
   assert.equal(serialized.includes("--repair"), false);
   assert.equal(serialized.endsWith("\n"), true);
 });
@@ -81,7 +81,7 @@ test("keeps the runtime attestation schema aligned with canonical output", async
 
 function sandboxPlan() {
   return createDockerSandboxPlan({
-    dockerExecutable: "C:\\Program Files\\Docker\\docker.exe",
+    dockerExecutable: path.resolve("docker"),
     image: `ghcr.io/0disoft/mensor-agent@sha256:${"a".repeat(64)}`,
     agentExecutable: "/usr/local/bin/mensor-agent",
     agentArgs: ["--repair"],

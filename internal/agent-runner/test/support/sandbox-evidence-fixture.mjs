@@ -1,3 +1,5 @@
+import * as path from "node:path";
+
 import {
   createDockerSandboxPlan,
   createDockerSandboxRuntimeAttestation,
@@ -22,7 +24,7 @@ export function conformanceOptions(plan) {
     adapter: metadata().sandboxAdapter,
     collector: metadata().collector,
     plan,
-    workspaceRoot: "C:\\workspace",
+    workspaceRoot: testWorkspaceRoot(),
     input: new TextEncoder().encode("input\n"),
     expectedSuccessOutput: successOutput(),
     cleanupTimeoutMs: 500,
@@ -116,7 +118,7 @@ export function metadata() {
 
 export function planOptions(overrides = {}) {
   return {
-    dockerExecutable: "C:\\Program Files\\Docker\\docker.exe",
+    dockerExecutable: testDockerExecutable(),
     image: `ghcr.io/0disoft/mensor-agent@sha256:${"a".repeat(64)}`,
     agentExecutable: "/usr/local/bin/mensor-agent",
     agentArgs: ["private-agent-argument"],
@@ -128,6 +130,14 @@ export function planOptions(overrides = {}) {
     pidsLimit: 128,
     ...overrides,
   };
+}
+
+export function testDockerExecutable() {
+  return path.resolve("docker");
+}
+
+export function testWorkspaceRoot() {
+  return path.resolve("workspace");
 }
 
 export function inspection(overrides = {}) {
