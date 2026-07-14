@@ -67,7 +67,7 @@ if (agentRunner.exports?.["."]?.import !== "./dist/src/index.js") {
 if (agentRunner.exports?.["."]?.types !== "./dist/src/index.d.ts") {
   failures.push("@mensor/agent-runner must expose its built root type declarations.");
 }
-if (agentRunner.devDependencies?.ajv !== "8.17.1") {
+if (agentRunner.devDependencies?.ajv !== "8.20.0") {
   failures.push("@mensor/agent-runner must declare the schema validator used by its tests.");
 }
 if (cli.bin?.mensor !== "./dist/src/bin.js") {
