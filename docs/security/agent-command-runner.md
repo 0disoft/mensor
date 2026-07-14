@@ -110,10 +110,9 @@ and cleanup use separate bounded abort signals.
 
 The port receives no ambient credentials from the runner and raw port errors
 are replaced with fixed lifecycle errors. The repository ships a private Docker
-CLI execution-port adapter, but no configured integration run currently proves
-its behavior against a real daemon. A port must honor abort signals and preserve
-the lifecycle contract before its output can be treated as executed sandbox
-evidence.
+CLI execution-port adapter and a dedicated real-daemon integration gate. A port
+must honor abort signals and preserve the lifecycle contract before its output
+can be treated as executed sandbox evidence.
 
 ## Docker CLI Adapter
 
@@ -131,10 +130,12 @@ stderr and Docker inspection payloads are not copied into public errors or
 evidence. Inspection still has to reproduce the requested network, root
 filesystem, user, capability, mount, tmpfs, and resource limits before start.
 
-These controls are process-boundary and fake-port test evidence. Until a
-configured integration intent exercises a preloaded immutable image against a
-real Docker daemon and verifies cleanup independently, daemon fidelity and
-executed sandbox claims remain blocked.
+The `docker-integration` gate explicitly preloads a digest-pinned public image,
+exercises success and three failure paths against a real daemon, and queries the
+daemon independently after each case for remaining Mensor-owned containers.
+The gate uses a temporary empty Docker configuration and never receives registry
+credentials. This proves the tested daemon path, but it is not independent
+attestation and does not enable a public repair-rate claim.
 
 ## Port Conformance
 
@@ -181,10 +182,10 @@ validated trial report. Raw port errors are never copied. A successful outcome
 means evidence creation succeeded, while the embedded report determines whether
 the agent repaired the mutation.
 
-The injected port is still a trust boundary. The private Docker CLI adapter
-narrows that boundary, but it has not been exercised by a configured real-daemon
-integration run. Atomic construction therefore does not establish daemon
-fidelity or public repair-rate eligibility.
+The injected port is still a trust boundary. The configured real-daemon gate
+narrows the missing-evidence set to independent provenance, credential-scope
+attestation, and actual agent repair trials. Atomic construction alone still
+does not establish public repair-rate eligibility.
 
 ## Sandbox Claim Assessment
 

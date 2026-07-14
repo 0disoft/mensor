@@ -220,8 +220,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     plan. This structure alone is not trusted execution evidence.
 35. Docker sandbox orchestration uses one fixed validate, create, inspect,
     attest, start, and cleanup workflow. It starts only after inspection passes,
-    attempts bounded cleanup after every successful create, and does not claim
-    executed sandbox evidence without a configured real-daemon integration run.
+    attempts bounded cleanup after every successful create, and does not treat
+    static or fake-port evidence alone as executed sandbox evidence.
 36. Docker execution ports can be checked with one immutable probe across
     success, timeout, output-limit, and nonzero-exit cases. The canonical report
     records digests and derived outcomes without claiming independent Docker
@@ -254,6 +254,11 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     before deletion; and uses a bounded, abortable, explicit-environment process
     boundary. Fake-port and subprocess tests do not count as real-daemon
     evidence.
+43. A dedicated Docker integration gate explicitly preloads one digest-pinned
+    public probe image, executes success, timeout, output-limit, and nonzero-exit
+    paths against a real daemon, and independently requires zero Mensor-owned
+    containers before and after every case. Passing this gate proves only the
+    tested daemon path, not independent provenance or an LLM repair rate.
 
 ## Deferred Decisions
 

@@ -17,6 +17,7 @@ This document owns stable validation names for this scaffold.
 - smoke
 - package-smoke
 - benchmark
+- docker-integration
 - docs
 - check
 
@@ -47,6 +48,14 @@ gate, not a claim that a migration engine has shipped.
 
 `benchmark` emits the deterministic mutation-detection report. It does not run
 an agent and must not be reported as repair-rate evidence.
+
+`docker-integration` builds the private runner, explicitly preloads one
+digest-pinned public probe image when absent, and exercises success, timeout,
+output-limit, and nonzero-exit paths against a real Docker daemon. It requires
+an approved absolute Docker CLI path, uses an empty temporary Docker config,
+and fails if any Mensor-owned container exists before or remains after the run.
+This is daemon integration evidence, not independent attestation or an LLM
+repair-rate measurement.
 
 ## Hygiene Validation
 

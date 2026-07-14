@@ -37,8 +37,8 @@ Raw stderr and raw inspection objects do not cross the adapter boundary.
 - The repository now owns a concrete Docker CLI process and lifecycle adapter.
 - Fake-port and subprocess tests cover command construction, ownership checks,
   output limits, abort behavior, and ambiguous-create cleanup.
-- A real Docker daemon, preloaded immutable image, independent cleanup check,
-  and configured integration intent are still required before claiming daemon
-  fidelity or executed sandbox evidence.
+- The dedicated integration gate uses a real Docker daemon, preloaded immutable
+  image, and independent cleanup checks. That result remains hosted test
+  evidence rather than independent attestation or repair-rate evidence.
 - The adapter does not pull images, inject ambient credentials, discover Docker
   from `PATH`, or remove containers that fail ownership verification.

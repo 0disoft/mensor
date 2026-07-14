@@ -59,9 +59,16 @@ comparison keys, not encryption. The injected-port lifecycle makes
 launch, observation, execution, and cleanup atomic from the runner's
 perspective. The private Docker CLI adapter implements that port with explicit
 process environment, owned-container labels, normalized inspection, and
-ownership-checked cleanup. Port conformance and unit tests still show only
-behavior visible through that API; without a configured real-daemon integration
-run they cannot prove daemon state or actual container removal.
+ownership-checked cleanup. Port conformance and unit tests alone still show only
+behavior visible through that API and cannot prove daemon state or actual
+container removal.
+
+The separate `docker-integration` gate supplies real-daemon compatibility
+evidence for the repository-owned CLI adapter. It uses a digest-pinned public
+probe image and independently checks owner-labelled container absence after
+success and expected failure paths. Its console summary is not accepted as a
+portable descriptor or attestation, so it cannot be merged into repair-rate
+cohorts.
 
 `parseSandboxExecutionDescriptor` validates standalone shape only. Evidence
 consumers must also call `validateSandboxExecutionDescriptorBindings` with the
