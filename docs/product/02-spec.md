@@ -221,7 +221,7 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 35. Docker sandbox orchestration uses one fixed validate, create, inspect,
     attest, start, and cleanup workflow. It starts only after inspection passes,
     attempts bounded cleanup after every successful create, and does not claim
-    a Docker daemon adapter or executed sandbox evidence.
+    executed sandbox evidence without a configured real-daemon integration run.
 36. Docker execution ports can be checked with one immutable probe across
     success, timeout, output-limit, and nonzero-exit cases. The canonical report
     records digests and derived outcomes without claiming independent Docker
@@ -248,6 +248,12 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     keeps public repair-rate eligibility false until constructor provenance,
     credential scope, Docker daemon fidelity, and runtime observations are
     independently attested.
+42. The private Docker CLI execution port creates containers with no implicit
+    image pull, explicit isolation limits, and unpredictable ownership labels;
+    validates normalized daemon inspection before start; rechecks ownership
+    before deletion; and uses a bounded, abortable, explicit-environment process
+    boundary. Fake-port and subprocess tests do not count as real-daemon
+    evidence.
 
 ## Deferred Decisions
 

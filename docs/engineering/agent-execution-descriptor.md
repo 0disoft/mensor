@@ -57,9 +57,11 @@ collector identities. The plan commitment replaces the host Docker executable
 path and agent arguments with separate SHA-256 values; those hashes are
 comparison keys, not encryption. The injected-port lifecycle makes
 launch, observation, execution, and cleanup atomic from the runner's
-perspective, but it is not a Docker daemon implementation. Port conformance
-shows only behavior visible through that API and cannot prove daemon state or
-actual container removal.
+perspective. The private Docker CLI adapter implements that port with explicit
+process environment, owned-container labels, normalized inspection, and
+ownership-checked cleanup. Port conformance and unit tests still show only
+behavior visible through that API; without a configured real-daemon integration
+run they cannot prove daemon state or actual container removal.
 
 `parseSandboxExecutionDescriptor` validates standalone shape only. Evidence
 consumers must also call `validateSandboxExecutionDescriptorBindings` with the

@@ -109,9 +109,32 @@ remove exactly once, and cleanup failure prevents a success result. Execution
 and cleanup use separate bounded abort signals.
 
 The port receives no ambient credentials from the runner and raw port errors
-are replaced with fixed lifecycle errors. The repository does not ship a Docker
-daemon adapter. A port must honor abort signals and preserve the lifecycle
-contract before its output can be treated as executed sandbox evidence.
+are replaced with fixed lifecycle errors. The repository ships a private Docker
+CLI execution-port adapter, but no configured integration run currently proves
+its behavior against a real daemon. A port must honor abort signals and preserve
+the lifecycle contract before its output can be treated as executed sandbox
+evidence.
+
+## Docker CLI Adapter
+
+The private Docker CLI adapter uses an absolute executable path and an explicit
+environment instead of inheriting the host process environment. Container
+creation uses `--pull=never`, an unpredictable per-container name, and owner,
+nonce, and plan-digest labels. The adapter tracks returned handles in memory and
+rechecks all three labels before start or removal. A failed or ambiguous create
+triggers bounded best-effort inspection and removes only a matching owned
+container.
+
+The subprocess boundary closes stdin, bounds combined stdout and stderr, retains
+stdout only, honors abort signals, and attempts process-tree termination. Raw
+stderr and Docker inspection payloads are not copied into public errors or
+evidence. Inspection still has to reproduce the requested network, root
+filesystem, user, capability, mount, tmpfs, and resource limits before start.
+
+These controls are process-boundary and fake-port test evidence. Until a
+configured integration intent exercises a preloaded immutable image against a
+real Docker daemon and verifies cleanup independently, daemon fidelity and
+executed sandbox claims remain blocked.
 
 ## Port Conformance
 
@@ -158,8 +181,9 @@ validated trial report. Raw port errors are never copied. A successful outcome
 means evidence creation succeeded, while the embedded report determines whether
 the agent repaired the mutation.
 
-The injected port is still a trust boundary and the repository still ships no
-Docker daemon adapter. Atomic construction therefore does not establish daemon
+The injected port is still a trust boundary. The private Docker CLI adapter
+narrows that boundary, but it has not been exercised by a configured real-daemon
+integration run. Atomic construction therefore does not establish daemon
 fidelity or public repair-rate eligibility.
 
 ## Sandbox Claim Assessment

@@ -14,8 +14,8 @@ evaluation preview:
 - CLI: arguments, config selection, output routing, and exit status; and
 - fixture kit: deterministic fixtures, snapshots, security probes, and repair
   evaluation support that is never published as a runtime dependency; and
-- agent runner: private bounded process and injected sandbox adapters plus fixed
-  execution-evidence workflows for evaluation commands.
+- agent runner: private bounded process, owned Docker CLI sandbox adapter, and
+  injected-port execution-evidence workflows for evaluation commands.
 
 It consumes the local filesystem and parser libraries. It does not own the
 application framework, HTTP server, database, authentication, deployment, or

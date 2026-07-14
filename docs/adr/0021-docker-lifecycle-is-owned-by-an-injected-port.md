@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted.
+Accepted. The adapter-absence statement is superseded by ADR 0028.
 
 ## Context
 
@@ -25,9 +25,10 @@ including inspection mismatch, execution failure, and timeout. Cleanup failure
 prevents a success result.
 
 The port must honor abort signals and must not resolve `create` until it owns a
-removable handle. The current repository provides no Docker daemon adapter, so
-this orchestration is static control-plane hardening rather than executed
-sandbox evidence.
+removable handle. ADR 0028 adds a private Docker CLI implementation of this
+port. Until that adapter passes a configured real-daemon integration run, this
+orchestration remains control-plane hardening rather than executed sandbox
+evidence.
 
 ## Consequences
 

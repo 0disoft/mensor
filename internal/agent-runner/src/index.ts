@@ -60,6 +60,20 @@ export type {
 } from "./docker-sandbox-attestation.js";
 export { validateDockerSandboxCollectorRef } from "./docker-sandbox-attestation.js";
 export {
+  createDockerCliProcessRunner,
+} from "./docker-cli-process.js";
+export type {
+  DockerCliCommand,
+  DockerCliCommandResult,
+  DockerCliProcessRunner,
+} from "./docker-cli-process.js";
+export {
+  createDockerCliExecutionPort,
+} from "./docker-cli-execution-port.js";
+export type {
+  DockerCliExecutionPortOptions,
+} from "./docker-cli-execution-port.js";
+export {
   runDockerSandbox,
   validateDockerSandboxCleanupTimeout,
   validateDockerSandboxExecutionPort,
