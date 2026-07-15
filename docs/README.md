@@ -21,6 +21,7 @@
 
 - HonoX compatibility boundary: `docs/engineering/honox-compatibility-spike.md`
 - Local compiler performance baseline: `docs/engineering/compiler-performance-baseline.md`
+- Hono adoption cost report: `docs/product/hono-adoption-cost.md`
 
 Summary pages may link to these contracts but must not redefine them. When two
 documents disagree, update the owning source first and then synchronize its

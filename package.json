@@ -1,6 +1,6 @@
 {
   "name": "mensor-workspace",
-  "version": "0.0.49",
+  "version": "0.0.50",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.11.0",
@@ -22,9 +22,10 @@
     "benchmark": "pnpm run build && node scripts/run-mutation-benchmark.mjs",
     "performance": "pnpm run build && node scripts/run-compiler-performance.mjs",
     "performance:smoke": "pnpm run build && node scripts/run-compiler-performance.mjs --sizes 1000",
+    "adoption": "pnpm run build && node scripts/run-adoption-pilot.mjs",
     "docker-integration": "pnpm run build && node scripts/run-docker-integration.mjs",
     "docs": "node scripts/check-docs.mjs",
-    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run package-smoke && pnpm run performance:smoke && pnpm run docs",
+    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run package-smoke && pnpm run performance:smoke && pnpm run adoption && pnpm run docs",
     "mensor": "node packages/cli/dist/src/bin.js"
   },
   "devDependencies": {

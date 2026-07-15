@@ -18,6 +18,7 @@ This document owns stable validation names for this scaffold.
 - package-smoke
 - benchmark
 - performance
+- adoption
 - docker-integration
 - docs
 - check
@@ -66,6 +67,11 @@ The aggregate `check` command runs `performance:smoke`, which uses the same
 measurement path with only 1,000 source files. Full scale measurement remains an
 explicit `performance` command so ordinary validation does not absorb volatile
 10,000-file timing cost.
+
+`adoption` measures contract and application line counts for the runnable Hono
+fixture, checks one form-field drift and one framework-route drift, and reports
+local diagnostic latency samples. It is a one-fixture adoption probe, not a
+framework support matrix, false-positive rate, or external-user study.
 
 `docker-integration` builds the private runner, explicitly preloads one
 digest-pinned public probe image when absent, and exercises success, timeout,

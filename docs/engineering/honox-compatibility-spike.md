@@ -103,6 +103,8 @@ keeps contract-bearing form markup in static HTML can use the current compiler.
 It does not prove JSX, HonoX file routing, middleware-schema inference, custom
 components, or renderer compatibility. Hono remains a root dev dependency used
 only by the runnable fixture and is not part of any published Mensor package.
+The measured authoring cost and route-drift gap are recorded in
+`docs/product/hono-adoption-cost.md`.
 
 ## Decision
 
