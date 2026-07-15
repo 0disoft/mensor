@@ -98,6 +98,10 @@ The next product decision must choose between two honest paths:
 2. Introduce a serialized `FormIndex` boundary and separately approve one
    narrow template extractor without executing application source.
 
+ADR-0030 selects the second architectural boundary while deliberately deferring
+the extractor. Static HTML remains the only implemented provider until the
+internal refactor preserves current diagnostics byte-for-byte.
+
 No generic plugin API, TypeScript renderer execution, or copied upstream
 fixture follows from this search.
 

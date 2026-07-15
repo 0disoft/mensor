@@ -291,9 +291,10 @@ The bounded candidate search recorded in
 that met the current native static HTML and TypeScript server-handler boundary.
 This gate is blocked, not complete. Do not substitute frontend-only forms,
 usage demos, dynamic framework templates, multipart forms, or client-mediated
-JSON requests. Continuing requires either maintainer recruitment for the
-current architecture or an explicit architecture decision for a serialized
-`FormIndex` and one narrow non-executing extractor.
+JSON requests. ADR-0030 selects a serialized `FormIndex` as the template-fact
+boundary while retaining static HTML as the only implemented provider. The
+next slice is a byte-preserving internal refactor; it does not claim dynamic
+template compatibility or authorize an external extractor.
 
 Compiler performance claims also wait for those repositories. The first
 performance report must distinguish cold and repeated process runs, file and
@@ -311,8 +312,9 @@ detection benchmark and cannot stand in for throughput evidence.
 
 - Runtime manifest and reference runtime: add only if a real consumer needs a
   compiled artifact beyond diagnostics.
-- Dynamic template adapters: design only after the static HTML fact model is
-  stable.
+- Dynamic template adapters: `FormIndex` design is accepted, but external
+  extractors remain deferred until the built-in HTML provider preserves
+  byte-identical diagnostics through the new boundary.
 - IDE, SARIF, watch mode, caching, and cloud services: post-MVP integrations.
 - Public diagnostic compatibility: begins with the first published preview,
   not with private pre-implementation drafts.

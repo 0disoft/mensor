@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Owner: Maintainer
+- Extended by: ADR-0030
 
 ## Context
 

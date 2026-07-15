@@ -24,6 +24,8 @@
 - Hono adoption cost report: `docs/product/hono-adoption-cost.md`
 - SonicJS external adoption study: `docs/product/sonicjs-adoption-study.md`
 - External static HTML candidate search: `docs/product/external-static-html-candidate-search.md`
+- FormIndex v0 design: `docs/architecture/form-index-v0.md`
+- FormIndex boundary decision: `docs/adr/0030-form-index-is-the-template-fact-boundary.md`
 
 Summary pages may link to these contracts but must not redefine them. When two
 documents disagree, update the owning source first and then synchronize its

@@ -26,6 +26,10 @@ coding agent.
 ```text
 JSONC contract       TypeScript/JavaScript       static HTML
       |                        |                      |
+      |                        |            built-in HTML provider
+      |                        |                      |
+      |                        |                 FormIndex
+      |                        |                      |
       +------------------------+----------------------+
                                |
                     deterministic discovery
@@ -72,9 +76,15 @@ authoring formats is claimed.
 
 ## Adapter Boundary
 
-The MVP has no generic plugin interface. A future language adapter may emit a
-versioned normalized index such as forms or module edges. It must not inject
-arbitrary lifecycle hooks or pass framework objects into compiler rules.
+The MVP has no generic plugin interface. ADR-0030 makes the versioned,
+serializable `FormIndex` the template-fact boundary. The current static HTML
+extractor is its first built-in provider. Compiler rules never receive parser
+nodes or framework objects.
+
+This boundary does not authorize external execution. A future extractor may
+produce an index outside the compiler, but CLI ingestion, process launching,
+package loading, and freshness validation require separate decisions. Arbitrary
+lifecycle hooks remain prohibited.
 
 ## Runtime Boundary
 
