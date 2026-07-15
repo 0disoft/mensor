@@ -190,13 +190,19 @@ export async function checkFeatureForms(options: {
       if (field === undefined) {
         return;
       }
-      const incompatibleControl = field.controls.length > 1
-        ? field.controls[1]
-        : field.controls.find(
-        (control) =>
-          (control.kind === "input" && control.inputType === "checkbox") ||
-          (control.kind === "select" && control.multiple),
-      );
+      const repeatedControlsAreOneRadioGroup =
+        field.controls.length > 1 &&
+        field.controls.every(
+          (control) => control.kind === "input" && control.inputType === "radio",
+        );
+      const incompatibleControl =
+        field.controls.length > 1 && !repeatedControlsAreOneRadioGroup
+          ? field.controls[1]
+          : field.controls.find(
+              (control) =>
+                (control.kind === "input" && control.inputType === "checkbox") ||
+                (control.kind === "select" && control.multiple),
+            );
       if (incompatibleControl === undefined) {
         return;
       }

@@ -103,6 +103,51 @@ test("rejects repeated successful controls for a scalar text binding", async () 
   }
 });
 
+test("accepts a radio group as one scalar text field", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    const file = path.join(root, "src/features/tasks/views/index.html");
+    const html = await readFile(file, "utf8");
+    await writeFile(
+      file,
+      html.replace(
+        '<input name="title" type="text" required="required" />',
+        '<input name="title" type="radio" value="low" required="required" />\n        <input name="title" type="radio" value="high" />',
+      ),
+      "utf8",
+    );
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.report.status, "passed");
+      assert.deepEqual(result.report.diagnostics, []);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("ignores duplicate form ids and fields inside inert template content", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    const file = path.join(root, "src/features/tasks/views/index.html");
+    const html = await readFile(file, "utf8");
+    await writeFile(
+      file,
+      `${html}<template><form id="create-task"><input name="prototype-only"></form></template>\n`,
+      "utf8",
+    );
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.report.status, "passed");
+      assert.deepEqual(result.report.diagnostics, []);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("reports the canonical unexpected form field diagnostic", async () => {
   const fixture = "invalid/form-field-unexpected";
   const result = await checkFixture(fixture);

@@ -26,6 +26,7 @@ import {
   InputFailure,
   joinProjectPath,
 } from "./paths.js";
+import { createSourceFactIndex } from "./source-fact-index.js";
 import type {
   CheckProjectOptions,
   CheckProjectResult,
@@ -106,6 +107,9 @@ export async function checkProject(
     const discovered = new Set(discoveredFiles);
     const diagnostics: Diagnostic[] = [];
     const featureOwners: FeatureOwnerFact[] = [];
+    const sourceFacts = createSourceFactIndex((file) =>
+      readProjectFile(root, file, maxFileBytes),
+    );
 
     for (const featureContractPath of [...project.featureContracts].sort(compareText)) {
       const safeFeatureContractPath = assertRelativePosixPath(
@@ -144,12 +148,11 @@ export async function checkProject(
       );
       diagnostics.push(
         ...(await checkFeatureHandlers({
-          root,
           featureContractPath: safeFeatureContractPath,
           featureText,
           feature: featureResult.value,
           discovered,
-          maxFileBytes,
+          sourceFacts,
         })),
       );
       diagnostics.push(
@@ -166,14 +169,13 @@ export async function checkProject(
 
     diagnostics.push(
       ...(await checkImportBoundaries({
-        root,
         projectContractPath: configFile,
         projectText,
         featureContractPaths: project.featureContracts,
         fileRoles: project.fileRoles,
         boundaries: project.boundaries ?? [],
         discoveredFiles,
-        maxFileBytes,
+        sourceFacts,
       })),
     );
     diagnostics.push(

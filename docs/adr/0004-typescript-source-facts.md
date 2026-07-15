@@ -18,6 +18,13 @@ its modules.
   default exports, and destructured variable exports.
 - Fail closed on syntax errors and wildcard re-exports when a handler export
   cannot otherwise be proven.
+- Share one lazy source-fact index across handler and boundary rules so a source
+  file is read and parsed at most once per project check.
+- Treat string and no-substitution template literals as static dynamic-import
+  targets. Ignore `require` and `require.resolve` calls when an enclosing
+  lexical declaration shadows the CommonJS binding.
+- Keep shadowing analysis syntax-only; do not create a TypeScript Program or
+  perform package resolution for this rule.
 - Never pass TypeScript nodes, symbols, programs, or source files across the
   extraction boundary.
 

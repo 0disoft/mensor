@@ -4,6 +4,17 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const failures = [];
+const workspaceMetadata = JSON.parse(
+  await readFile(resolve(root, "package.json"), "utf8"),
+);
+const commandContract = await readFile(
+  resolve(root, "docs/cli/command-contract.md"),
+  "utf8",
+);
+
+if (!commandContract.includes(`"version": "${workspaceMetadata.version}"`)) {
+  failures.push("docs/cli/command-contract.md: CLI version example is stale");
+}
 
 for (const file of await markdownFiles(root)) {
   const text = await readFile(file, "utf8");

@@ -6,25 +6,22 @@ import type {
   HandlerExportMissingDiagnostic,
 } from "@mensor/contract";
 
-import { readProjectFile } from "./filesystem.js";
 import { handlerExportRange } from "./locations.js";
 import {
   assertRelativePosixPath,
   InputFailure,
   joinProjectPath,
 } from "./paths.js";
-import { extractModuleFact, type ModuleFact } from "./typescript-source.js";
+import type { SourceFactIndex } from "./source-fact-index.js";
 
 export async function checkFeatureHandlers(options: {
-  readonly root: string;
   readonly featureContractPath: string;
   readonly featureText: string;
   readonly feature: FeatureContract;
   readonly discovered: ReadonlySet<string>;
-  readonly maxFileBytes: number;
+  readonly sourceFacts: SourceFactIndex;
 }): Promise<readonly Diagnostic[]> {
   const featureRoot = path.posix.dirname(options.featureContractPath);
-  const moduleCache = new Map<string, ModuleFact>();
   const diagnostics: HandlerExportMissingDiagnostic[] = [];
 
   for (let actionIndex = 0; actionIndex < options.feature.actions.length; actionIndex += 1) {
@@ -37,24 +34,7 @@ export async function checkFeatureHandlers(options: {
     if (!options.discovered.has(projectFile)) {
       continue;
     }
-    let module = moduleCache.get(projectFile);
-    if (module === undefined) {
-      const sourceText = await readProjectFile(
-        options.root,
-        projectFile,
-        options.maxFileBytes,
-      );
-      module = extractModuleFact(sourceText, projectFile);
-      moduleCache.set(projectFile, module);
-    }
-    if (module.syntaxErrors.length > 0) {
-      throw new InputFailure(
-        "configuration",
-        "typescript.syntax_invalid",
-        `Handler source ${JSON.stringify(projectFile)} contains unsupported syntax: ${module.syntaxErrors[0]}`,
-        projectFile,
-      );
-    }
+    const module = await options.sourceFacts.get(projectFile);
     if (module.exports.some(
       (entry) => entry.kind === "value" && entry.name === action.handler.export,
     )) {

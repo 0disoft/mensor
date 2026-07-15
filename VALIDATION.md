@@ -35,6 +35,12 @@ The root `package.json` currently configures every standard validation name.
 `pnpm run check` is the aggregate local gate. Individual names remain runnable
 for narrower evidence.
 
+`check:text` names the text-hygiene implementation behind the stable `format`
+slot. `check:structure` names the workspace-contract implementation behind the
+stable `lint` slot. Neither is a semantic TypeScript linter. Adding one requires
+an explicit dependency and rule-policy decision rather than silently changing
+what the stable scaffold names mean.
+
 `package-smoke` builds and packs the contract, compiler, and CLI packages,
 forces those local tarballs into an isolated consumer while allowing normal
 resolution of public third-party dependencies, and verifies the installed CLI

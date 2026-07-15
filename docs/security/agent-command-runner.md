@@ -129,6 +129,9 @@ stdout only, honors abort signals, and attempts process-tree termination. Raw
 stderr and Docker inspection payloads are not copied into public errors or
 evidence. Failed Docker commands may emit only a fixed failure category plus
 stage, termination, and exit code to the non-canonical integration log.
+The category is an advisory troubleshooting hint derived from unstable CLI
+prose. It is never attestation input, never changes cleanup behavior, and must
+fall back to `other` instead of inventing a trusted cause.
 Inspection still has to reproduce the requested network, root
 filesystem, user, capability, mount, tmpfs, and resource limits before start.
 

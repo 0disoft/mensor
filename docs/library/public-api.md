@@ -51,11 +51,14 @@ source. It currently implements action-handler placement plus static HTML form
 linking for required-field presence and rejection of named fields that are
 neither bound nor explicitly ignored. It also compares static form method and
 action attributes with the linked action route and rejects checkbox or repeated
-select controls bound to the v1 scalar text decoder. Additional codec families
-remain later behavior. It now extracts explicit TypeScript/JavaScript exports
-for handler linkage, resolves local import edges, and applies optional
-project-owned direct or transitive role boundaries. External package imports
-remain graph leaves.
+select controls bound to the v1 scalar text decoder. Radio controls sharing one
+form and wire name are one scalar field, while inert `template` content is not
+part of the static form index. Additional codec families remain later behavior.
+It extracts explicit TypeScript/JavaScript exports, ignores lexically shadowed
+CommonJS-like calls, resolves local import edges, and applies optional
+project-owned direct or transitive role boundaries. Handler and boundary rules
+share one lazy source-fact index so each source file is read and parsed at most
+once per check. External package imports remain graph leaves.
 Optional ownership rules also enforce suffix-based test and i18n slots without
 inferring a feature owner from file content or naming conventions.
 

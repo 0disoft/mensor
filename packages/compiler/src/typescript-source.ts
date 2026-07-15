@@ -45,6 +45,7 @@ export function extractModuleFact(
   const exports: ModuleExportFact[] = [];
   const imports: ModuleImportFact[] = [];
   const unsupportedDynamicImports: SourceRange[] = [];
+  const scopeBindings = collectRequireBindings(sourceFile);
   let hasExportStar = false;
   for (const statement of sourceFile.statements) {
     if (ts.isExportDeclaration(statement) && statement.exportClause === undefined) {
@@ -58,6 +59,8 @@ export function extractModuleFact(
     sourceFile,
     imports,
     unsupportedDynamicImports,
+    scopeBindings,
+    scopeBindings.get(sourceFile) === true,
   );
   return {
     exports: uniqueExports(exports),
@@ -112,10 +115,17 @@ function collectRuntimeCalls(
   sourceFile: ts.SourceFile,
   imports: ModuleImportFact[],
   unsupported: SourceRange[],
+  scopeBindings: ReadonlyMap<ts.Node, boolean>,
+  requireShadowed: boolean,
 ): void {
-  if (ts.isCallExpression(node) && isRuntimeImportCall(node)) {
+  const nestedRequireShadowed =
+    requireShadowed || (node !== sourceFile && scopeBindings.get(node) === true);
+  if (
+    ts.isCallExpression(node) &&
+    isRuntimeImportCall(node, nestedRequireShadowed)
+  ) {
     const argument = node.arguments[0];
-    if (argument !== undefined && ts.isStringLiteral(argument)) {
+    if (argument !== undefined && ts.isStringLiteralLike(argument)) {
       imports.push({
         edgeKind: "runtime",
         specifier: argument.text,
@@ -126,22 +136,186 @@ function collectRuntimeCalls(
     }
   }
   node.forEachChild((child) =>
-    collectRuntimeCalls(child, sourceFile, imports, unsupported),
+    collectRuntimeCalls(
+      child,
+      sourceFile,
+      imports,
+      unsupported,
+      scopeBindings,
+      nestedRequireShadowed,
+    ),
   );
 }
 
-function isRuntimeImportCall(node: ts.CallExpression): boolean {
+function isRuntimeImportCall(
+  node: ts.CallExpression,
+  requireShadowed: boolean,
+): boolean {
   if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
     return true;
   }
-  if (ts.isIdentifier(node.expression) && node.expression.text === "require") {
+  if (
+    !requireShadowed &&
+    ts.isIdentifier(node.expression) &&
+    node.expression.text === "require"
+  ) {
     return true;
   }
   return (
+    !requireShadowed &&
     ts.isPropertyAccessExpression(node.expression) &&
     ts.isIdentifier(node.expression.expression) &&
     node.expression.expression.text === "require" &&
     node.expression.name.text === "resolve"
+  );
+}
+
+function collectRequireBindings(sourceFile: ts.SourceFile): ReadonlyMap<ts.Node, boolean> {
+  const bindings = new Map<ts.Node, boolean>();
+  visitBindingScopes(sourceFile, bindings);
+  return bindings;
+}
+
+function visitBindingScopes(node: ts.Node, bindings: Map<ts.Node, boolean>): void {
+  if (isBindingScope(node)) {
+    bindings.set(node, scopeDeclaresRequire(node));
+  }
+  node.forEachChild((child) => visitBindingScopes(child, bindings));
+}
+
+function isBindingScope(node: ts.Node): boolean {
+  return (
+    ts.isSourceFile(node) ||
+    isFunctionScope(node) ||
+    ts.isBlock(node) ||
+    ts.isCaseBlock(node) ||
+    ts.isCatchClause(node) ||
+    ts.isForStatement(node) ||
+    ts.isForInStatement(node) ||
+    ts.isForOfStatement(node)
+  );
+}
+
+function scopeDeclaresRequire(scope: ts.Node): boolean {
+  if (ts.isSourceFile(scope)) {
+    return (
+      scope.statements.some(statementDeclaresRequire) ||
+      containsFunctionScopedRequire(scope)
+    );
+  }
+  if (isFunctionScope(scope)) {
+    if (scope.parameters.some((parameter) => bindingNameContainsRequire(parameter.name))) {
+      return true;
+    }
+    if (
+      (ts.isFunctionExpression(scope) || ts.isFunctionDeclaration(scope)) &&
+      scope.name?.text === "require"
+    ) {
+      return true;
+    }
+    return scope.body !== undefined && containsFunctionScopedRequire(scope.body);
+  }
+  if (ts.isCatchClause(scope)) {
+    return scope.variableDeclaration !== undefined &&
+      bindingNameContainsRequire(scope.variableDeclaration.name);
+  }
+  if (
+    ts.isForStatement(scope) ||
+    ts.isForInStatement(scope) ||
+    ts.isForOfStatement(scope)
+  ) {
+    return scope.initializer !== undefined &&
+      ts.isVariableDeclarationList(scope.initializer) &&
+      declarationListContainsRequire(scope.initializer);
+  }
+  const statements = ts.isBlock(scope)
+    ? scope.statements
+    : ts.isCaseBlock(scope)
+      ? scope.clauses.flatMap((clause) => [...clause.statements])
+      : [];
+  return statements.some(statementDeclaresRequire);
+}
+
+function isFunctionScope(node: ts.Node): node is
+  | ts.FunctionDeclaration
+  | ts.FunctionExpression
+  | ts.ArrowFunction
+  | ts.MethodDeclaration
+  | ts.ConstructorDeclaration
+  | ts.GetAccessorDeclaration
+  | ts.SetAccessorDeclaration {
+  return (
+    ts.isFunctionDeclaration(node) ||
+    ts.isFunctionExpression(node) ||
+    ts.isArrowFunction(node) ||
+    ts.isMethodDeclaration(node) ||
+    ts.isConstructorDeclaration(node) ||
+    ts.isGetAccessorDeclaration(node) ||
+    ts.isSetAccessorDeclaration(node)
+  );
+}
+
+function statementDeclaresRequire(statement: ts.Statement): boolean {
+  if (ts.isVariableStatement(statement)) {
+    return declarationListContainsRequire(statement.declarationList);
+  }
+  if (
+    (ts.isFunctionDeclaration(statement) ||
+      ts.isClassDeclaration(statement) ||
+      ts.isEnumDeclaration(statement) ||
+      ts.isImportEqualsDeclaration(statement)) &&
+    statement.name?.text === "require"
+  ) {
+    return true;
+  }
+  if (ts.isImportDeclaration(statement)) {
+    const clause = statement.importClause;
+    if (clause?.name?.text === "require") {
+      return true;
+    }
+    const bindings = clause?.namedBindings;
+    if (bindings !== undefined && ts.isNamespaceImport(bindings)) {
+      return bindings.name.text === "require";
+    }
+    return bindings !== undefined &&
+      ts.isNamedImports(bindings) &&
+      bindings.elements.some((element) => element.name.text === "require");
+  }
+  return false;
+}
+
+function containsFunctionScopedRequire(node: ts.Node): boolean {
+  let found = false;
+  const visit = (child: ts.Node): void => {
+    if (found || (child !== node && ts.isFunctionLike(child))) {
+      return;
+    }
+    if (
+      ts.isVariableDeclarationList(child) &&
+      (child.flags & ts.NodeFlags.BlockScoped) === 0 &&
+      declarationListContainsRequire(child)
+    ) {
+      found = true;
+      return;
+    }
+    child.forEachChild(visit);
+  };
+  visit(node);
+  return found;
+}
+
+function declarationListContainsRequire(list: ts.VariableDeclarationList): boolean {
+  return list.declarations.some((declaration) =>
+    bindingNameContainsRequire(declaration.name),
+  );
+}
+
+function bindingNameContainsRequire(name: ts.BindingName): boolean {
+  if (ts.isIdentifier(name)) {
+    return name.text === "require";
+  }
+  return name.elements.some((element) =>
+    !ts.isOmittedExpression(element) && bindingNameContainsRequire(element.name),
   );
 }
 

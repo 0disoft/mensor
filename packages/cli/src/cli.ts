@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
 
@@ -8,7 +9,29 @@ import type {
   RunCliOptions,
 } from "./types.js";
 
-export const cliVersion = "0.0.45";
+export const cliVersion = readPackageVersion();
+
+function readPackageVersion(): string {
+  let value: unknown;
+  try {
+    value = JSON.parse(
+      readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+    );
+  } catch {
+    throw new Error("CLI package metadata must contain valid JSON.");
+  }
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    !("version" in value) ||
+    typeof value.version !== "string" ||
+    !/^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$/u.test(value.version)
+  ) {
+    throw new Error("CLI package metadata must declare a semantic version.");
+  }
+  return value.version;
+}
 
 const helpText = `Usage: mensor check [root] [--config <path>] [--json]
 

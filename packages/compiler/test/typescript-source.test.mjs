@@ -85,3 +85,55 @@ require(runtimeTarget);
   );
   assert.equal(fact.unsupportedDynamicImports.length, 2);
 });
+
+test("ignores CommonJS-like calls when require is lexically shadowed", () => {
+  const fact = extractModuleFact(`function run(require: (value: string) => unknown) {
+  return require("./server.js");
+}
+{
+  const require = (value: string) => value;
+  require.resolve("./also-local.js");
+}
+`, "browser.ts");
+
+  assert.deepEqual(fact.imports, []);
+  assert.deepEqual(fact.unsupportedDynamicImports, []);
+});
+
+test("honors a require binding shared by switch clauses", () => {
+  const fact = extractModuleFact(`switch (mode) {
+  case "setup":
+    const require = (value: string) => value;
+    break;
+  default:
+    require("./local-call.js");
+}
+`, "browser.ts");
+
+  assert.deepEqual(fact.imports, []);
+});
+
+test("honors a module-scoped var binding declared inside a block", () => {
+  const fact = extractModuleFact(
+    `
+      if (enabled) {
+        var require = loadDependency;
+      }
+      require("./local.js");
+    `,
+    "src/module-var.ts",
+  );
+
+  assert.deepEqual(fact.imports, []);
+  assert.deepEqual(fact.unsupportedDynamicImports, []);
+});
+
+test("accepts no-substitution template literals as static dynamic imports", () => {
+  const fact = extractModuleFact("void import(`./lazy.js`);\n", "browser.ts");
+
+  assert.deepEqual(
+    fact.imports.map((entry) => [entry.specifier, entry.edgeKind]),
+    [["./lazy.js", "runtime"]],
+  );
+  assert.deepEqual(fact.unsupportedDynamicImports, []);
+});

@@ -9,11 +9,11 @@ import type {
   SourceRange,
 } from "@mensor/contract";
 
-import { readProjectFile } from "./filesystem.js";
 import { findFeatureOwner, sortFeatureRoots } from "./feature-roots.js";
 import { projectBoundaryRange } from "./locations.js";
 import { compareText, InputFailure } from "./paths.js";
-import { extractModuleFact, type ModuleFact } from "./typescript-source.js";
+import type { SourceFactIndex } from "./source-fact-index.js";
+import type { ModuleFact } from "./typescript-source.js";
 
 interface ProjectModuleFact {
   readonly file: string;
@@ -32,14 +32,13 @@ interface ResolvedModuleEdge {
 const sourceExtensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
 
 export async function checkImportBoundaries(options: {
-  readonly root: string;
   readonly projectContractPath: string;
   readonly projectText: string;
   readonly featureContractPaths: readonly string[];
   readonly fileRoles: readonly FileRoleContract[];
   readonly boundaries: readonly BoundaryContract[];
   readonly discoveredFiles: readonly string[];
-  readonly maxFileBytes: number;
+  readonly sourceFacts: SourceFactIndex;
 }): Promise<readonly Diagnostic[]> {
   if (options.boundaries.length === 0) {
     return [];
@@ -56,16 +55,7 @@ export async function checkImportBoundaries(options: {
   );
   const parsed = new Map<string, ModuleFact>();
   for (const file of sourceFiles) {
-    const sourceText = await readProjectFile(options.root, file, options.maxFileBytes);
-    const fact = extractModuleFact(sourceText, file);
-    if (fact.syntaxErrors.length > 0) {
-      throw new InputFailure(
-        "configuration",
-        "typescript.syntax_invalid",
-        `Source ${JSON.stringify(file)} contains unsupported syntax: ${fact.syntaxErrors[0]}`,
-        file,
-      );
-    }
+    const fact = await options.sourceFacts.get(file);
     parsed.set(file, fact);
   }
 

@@ -164,6 +164,29 @@ test("preserves control shape needed for codec compatibility", () => {
   );
 });
 
+test("preserves radio controls as one mutually exclusive wire field", () => {
+  const facts = extractFormFacts(`<form id="priority">
+  <input type="radio" name="priority" value="low">
+  <input type="radio" name="priority" value="high">
+</form>`);
+
+  assert.equal(facts[0]?.fields.length, 1);
+  assert.deepEqual(
+    facts[0]?.fields[0]?.controls.map((control) => control.inputType),
+    ["radio", "radio"],
+  );
+});
+
+test("ignores inert forms and controls inside template content", () => {
+  const facts = extractFormFacts(`<form id="task"><input name="title"></form>
+<template>
+  <form id="task"><input name="prototype-only"></form>
+</template>`);
+
+  assert.equal(facts.length, 1);
+  assert.deepEqual(facts[0]?.fields.map((field) => field.name), ["title"]);
+});
+
 test("applies disabled fieldset inheritance and the first legend exception", () => {
   const facts = extractFormFacts(`<form id="settings">
   <fieldset disabled>

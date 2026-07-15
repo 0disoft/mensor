@@ -175,9 +175,6 @@ function collectElements(
     }
     result.push(node);
     collectElements(node.childNodes, result);
-    if (node.tagName === "template" && "content" in node) {
-      collectElements(node.content.childNodes, result);
-    }
   }
 }
 

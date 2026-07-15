@@ -32,6 +32,11 @@ rule contract.
   diagnostics against the linked action route.
 - Preserve normalized control kind, input type, multiplicity, and source range
   so scalar text bindings cannot hide checkbox or repeated-select semantics.
+- Treat repeated radio controls with one form and wire name as one mutually
+  exclusive scalar field, while mixed or other repeated controls remain
+  incompatible with the scalar text decoder.
+- Exclude inert `template` content from static form facts. Client-side cloning
+  requires a future explicit contract rather than implicit activation.
 - Limit every contract and template read to 1 MiB by default through
   `limits.maxFileBytes`.
 
@@ -40,7 +45,7 @@ rule contract.
 - HTML tree correction and UTF-16 source ranges come from one proven parser.
 - parse5 nodes and parser errors remain compiler-internal.
 - The current fact model does not claim complete successful-control semantics
-  for disabled fieldsets, named submitters, or codec compatibility.
+  for named submitters or every future codec family.
 - Additional decoder families and unsupported dynamic behavior require
   separate diagnostic slices.
 
