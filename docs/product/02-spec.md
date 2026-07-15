@@ -286,6 +286,15 @@ copying application source into benchmark artifacts. Real-provider repair
 trials remain paused until at least one external project keeps the contract
 after its first maintenance change.
 
+The bounded candidate search recorded in
+`docs/product/external-static-html-candidate-search.md` found no application
+that met the current native static HTML and TypeScript server-handler boundary.
+This gate is blocked, not complete. Do not substitute frontend-only forms,
+usage demos, dynamic framework templates, multipart forms, or client-mediated
+JSON requests. Continuing requires either maintainer recruitment for the
+current architecture or an explicit architecture decision for a serialized
+`FormIndex` and one narrow non-executing extractor.
+
 Compiler performance claims also wait for those repositories. The first
 performance report must distinguish cold and repeated process runs, file and
 byte counts, parse time, and peak RSS. The mutation benchmark remains a
