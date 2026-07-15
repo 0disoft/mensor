@@ -17,6 +17,10 @@
 - Executable behavior examples: `fixtures/README.md`
 - Validation names and reporting: `VALIDATION.md`
 
+## Research Notes
+
+- HonoX compatibility boundary: `docs/engineering/honox-compatibility-spike.md`
+
 Summary pages may link to these contracts but must not redefine them. When two
 documents disagree, update the owning source first and then synchronize its
 summaries.

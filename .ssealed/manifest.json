@@ -1,7 +1,7 @@
 {
   "tool": "ssealed",
   "version": "0.6.11",
-  "generatedAt": "2026-07-14T09:54:44.224Z",
+  "generatedAt": "2026-07-15T02:19:17.368Z",
   "scope": "general",
   "profile": "monorepo",
   "addons": [
@@ -332,13 +332,13 @@
     },
     {
       "path": "docs/README.md",
-      "checksum": "sha256:8431806d51ae8f0e7484d0afffaa12233506012b65c27981424fdd03e14ffb08",
+      "checksum": "sha256:f82b0a6a8ab25fcc07179c413768fab74287cca7f1e5235144b0fb11a638c56a",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:f380bbc1cfcbf142a5b1522f48a45e4b0ffd2e528f0aa2fe3e06584bda8f32a7",
-      "acceptedChecksum": "sha256:8431806d51ae8f0e7484d0afffaa12233506012b65c27981424fdd03e14ffb08",
+      "acceptedChecksum": "sha256:f82b0a6a8ab25fcc07179c413768fab74287cca7f1e5235144b0fb11a638c56a",
       "generatedChecksum": "sha256:f380bbc1cfcbf142a5b1522f48a45e4b0ffd2e528f0aa2fe3e06584bda8f32a7"
     },
     {
