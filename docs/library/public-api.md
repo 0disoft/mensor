@@ -105,7 +105,7 @@ Serialized contracts carry their own schema version. Package version and
 schema version do not advance together unless both implementation and wire
 format change. A public diagnostic code cannot silently change meaning.
 
-Version `0.0.48` includes optional `form.documentPath` authoring and the
+Version `0.0.49` includes optional `form.documentPath` authoring and the
 required `actualActionSource` fact to `form.action_mismatch`. The latter is a
 pre-release breaking diagnostic shape change; no preview compatibility promise
 exists yet.

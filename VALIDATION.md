@@ -17,6 +17,7 @@ This document owns stable validation names for this scaffold.
 - smoke
 - package-smoke
 - benchmark
+- performance
 - docker-integration
 - docs
 - check
@@ -54,6 +55,17 @@ gate, not a claim that a migration engine has shipped.
 
 `benchmark` emits the deterministic mutation-detection report. It does not run
 an agent and must not be reported as repair-rate evidence.
+
+`performance` creates bounded temporary projects with 1,000, 5,000, and 10,000
+source files. Each case runs in two isolated Node processes and reports elapsed
+time plus peak RSS. The first and immediate repeat runs do not flush the host OS
+filesystem cache, so the output is a local engineering baseline rather than a
+portable cold/warm performance claim or a pass/fail budget.
+
+The aggregate `check` command runs `performance:smoke`, which uses the same
+measurement path with only 1,000 source files. Full scale measurement remains an
+explicit `performance` command so ordinary validation does not absorb volatile
+10,000-file timing cost.
 
 `docker-integration` builds the private runner, explicitly preloads one
 digest-pinned public probe image when absent, and exercises success, timeout,
