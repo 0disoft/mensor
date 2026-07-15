@@ -1,8 +1,8 @@
 # HonoX Compatibility Spike
 
-- Status: Research complete
+- Status: Static HTML pilot complete; JSX extraction deferred
 - Evidence date: 2026-07-15
-- Decision: Defer implementation
+- Decision: Support framework-neutral static HTML integration; defer HonoX JSX extraction
 
 ## Question
 
@@ -88,9 +88,26 @@ the action form contract's explicit `documentPath` during semantic linking.
 Missing page evidence fails configuration instead of borrowing the expected
 action route. The Hono JSX extractor remains deferred.
 
+## Runnable Hono Static HTML Pilot
+
+`fixtures/valid/hono-static-tasks` is a runnable Hono `4.12.30` application,
+not a HonoX or JSX extractor fixture. Hono owns request routing and response
+delivery while a static HTML file owns the form markup. The compiler checks the
+project without importing Hono or executing application modules. The fixture's
+semantic tests separately execute Hono's in-process request API and prove GET,
+POST, redirect, duplicate-field rejection, unknown-field rejection, and output
+escaping.
+
+This result proves a narrow compatibility statement: a Hono application that
+keeps contract-bearing form markup in static HTML can use the current compiler.
+It does not prove JSX, HonoX file routing, middleware-schema inference, custom
+components, or renderer compatibility. Hono remains a root dev dependency used
+only by the runnable fixture and is not part of any published Mensor package.
+
 ## Decision
 
-- **Applied:** retain this compatibility map and the corrected action model.
+- **Applied:** retain this compatibility map, the corrected action model, and
+  the runnable static HTML Hono fixture.
 - **Defer:** Hono JSX intrinsic extraction until an independently maintained
   application is available.
 - **Reject:** generic TSX traversal, BYOR support, HonoX config execution, Vite

@@ -14,6 +14,9 @@ importers:
       '@typescript/typescript6':
         specifier: 6.0.2
         version: 6.0.2
+      hono:
+        specifier: 4.12.30
+        version: 4.12.30
 
   internal/agent-runner:
     dependencies:
@@ -89,6 +92,10 @@ packages:
   fast-uri@3.1.3:
     resolution: {integrity: sha512-i70LwGWUduXqzicKXWshooq+sWL1K3WUU5rKZNG/0i3a1OSoX3HqhH5WbWwTmqWfor4urUakGPiRQcleRZTwOg==}
 
+  hono@4.12.30:
+    resolution: {integrity: sha512-emn+JoJjrN9YTpRDS5it/UI2SO9BAE37T6I3d963RxcZ81G9A4pr2SZTEiiaiKbzx+NKRg5BZ89fCL7gCJCUog==}
+    engines: {node: '>=16.9.0'}
+
   json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
 
@@ -132,6 +139,8 @@ snapshots:
   fast-deep-equal@3.1.3: {}
 
   fast-uri@3.1.3: {}
+
+  hono@4.12.30: {}
 
   json-schema-traverse@1.0.0: {}
 

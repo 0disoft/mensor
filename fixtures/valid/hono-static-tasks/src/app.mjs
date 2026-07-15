@@ -1,0 +1,17 @@
+import { readFile } from "node:fs/promises";
+
+import { Hono } from "hono";
+
+import { createTaskStore } from "./features/tasks/database/task-store.mjs";
+import { registerTaskRoutes } from "./features/tasks/routes/tasks.mjs";
+
+const templateUrl = new URL("./features/tasks/views/index.html", import.meta.url);
+
+export async function createHonoStaticTasksApp() {
+  const app = new Hono();
+  registerTaskRoutes(app, {
+    store: createTaskStore(),
+    template: await readFile(templateUrl, "utf8"),
+  });
+  return app;
+}
