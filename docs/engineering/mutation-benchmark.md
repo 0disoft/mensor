@@ -53,3 +53,8 @@ It is not `pass@k`, `pass^k`, repair rate, semantic preservation rate, or safe
 trajectory rate. The private trial protocol can record those final-state checks
 with fake adapters, but real metrics still require repeated provider trials and
 explicit tool, environment, cost, and approval policy.
+
+This command does not measure compiler throughput. Cold-run time, repeated
+process time, file and byte counts, parsing time, and peak RSS require a
+separate performance report over reviewed external dogfood repositories before
+any performance threshold is adopted.

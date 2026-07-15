@@ -70,6 +70,11 @@ candidates, then detects:
 - checkbox or repeated select semantics are connected to the scalar text
   decoder.
 
+Repeated radio controls with one form and wire name are one mutually exclusive
+scalar field, not duplicate scalar values. Inert form or control markup inside
+`template` content is excluded from the static document facts. Supporting
+client-side cloning of that content requires a separate explicit contract.
+
 Additional decoder families remain separate slices and are supported only when
 their serializable schema and form semantics are defined.
 
@@ -87,7 +92,9 @@ The normalized TypeScript fact pipeline enforces configured direct and
 transitive import boundaries. A browser role can forbid transitively reachable
 server roles, while a route role can forbid only direct imports of database or
 internal roles. Type-only imports remain architectural edges. Non-literal
-dynamic imports reached by a boundary fail explicitly.
+dynamic imports reached by a boundary fail explicitly. No-substitution template
+literals are static import targets. Calls to a lexically bound local `require`
+or `require.resolve` are not CommonJS module edges.
 
 Project-owned ownership rules match explicit suffixes and require test or
 translation files to live under a declared slot inside their feature. Matching
@@ -260,12 +267,29 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     containers before and after every case. Passing this gate proves only the
     tested daemon path, not independent provenance or an LLM repair rate.
 
+## Next Product Validation Gate
+
+The next milestone is external dogfood, not another evidence layer. Apply the
+checker to at least two small, independently maintained TypeScript and static
+HTML applications. Record contract authoring lines, first-diagnostic time,
+false positives, missed defects, and contract maintenance changes without
+copying application source into benchmark artifacts. Real-provider repair
+trials remain paused until at least one external project keeps the contract
+after its first maintenance change.
+
+Compiler performance claims also wait for those repositories. The first
+performance report must distinguish cold and repeated process runs, file and
+byte counts, parse time, and peak RSS. The mutation benchmark remains a
+detection benchmark and cannot stand in for throughput evidence.
+
 ## Deferred Decisions
 
-- Agent repair-rate claims: the private provider-neutral protocol records final
+- Agent repair-rate claims and new evidence infrastructure: the private
+  provider-neutral protocol records final
   state, protected-contract integrity, semantic tests, and changed-file
   evidence with fake adapters. Claims remain deferred until real providers run
-  repeated controlled trials with an explicit trajectory policy.
+  repeated controlled trials with an explicit trajectory policy. Do not add
+  another attestation or eligibility layer before the external dogfood gate.
 
 - Runtime manifest and reference runtime: add only if a real consumer needs a
   compiled artifact beyond diagnostics.

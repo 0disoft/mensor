@@ -58,6 +58,9 @@ different absolute checkout paths.
   the tested behavior.
 - Contract authoring stays smaller than duplicating the implementation facts
   already present in HTML and TypeScript.
+- At least two independently maintained applications retain their contracts
+  through a maintenance change before more repair-evidence infrastructure or
+  public repair-rate work resumes.
 
 ## Non-goals
 

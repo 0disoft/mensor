@@ -44,6 +44,8 @@ configuration, documentation, and release behavior.
     coverage.
 17. Runtime, manifest, IDE, and cloud surfaces remain deferred until a measured
     use case justifies their maintenance cost.
+18. External dogfood and contract adoption evidence precede additional agent
+    attestation layers or public repair-rate work.
 
 ## Merge Evidence
 
