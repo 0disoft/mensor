@@ -105,6 +105,9 @@ components, or renderer compatibility. Hono remains a root dev dependency used
 only by the runnable fixture and is not part of any published Mensor package.
 The measured authoring cost and route-drift gap are recorded in
 `docs/product/hono-adoption-cost.md`.
+The external SonicJS study in `docs/product/sonicjs-adoption-study.md` confirms
+that real Hono server-rendered forms can live entirely in TypeScript templates;
+it does not satisfy the separate HonoX opt-in gate below.
 
 ## Decision
 

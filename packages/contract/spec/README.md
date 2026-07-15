@@ -39,8 +39,10 @@ more expressive matcher is needed.
 
 ## Form Slice
 
-An action links to static HTML through its feature-relative template path and
-exact form id. The compiler uses the action schema and form codec to identify
+An action links to static HTML through its feature-relative `.html` template
+path and exact form id. Contract validation rejects other extensions before the
+compiler can parse TypeScript or another source kind as HTML. The compiler uses
+the action schema and form codec to identify
 required wire fields. When a required binding has no named field candidate in
 the linked form, the diagnostic report contains `form.field_missing`.
 When a named field candidate is absent from both codec bindings and explicit

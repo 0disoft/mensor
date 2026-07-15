@@ -14,8 +14,9 @@ small feature, and framework route declarations remain outside the compiler's
 fact graph.
 
 Do not build a Hono-specific extractor or generic plugin system from this one
-synthetic fixture. The next adoption study should use an independently
-maintained application and the same measurement contract.
+synthetic fixture. The follow-up SonicJS study found that a real Hono CMS owns
+its forms in TypeScript templates rather than static HTML; see
+`docs/product/sonicjs-adoption-study.md`.
 
 ## Authoring Cost
 
@@ -77,8 +78,8 @@ integration, not execution of Hono configuration or application modules.
 ## Product Consequences
 
 1. Keep static HTML Hono compatibility experimental.
-2. Measure one independently maintained application before adding framework
-   extraction code.
+2. Treat the independently maintained SonicJS study's `0/92` input eligibility
+   as evidence that static HTML is not a representative Hono default.
 3. Treat per-feature contract lines as a primary adoption metric.
 4. Preserve semantic application tests because the compiler does not yet own
    framework route facts.

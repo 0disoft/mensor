@@ -110,6 +110,9 @@ required `actualActionSource` fact to `form.action_mismatch`. The latter is a
 pre-release breaking diagnostic shape change; no preview compatibility promise
 exists yet.
 
+Version `0.0.51` requires action form template paths to end in `.html`, aligning
+the authoring schema with the static-HTML-only compiler boundary.
+
 ## Deprecation
 
 Before `1.0`, a published public API should be deprecated for at least one

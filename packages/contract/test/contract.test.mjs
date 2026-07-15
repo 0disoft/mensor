@@ -102,6 +102,22 @@ test("accepts a current-document form path and rejects non-route values", async 
   assert.equal(invalid.ok, false);
 });
 
+test("rejects non-HTML form templates before source parsing", async () => {
+  const text = await fixtureText(
+    "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
+  );
+  const value = JSON.parse(text);
+  value.actions[0].form.template = "views/index.ts";
+
+  const result = parseFeatureContract(JSON.stringify(value));
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.ok(result.issues.some((issue) =>
+      issue.instancePath === "/actions/0/form/template"
+    ));
+  }
+});
+
 test("rejects form bindings that do not have one schema-owned identity", async () => {
   const text = await fixtureText(
     "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",

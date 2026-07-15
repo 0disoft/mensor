@@ -23,6 +23,10 @@ request within the documented resource limits.
 The compiler must not import source modules, execute configuration, spawn a
 framework CLI, install packages, or access the network.
 
+An action form template must end in `.html`. Contract validation rejects other
+source kinds before HTML extraction so TypeScript template strings cannot be
+misclassified as static documents.
+
 ## Contract Authoring Rule
 
 Source facts that can be extracted reliably must not be repeated in the project

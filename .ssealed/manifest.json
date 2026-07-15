@@ -1,7 +1,7 @@
 {
   "tool": "ssealed",
   "version": "0.6.11",
-  "generatedAt": "2026-07-15T04:30:35.488Z",
+  "generatedAt": "2026-07-15T05:17:09.255Z",
   "scope": "general",
   "profile": "monorepo",
   "addons": [
@@ -222,13 +222,13 @@
     },
     {
       "path": "docs/cli/command-contract.md",
-      "checksum": "sha256:d1f2aa684533e254014ba7ac25776b0b07ddde334dc0964a436fd2421e635413",
+      "checksum": "sha256:02cf3f50248b944866ef6265c2015da7ebf5dac14730b40f39ed1d7de0b1cba7",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:27c3b100ca1684d15c735acbfeafa98f00c1efc64d164fa961074a1b5ffc4a74",
-      "acceptedChecksum": "sha256:d1f2aa684533e254014ba7ac25776b0b07ddde334dc0964a436fd2421e635413",
+      "acceptedChecksum": "sha256:02cf3f50248b944866ef6265c2015da7ebf5dac14730b40f39ed1d7de0b1cba7",
       "generatedChecksum": "sha256:27c3b100ca1684d15c735acbfeafa98f00c1efc64d164fa961074a1b5ffc4a74"
     },
     {
@@ -255,13 +255,13 @@
     },
     {
       "path": "docs/library/public-api.md",
-      "checksum": "sha256:6183f9156db19035f6da405e21510791d831b61c5c9e4b9dfa95df4e0c87096c",
+      "checksum": "sha256:5eb11c8934f62b14203ab447564cced8f6a1a80a265c3f33f3b5bf7cf3c3255b",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:b120a96b27dca9baf88bff95d77868e0f9e05d49de6382cd1f8edca01e206de7",
-      "acceptedChecksum": "sha256:6183f9156db19035f6da405e21510791d831b61c5c9e4b9dfa95df4e0c87096c",
+      "acceptedChecksum": "sha256:5eb11c8934f62b14203ab447564cced8f6a1a80a265c3f33f3b5bf7cf3c3255b",
       "generatedChecksum": "sha256:b120a96b27dca9baf88bff95d77868e0f9e05d49de6382cd1f8edca01e206de7"
     },
     {
@@ -321,35 +321,35 @@
     },
     {
       "path": "docs/product/02-spec.md",
-      "checksum": "sha256:ce63a8628d3aab459faf9a3de05768e104fc7ffd7b78e907fe54957896597fac",
+      "checksum": "sha256:3492683a4d62129ac4c7b8530b21087c1cc10af77a8f967455a90ac2acf80095",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:a4b9ccd412af5252824341199977718a3cfddf59d3ebf2bc293ef3ffea3a862b",
-      "acceptedChecksum": "sha256:ce63a8628d3aab459faf9a3de05768e104fc7ffd7b78e907fe54957896597fac",
+      "acceptedChecksum": "sha256:3492683a4d62129ac4c7b8530b21087c1cc10af77a8f967455a90ac2acf80095",
       "generatedChecksum": "sha256:a4b9ccd412af5252824341199977718a3cfddf59d3ebf2bc293ef3ffea3a862b"
     },
     {
       "path": "docs/README.md",
-      "checksum": "sha256:0bddd821838e89812200b0e79eba34a179db442aec94d92245b3a0854d553f3c",
+      "checksum": "sha256:5463972588cf077c0e4c432add7adcd5e7c7fa4f9d3e50695ef43aafe8b9a61b",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:f380bbc1cfcbf142a5b1522f48a45e4b0ffd2e528f0aa2fe3e06584bda8f32a7",
-      "acceptedChecksum": "sha256:0bddd821838e89812200b0e79eba34a179db442aec94d92245b3a0854d553f3c",
+      "acceptedChecksum": "sha256:5463972588cf077c0e4c432add7adcd5e7c7fa4f9d3e50695ef43aafe8b9a61b",
       "generatedChecksum": "sha256:f380bbc1cfcbf142a5b1522f48a45e4b0ffd2e528f0aa2fe3e06584bda8f32a7"
     },
     {
       "path": "package.json",
-      "checksum": "sha256:f83ab05c657b8b64f6a0be5b0498a45115fa502b8c789fa8d6d9227da06378d5",
+      "checksum": "sha256:4be30515e503837548cfc20b5499ddb9455c6b1eed2d41dfc270451bcde0f8e2",
       "kind": "runner",
       "ownership": "project-owned",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:44087c2e1c46f097ef3938a430169b92bf73ebc6dffa11c0ce0b4717e710d6b5",
-      "acceptedChecksum": "sha256:f83ab05c657b8b64f6a0be5b0498a45115fa502b8c789fa8d6d9227da06378d5",
+      "acceptedChecksum": "sha256:4be30515e503837548cfc20b5499ddb9455c6b1eed2d41dfc270451bcde0f8e2",
       "generatedChecksum": "sha256:44087c2e1c46f097ef3938a430169b92bf73ebc6dffa11c0ce0b4717e710d6b5"
     },
     {
