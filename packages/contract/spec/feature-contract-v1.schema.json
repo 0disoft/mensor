@@ -69,6 +69,10 @@
         "id": {
           "type": "string",
           "minLength": 1
+        },
+        "documentPath": {
+          "type": "string",
+          "pattern": "^/[^?#]*$"
         }
       }
     },

@@ -108,6 +108,7 @@ export interface ActionContract {
   readonly form: {
     readonly template: string;
     readonly id: string;
+    readonly documentPath?: string;
   };
   readonly handler: {
     readonly file: string;
@@ -216,6 +217,7 @@ export interface FormMethodMismatchDiagnostic {
 export interface FormActionMismatchFacts {
   readonly actionId: string;
   readonly actualAction: string;
+  readonly actualActionSource: "literal" | "current-document";
   readonly expectedAction: string;
   readonly formId: string;
   readonly template: string;

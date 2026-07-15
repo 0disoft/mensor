@@ -79,10 +79,15 @@ Additional decoder families remain separate slices and are supported only when
 their serializable schema and form semantics are defined.
 
 For form comparison, the compiler normalizes an HTML form method to ASCII uppercase
-and treats an omitted method as `GET`. The first schema accepts only a static,
-root-relative action path without a query or fragment. URL resolution, route
-parameters, named submitters, and per-button method or action overrides are
-unsupported and must produce an explicit diagnostic when encountered.
+and treats an omitted method as `GET`. A non-empty action must be a static,
+root-relative path without a query or fragment. An omitted or empty action is a
+`current-document` fact, not an empty route. Its action form contract must
+declare the static root-relative `documentPath` that owns the template; semantic
+linking resolves that path before comparing it with the POST action route.
+Mismatch facts distinguish `literal` from `current-document` action sources.
+URL resolution beyond the current document, route parameters, named submitters,
+and per-button method or action overrides are unsupported and must produce an
+explicit diagnostic when encountered.
 Named file inputs are also explicit unsupported controls because multipart
 transport is outside the MVP.
 

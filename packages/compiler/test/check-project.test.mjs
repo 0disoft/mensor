@@ -178,6 +178,104 @@ test("reports the canonical form action mismatch diagnostic", async () => {
   }
 });
 
+test("requires documentPath when a form submits to the current document", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    const file = path.join(
+      root,
+      "src/features/tasks/feature.mensor.jsonc",
+    );
+    const contract = await readFile(file, "utf8");
+    await writeFile(
+      file,
+      contract.replace(
+        '        "id": "create-task",\n        "documentPath": "/tasks"',
+        '        "id": "create-task"',
+      ),
+      "utf8",
+    );
+
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.failure.kind, "configuration");
+      assert.equal(result.failure.code, "form.document_path_missing");
+      assert.equal(
+        result.failure.file,
+        "src/features/tasks/feature.mensor.jsonc",
+      );
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("reports a current-document action against its declared page path", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    const file = path.join(
+      root,
+      "src/features/tasks/feature.mensor.jsonc",
+    );
+    const contract = await readFile(file, "utf8");
+    await writeFile(
+      file,
+      contract.replace(
+        '"documentPath": "/tasks"',
+        '"documentPath": "/wrong-page"',
+      ),
+      "utf8",
+    );
+
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+        "form.action_mismatch",
+      ]);
+      assert.deepEqual(result.report.diagnostics[0]?.facts, {
+        actionId: "tasks.create",
+        actualAction: "/wrong-page",
+        actualActionSource: "current-document",
+        expectedAction: "/tasks",
+        formId: "create-task",
+        template: "src/features/tasks/views/index.html",
+      });
+      assert.deepEqual(
+        result.report.diagnostics[0]?.related.map((item) => item.role),
+        ["form-document-path", "action-route-path"],
+      );
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("accepts an explicitly empty action with a declared documentPath", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    const file = path.join(root, "src/features/tasks/views/index.html");
+    const html = await readFile(file, "utf8");
+    await writeFile(
+      file,
+      html.replace(
+        '<form id="create-task" method="post">',
+        '<form id="create-task" method="post" action="">',
+      ),
+      "utf8",
+    );
+
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.report.status, "passed");
+      assert.deepEqual(result.report.diagnostics, []);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("reports the canonical control and codec mismatch diagnostic", async () => {
   const fixture = "invalid/form-control-codec-mismatch";
   const result = await checkFixture(fixture);

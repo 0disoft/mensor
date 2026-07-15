@@ -80,23 +80,19 @@ The extractor must reject or mark unsupported:
 - any renderer that cannot be statically proven to use the supported Hono JSX
   intrinsic semantics.
 
-## Required Core Correction
+## Completed Core Correction
 
-Before a TSX extractor can link the documented HonoX form, the private form fact
-must distinguish a literal action path from `current-document`. This correction
-also applies to static HTML because an omitted or empty HTML form action submits
-to the document URL. Route resolution belongs in semantic linking, where the
-declared page or action route is available, not in parser-specific extraction.
-
-The correction needs its own contract decision and fixtures. This spike does
-not change current behavior.
+The private form fact now distinguishes a literal action path from
+`current-document`. Static HTML with an omitted or empty action resolves through
+the action form contract's explicit `documentPath` during semantic linking.
+Missing page evidence fails configuration instead of borrowing the expected
+action route. The Hono JSX extractor remains deferred.
 
 ## Decision
 
-- **Apply now:** retain this compatibility map and the discovered action-model
-  gap.
+- **Applied:** retain this compatibility map and the corrected action model.
 - **Defer:** Hono JSX intrinsic extraction until an independently maintained
-  application is available and the `current-document` fact is accepted.
+  application is available.
 - **Reject:** generic TSX traversal, BYOR support, HonoX config execution, Vite
   plugin loading, schema inference from TypeScript generics, and component
   rendering inside the compiler.
@@ -109,7 +105,6 @@ not change current behavior.
 Implementation may start only when all of the following exist:
 
 - one independently maintained HonoX application that opts into the experiment;
-- a maintainer decision for the `current-document` form-action fact;
 - synthetic pass and explicit-unsupported fixtures that do not copy upstream
   application code;
 - canonical output and cross-root determinism expectations; and

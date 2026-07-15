@@ -50,8 +50,11 @@ symlinks, enforces file-count and file-byte limits, and never imports inspected
 source. It currently implements action-handler placement plus static HTML form
 linking for required-field presence and rejection of named fields that are
 neither bound nor explicitly ignored. It also compares static form method and
-action attributes with the linked action route and rejects checkbox or repeated
-select controls bound to the v1 scalar text decoder. Radio controls sharing one
+resolved action facts with the linked action route. Omitted and empty actions
+resolve through the optional contract `documentPath`, which becomes required
+for those forms, while non-empty literal actions remain backward compatible.
+Action mismatch facts expose the source of the resolved path. The compiler
+rejects checkbox or repeated select controls bound to the v1 scalar text decoder. Radio controls sharing one
 form and wire name are one scalar field, while inert `template` content is not
 part of the static form index. Additional codec families remain later behavior.
 It extracts explicit TypeScript/JavaScript exports, ignores lexically shadowed
@@ -101,6 +104,11 @@ breaking public change requires release notes and migration guidance.
 Serialized contracts carry their own schema version. Package version and
 schema version do not advance together unless both implementation and wire
 format change. A public diagnostic code cannot silently change meaning.
+
+Version `0.0.47` adds optional `form.documentPath` authoring and adds the
+required `actualActionSource` fact to `form.action_mismatch`. The latter is a
+pre-release breaking diagnostic shape change; no preview compatibility promise
+exists yet.
 
 ## Deprecation
 

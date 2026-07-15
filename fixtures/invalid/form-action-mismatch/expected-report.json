@@ -16,6 +16,7 @@
       "facts": {
         "actionId": "tasks.create",
         "actualAction": "/wrong",
+        "actualActionSource": "literal",
         "expectedAction": "/tasks",
         "formId": "create-task",
         "template": "src/features/tasks/views/index.html"

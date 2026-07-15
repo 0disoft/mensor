@@ -13,7 +13,8 @@
       },
       "form": {
         "template": "views/index.html",
-        "id": "create-task"
+        "id": "create-task",
+        "documentPath": "/tasks"
       },
       "handler": {
         "file": "server/create-task.ts",

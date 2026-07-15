@@ -89,6 +89,19 @@ test("rejects unsupported form codecs", async () => {
   assert.equal(result.ok, false);
 });
 
+test("accepts a current-document form path and rejects non-route values", async () => {
+  const text = await fixtureText(
+    "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
+  );
+  const valid = parseFeatureContract(text);
+  assert.equal(valid.ok, true);
+
+  const value = JSON.parse(text);
+  value.actions[0].form.documentPath = "/tasks?view=all";
+  const invalid = parseFeatureContract(JSON.stringify(value));
+  assert.equal(invalid.ok, false);
+});
+
 test("rejects form bindings that do not have one schema-owned identity", async () => {
   const text = await fixtureText(
     "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
@@ -173,6 +186,15 @@ test("validates route mismatch diagnostic facts independently", async () => {
     const result = parseDiagnosticReport(JSON.stringify(value));
     assert.equal(result.ok, false, fixture);
   }
+
+  const actionMismatch = JSON.parse(
+    await fixtureText("invalid/form-action-mismatch/expected-report.json"),
+  );
+  delete actionMismatch.diagnostics[0].facts.actualActionSource;
+  assert.equal(
+    parseDiagnosticReport(JSON.stringify(actionMismatch)).ok,
+    false,
+  );
 });
 
 test("validates control-codec diagnostic facts independently", async () => {

@@ -382,7 +382,7 @@
     "formActionMismatchFacts": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["actionId", "actualAction", "expectedAction", "formId", "template"],
+      "required": ["actionId", "actualAction", "actualActionSource", "expectedAction", "formId", "template"],
       "properties": {
         "actionId": {
           "type": "string",
@@ -390,6 +390,9 @@
         },
         "actualAction": {
           "type": "string"
+        },
+        "actualActionSource": {
+          "enum": ["literal", "current-document"]
         },
         "expectedAction": {
           "type": "string",

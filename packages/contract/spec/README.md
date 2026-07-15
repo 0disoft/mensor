@@ -48,10 +48,14 @@ ignored fields, the report contains one `form.field_unexpected` diagnostic for
 that wire field name. Repeated controls with the same name share one wire field
 diagnostic.
 
-The compiler compares the normalized HTML method and literal action attribute
-with the linked action route. Method and path drift use separate
+The compiler compares the normalized HTML method and resolved form action with
+the linked action route. A non-empty literal action is used directly. An
+omitted or empty action is preserved as `current-document` and resolves through
+the action form contract's explicit `documentPath`; the compiler rejects that
+case as invalid configuration when `documentPath` is absent. Method and path drift use separate
 `form.method_mismatch` and `form.action_mismatch` diagnostics so repair agents
-do not have to infer which route fact is wrong.
+do not have to infer which route fact is wrong. Action mismatch facts identify
+whether the observed path came from a literal or the current document.
 
 The v1 codec currently owns only scalar text decoding. Checkbox controls and
 `select[multiple]` have missing-value or repeated-value semantics that cannot be

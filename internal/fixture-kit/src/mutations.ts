@@ -260,7 +260,11 @@ function mutateSource(mutationId: MutationId, source: string): string {
         'import type { ServerSecret } from "../server/secret.js";\n\nexport const taskLabel: ServerSecret | string = "tasks";',
       );
     case "form-action-mismatch":
-      return replaceExactly(source, 'action="/tasks"', 'action="/wrong-tasks"');
+      return replaceExactly(
+        source,
+        '<form id="create-task" method="post">',
+        '<form id="create-task" method="post" action="/wrong-tasks">',
+      );
     case "form-control-codec-mismatch":
       return replaceExactly(source, 'name="title" type="text"', 'name="title" type="checkbox"');
     case "dogfood-form-field-missing":

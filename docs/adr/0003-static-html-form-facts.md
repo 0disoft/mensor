@@ -17,7 +17,8 @@ rule contract.
 
 - Use parse5 8.0.1 with source location information enabled.
 - Convert parser nodes immediately into private `FormFact` values containing
-  id, normalized method, action, named field candidates, and start-tag range.
+  id, normalized method, a discriminated literal or `current-document` action,
+  named field candidates, and start-tag range.
 - Associate controls through either their nearest ancestor form or an explicit
   `form` attribute.
 - Exclude disabled controls, buttons, file inputs, and submitter-only input
@@ -28,8 +29,12 @@ rule contract.
 - Preserve the first source range for each unique wire field name and emit one
   `form.field_unexpected` when that name is neither bound nor explicitly
   ignored.
-- Preserve method and action attribute ranges and emit separate mismatch
-  diagnostics against the linked action route.
+- Preserve method and action attribute ranges. Resolve `current-document`
+  through the linked action form contract's explicit `documentPath`, then emit
+  separate mismatch diagnostics against the linked action route.
+- Reject a `current-document` form as invalid configuration when its action
+  form contract omits `documentPath`; never substitute the expected action
+  route as evidence of the page URL.
 - Preserve normalized control kind, input type, multiplicity, and source range
   so scalar text bindings cannot hide checkbox or repeated-select semantics.
 - Treat repeated radio controls with one form and wire name as one mutually
@@ -46,6 +51,8 @@ rule contract.
 - parse5 nodes and parser errors remain compiler-internal.
 - The current fact model does not claim complete successful-control semantics
   for named submitters or every future codec family.
+- Existing contracts with non-empty literal actions do not need
+  `documentPath`; omitted and empty actions do.
 - Additional decoder families and unsupported dynamic behavior require
   separate diagnostic slices.
 

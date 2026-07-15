@@ -21,10 +21,13 @@ test("normalizes static forms and successful named field candidates", () => {
         start: { line: 1, character: 16 },
         end: { line: 1, character: 29 },
       },
-      action: "/tasks",
-      actionRange: {
-        start: { line: 1, character: 30 },
-        end: { line: 1, character: 45 },
+      action: {
+        kind: "literal",
+        value: "/tasks",
+        range: {
+          start: { line: 1, character: 30 },
+          end: { line: 1, character: 45 },
+        },
       },
       fields: [
         {
@@ -121,12 +124,30 @@ test("extracts unsupported file and submitter controls explicitly", () => {
   );
 });
 
-test("uses GET and an empty action when attributes are omitted", () => {
+test("preserves an omitted action as current-document", () => {
   const facts = extractFormFacts('<form id="search"><input name="query"></form>');
 
   assert.equal(facts[0]?.method, "GET");
-  assert.equal(facts[0]?.action, "");
+  assert.deepEqual(facts[0]?.action, {
+    kind: "current-document",
+    range: {
+      start: { line: 0, character: 0 },
+      end: { line: 0, character: 18 },
+    },
+  });
   assert.deepEqual(facts[0]?.fields.map((field) => field.name), ["query"]);
+});
+
+test("preserves an empty action as current-document at its attribute range", () => {
+  const facts = extractFormFacts('<form id="search" action=""><input name="query"></form>');
+
+  assert.deepEqual(facts[0]?.action, {
+    kind: "current-document",
+    range: {
+      start: { line: 0, character: 18 },
+      end: { line: 0, character: 27 },
+    },
+  });
 });
 
 test("keeps one source location for repeated wire field names", () => {

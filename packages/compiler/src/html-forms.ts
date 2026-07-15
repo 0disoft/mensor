@@ -11,12 +11,22 @@ export interface FormFact {
   readonly id: string;
   readonly method: string;
   readonly methodRange: SourceRange;
-  readonly action: string;
-  readonly actionRange: SourceRange;
+  readonly action: FormActionFact;
   readonly fields: readonly FormFieldFact[];
   readonly unsupportedControls: readonly UnsupportedFormControlFact[];
   readonly range: SourceRange;
 }
+
+export type FormActionFact =
+  | {
+      readonly kind: "literal";
+      readonly value: string;
+      readonly range: SourceRange;
+    }
+  | {
+      readonly kind: "current-document";
+      readonly range: SourceRange;
+    };
 
 export interface FormFieldFact {
   readonly name: string;
@@ -73,14 +83,23 @@ export function extractFormFacts(html: string): readonly FormFact[] {
         id,
         method: asciiUppercase(attribute(form, "method") ?? "GET"),
         methodRange: elementAttributeRange(form, "method"),
-        action: attribute(form, "action") ?? "",
-        actionRange: elementAttributeRange(form, "action"),
+        action: formActionFact(form),
         fields: uniqueFields(fields),
         unsupportedControls,
         range: elementStartTagRange(form),
       };
     })
     .sort((left, right) => compareText(left.id, right.id));
+}
+
+function formActionFact(
+  form: DefaultTreeAdapterTypes.Element,
+): FormActionFact {
+  const value = attribute(form, "action");
+  const range = elementAttributeRange(form, "action");
+  return value === null || value.length === 0
+    ? { kind: "current-document", range }
+    : { kind: "literal", value, range };
 }
 
 function unsupportedControlFact(

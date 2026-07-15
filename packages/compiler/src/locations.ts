@@ -105,6 +105,24 @@ export function actionRoutePropertyRange(
   return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
+export function actionFormPropertyRange(
+  contractText: string,
+  actionIndex: number,
+  propertyName: "documentPath" | "id" | "template",
+): SourceRange {
+  const root = parseTree(contractText);
+  if (root === undefined) {
+    return zeroRange;
+  }
+  const node = findNodeAtLocation(root, [
+    "actions",
+    actionIndex,
+    "form",
+    propertyName,
+  ]);
+  return node === undefined ? zeroRange : nodeRange(contractText, node);
+}
+
 export function actionBindingDecoderKindRange(
   contractText: string,
   actionIndex: number,

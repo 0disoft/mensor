@@ -14,6 +14,7 @@ import type {
 import { readProjectFile } from "./filesystem.js";
 import { extractFormFacts, type FormFact } from "./html-forms.js";
 import {
+  actionFormPropertyRange,
   actionFormCodecPropertyRange,
   actionBindingDecoderKindRange,
   actionRoutePropertyRange,
@@ -97,12 +98,19 @@ export async function checkFeatureForms(options: {
         }),
       );
     }
-    if (form.action !== action.route.path) {
+    const resolvedAction = resolveFormAction({
+      actionId: action.id,
+      documentPath: action.form.documentPath,
+      featureContractPath: options.featureContractPath,
+      form,
+    });
+    if (resolvedAction.path !== action.route.path) {
       diagnostics.push(
         actionMismatchDiagnostic({
           actionId: action.id,
           actionIndex,
-          actualAction: form.action,
+          actualAction: resolvedAction.path,
+          actualActionSource: resolvedAction.source,
           expectedAction: action.route.path,
           form,
           templateFile: projectTemplate,
@@ -403,6 +411,7 @@ function actionMismatchDiagnostic(options: {
   readonly actionId: string;
   readonly actionIndex: number;
   readonly actualAction: string;
+  readonly actualActionSource: "literal" | "current-document";
   readonly expectedAction: string;
   readonly form: FormFact;
   readonly templateFile: string;
@@ -415,15 +424,28 @@ function actionMismatchDiagnostic(options: {
     category: "form-contract",
     message: `Form ${JSON.stringify(options.form.id)} submits to ${JSON.stringify(options.actualAction)}, but action ${JSON.stringify(options.actionId)} requires ${JSON.stringify(options.expectedAction)}.`,
     file: options.templateFile,
-    range: options.form.actionRange,
+    range: options.form.action.range,
     facts: {
       actionId: options.actionId,
       actualAction: options.actualAction,
+      actualActionSource: options.actualActionSource,
       expectedAction: options.expectedAction,
       formId: options.form.id,
       template: options.templateFile,
     },
     related: [
+      ...(options.actualActionSource === "current-document"
+        ? [{
+            role: "form-document-path",
+            message: "The form contract declares the current document path.",
+            file: options.featureContractPath,
+            range: actionFormPropertyRange(
+              options.featureText,
+              options.actionIndex,
+              "documentPath",
+            ),
+          }]
+        : []),
       {
         role: "action-route-path",
         message: "The action contract declares the required submission path.",
@@ -437,7 +459,9 @@ function actionMismatchDiagnostic(options: {
     ],
     repair: {
       strategy: "align-form-action",
-      hint: `Set form ${options.form.id} action to ${options.expectedAction}.`,
+      hint: options.actualActionSource === "current-document"
+        ? `Set form ${options.form.id} action to ${options.expectedAction}, or align its documentPath with the real page route.`
+        : `Set form ${options.form.id} action to ${options.expectedAction}.`,
       mustPreserve: [
         `action ${options.actionId}`,
         `route path ${options.expectedAction}`,
@@ -449,6 +473,26 @@ function actionMismatchDiagnostic(options: {
       ],
     },
   };
+}
+
+function resolveFormAction(options: {
+  readonly actionId: string;
+  readonly documentPath: string | undefined;
+  readonly featureContractPath: string;
+  readonly form: FormFact;
+}): { readonly path: string; readonly source: "literal" | "current-document" } {
+  if (options.form.action.kind === "literal") {
+    return { path: options.form.action.value, source: "literal" };
+  }
+  if (options.documentPath === undefined) {
+    throw new InputFailure(
+      "configuration",
+      "form.document_path_missing",
+      `Action ${JSON.stringify(options.actionId)} links a current-document form but does not declare form.documentPath.`,
+      options.featureContractPath,
+    );
+  }
+  return { path: options.documentPath, source: "current-document" };
 }
 
 function unexpectedFieldDiagnostic(options: {

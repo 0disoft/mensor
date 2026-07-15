@@ -202,7 +202,14 @@ test("attributes repair changes before semantic evaluation and rejects later mut
       semanticCheck: async () => {
         const file = path.join(root, ...template.split("/"));
         const html = await readFile(file, "utf8");
-        await writeFile(file, html.replace('action="/tasks"', 'action="/late-change"'), "utf8");
+        await writeFile(
+          file,
+          html.replace(
+            '<form id="create-task" method="post">',
+            '<form id="create-task" method="post" action="/late-change">',
+          ),
+          "utf8",
+        );
         return true;
       },
     });
