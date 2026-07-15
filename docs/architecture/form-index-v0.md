@@ -1,6 +1,6 @@
 # FormIndex v0 Design
 
-- Status: Accepted design; not implemented
+- Status: Private kernel implemented; provider integration pending
 - Authority: ADR-0030
 - Public compatibility: None
 
@@ -29,8 +29,17 @@ interface FormDocumentFact {
   readonly path: string;
   readonly contentDigest: `sha256:${string}`;
   readonly sourceKind: string;
+  readonly inspection: DocumentInspection;
   readonly forms: readonly IndexedFormFact[];
 }
+
+type DocumentInspection =
+  | { readonly state: "complete" }
+  | {
+      readonly state: "incomplete";
+      readonly reason: DynamicReason | UnsupportedReason;
+      readonly range?: SourceRange;
+    };
 ```
 
 `schemaVersion: 1` is the proposed first serialized revision. The document name
@@ -69,16 +78,16 @@ type IndexedEvidence<T> =
     };
 ```
 
-Reason values are stable identifiers, not source snippets. The first design
-reserves these categories:
+Reason values are stable identifiers, not source snippets. The private kernel
+accepts these exact codes:
 
-- dynamic interpolation;
-- conditional presence;
-- repeated generation;
-- computed attribute;
-- custom helper semantics;
-- unsupported control kind; and
-- provider resource limit.
+- `dynamic-interpolation`;
+- `conditional-presence`;
+- `repeated-generation`;
+- `computed-attribute`;
+- `custom-helper-semantics`;
+- `unsupported-control-kind`; and
+- `provider-resource-limit`.
 
 The machine schema must replace those prose labels with stable namespaced codes
 before implementation. Unknown codes must fail validation until an explicit
@@ -101,7 +110,6 @@ interface IndexedFormFact {
 }
 
 interface IndexedControlFact {
-  readonly owner: IndexedEvidence<string>;
   readonly name: IndexedEvidence<string>;
   readonly controlKind: IndexedEvidence<
     "input" | "select" | "textarea" | "button"
@@ -152,7 +160,8 @@ An index must not contain:
 - Object keys follow the eventual schema order.
 - Reason codes and source kinds use exact case-sensitive strings.
 - JSON uses UTF-8, LF, two-space indentation, and one final newline.
-- Duplicate document paths, form ranges, or control ranges fail validation.
+- Duplicate or case-colliding document paths, duplicate form ranges, and
+  duplicate control ranges fail validation.
 - A repeated run over byte-identical source with the same provider version must
   produce byte-identical output.
 
@@ -196,6 +205,10 @@ not change during the internal refactor.
 
 No step adds a CLI provider flag, process launcher, package loader, network
 access, generic plugin interface, Hono dependency, or renderer execution.
+
+Step 1 is implemented in the private compiler modules. The public compiler
+entry point does not export the index, and no current compiler path consumes it
+yet.
 
 ## Exit Criteria for v0
 

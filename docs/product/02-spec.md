@@ -296,6 +296,11 @@ boundary while retaining static HTML as the only implemented provider. The
 next slice is a byte-preserving internal refactor; it does not claim dynamic
 template compatibility or authorize an external extractor.
 
+The private `FormIndex` validator, canonical serializer/parser, and source
+digest binding exist as preparatory compiler internals. They are not public
+exports and are not yet connected to the static HTML extractor or semantic
+rules.
+
 Compiler performance claims also wait for those repositories. The first
 performance report must distinguish cold and repeated process runs, file and
 byte counts, parse time, and peak RSS. The mutation benchmark remains a
