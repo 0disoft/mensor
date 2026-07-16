@@ -293,13 +293,14 @@ This gate is blocked, not complete. Do not substitute frontend-only forms,
 usage demos, dynamic framework templates, multipart forms, or client-mediated
 JSON requests. ADR-0030 selects a serialized `FormIndex` as the template-fact
 boundary while retaining static HTML as the only implemented provider. The
-next slice is a byte-preserving internal refactor; it does not claim dynamic
-template compatibility or authorize an external extractor.
+byte-preserving internal refactor is complete: the built-in provider
+serializes, validates, source-binds, and hands index facts to semantic rules
+without changing the maintained diagnostic reports. This does not claim
+dynamic template compatibility or authorize an external extractor.
 
-The private `FormIndex` validator, canonical serializer/parser, and source
-digest binding exist as preparatory compiler internals. They are not public
-exports and are not yet connected to the static HTML extractor or semantic
-rules.
+The private `FormIndex` types, validator, canonical serializer/parser, source
+digest and range binding, built-in provider, and semantic translator remain
+compiler internals. They are not public exports or CLI inputs.
 
 Compiler performance claims also wait for those repositories. The first
 performance report must distinguish cold and repeated process runs, file and
@@ -317,9 +318,9 @@ detection benchmark and cannot stand in for throughput evidence.
 
 - Runtime manifest and reference runtime: add only if a real consumer needs a
   compiled artifact beyond diagnostics.
-- Dynamic template adapters: `FormIndex` design is accepted, but external
-  extractors remain deferred until the built-in HTML provider preserves
-  byte-identical diagnostics through the new boundary.
+- Dynamic template adapters: the built-in provider now preserves byte-identical
+  diagnostics through `FormIndex`, but external extractors remain deferred
+  until one separately approved real template source and trust boundary exist.
 - IDE, SARIF, watch mode, caching, and cloud services: post-MVP integrations.
 - Public diagnostic compatibility: begins with the first published preview,
   not with private pre-implementation drafts.

@@ -5,183 +5,269 @@ import {
 
 import type { SourceRange } from "@mensor/contract";
 
+import type { CompilerTiming } from "./compiler-timing.js";
+import {
+  createContentDigest,
+  parseFormIndex,
+  serializeFormIndex,
+  verifyFormIndexContent,
+  type FormDocumentFact,
+  type FormIndex,
+  type IndexedControlFact,
+  type IndexedEvidence,
+  type IndexedFormFact,
+  type UnsupportedReason,
+} from "./form-index.js";
 import { compareText } from "./paths.js";
 
-export interface FormFact {
-  readonly id: string;
-  readonly method: string;
-  readonly methodRange: SourceRange;
-  readonly action: FormActionFact;
-  readonly fields: readonly FormFieldFact[];
-  readonly unsupportedControls: readonly UnsupportedFormControlFact[];
-  readonly range: SourceRange;
+const staticHtmlSourceKind = "mensor/static-html";
+
+export interface StaticHtmlFormIndexProvider {
+  readonly getIndex: (
+    documentPaths: readonly string[],
+  ) => Promise<FormIndex>;
 }
 
-export type FormActionFact =
-  | {
-      readonly kind: "literal";
-      readonly value: string;
-      readonly range: SourceRange;
+export function createStaticHtmlFormIndexProvider(options: {
+  readonly producerVersion: string;
+  readonly readSource: (documentPath: string) => Promise<string>;
+  readonly timing?: CompilerTiming;
+}): StaticHtmlFormIndexProvider {
+  const documents = new Map<string, Promise<FormDocumentFact>>();
+  const sources = new Map<string, string>();
+
+  async function getDocument(documentPath: string): Promise<FormDocumentFact> {
+    let document = documents.get(documentPath);
+    if (document === undefined) {
+      const extract = async (): Promise<FormDocumentFact> => {
+        const source = options.timing === undefined
+          ? await options.readSource(documentPath)
+          : await options.timing.measure(
+              "templateRead",
+              () => options.readSource(documentPath),
+            );
+        sources.set(documentPath, source);
+        options.timing?.recordTemplateSource(source);
+        return options.timing === undefined
+          ? extractStaticHtmlFormDocument(documentPath, source)
+          : options.timing.measureSync(
+              "templateExtraction",
+              () => extractStaticHtmlFormDocument(documentPath, source),
+            );
+      };
+      document = extract();
+      documents.set(documentPath, document);
     }
-  | {
-      readonly kind: "current-document";
-      readonly range: SourceRange;
-    };
+    return document;
+  }
 
-export interface FormFieldFact {
-  readonly name: string;
-  readonly controls: readonly FormControlFact[];
-  readonly range: SourceRange;
+  return {
+    async getIndex(documentPaths) {
+      const uniquePaths = [...new Set(documentPaths)].sort(compareText);
+      const indexedDocuments: FormDocumentFact[] = [];
+      for (const documentPath of uniquePaths) {
+        indexedDocuments.push(await getDocument(documentPath));
+      }
+      const validate = (): FormIndex => {
+        const serialized = serializeFormIndex({
+          schemaVersion: 1,
+          producer: {
+            name: staticHtmlSourceKind,
+            version: options.producerVersion,
+          },
+          documents: indexedDocuments,
+        });
+        const parsed = parseFormIndex(serialized);
+        return verifyFormIndexContent(parsed, (documentPath) =>
+          sources.get(documentPath),
+        );
+      };
+      return options.timing === undefined
+        ? validate()
+        : options.timing.measureSync("formIndexValidation", validate);
+    },
+  };
 }
 
-export interface FormControlFact {
-  readonly kind: "input" | "select" | "textarea";
-  readonly inputType: string;
-  readonly multiple: boolean;
-  readonly range: SourceRange;
-}
-
-export interface UnsupportedFormControlFact {
-  readonly kind: "button" | "input";
-  readonly inputType: string;
-  readonly name: string;
-  readonly reason: "file-input" | "named-submitter" | "submitter-route-override";
-  readonly range: SourceRange;
-}
-
-export function extractFormFacts(html: string): readonly FormFact[] {
+export function extractStaticHtmlFormDocument(
+  documentPath: string,
+  html: string,
+): FormDocumentFact {
   const document = parse(html, { sourceCodeLocationInfo: true });
   const elements: DefaultTreeAdapterTypes.Element[] = [];
   collectElements(document.childNodes, elements);
   const forms = elements.filter((element) => element.tagName === "form");
   const controls = elements.filter(isFormControl);
 
-  return forms
-    .map((form) => {
-      const id = attribute(form, "id") ?? "";
-      const fields = controls
-        .filter((control) => associatedForm(control, forms) === form)
-        .filter(isSuccessfulFieldCandidate)
-        .flatMap((control) => {
-          const name = attribute(control, "name");
-          return name === null || name.length === 0
-            ? []
-            : [{
-                name,
-                controls: [controlFact(control)],
-                range: elementStartTagRange(control),
-              }];
-        });
-      const unsupportedControls = controls
-        .filter((control) => associatedForm(control, forms) === form)
-        .flatMap(unsupportedControlFact)
-        .sort((left, right) =>
-          compareText(left.name, right.name) ||
-          compareText(left.reason, right.reason),
-        );
-      return {
-        id,
-        method: asciiUppercase(attribute(form, "method") ?? "GET"),
-        methodRange: elementAttributeRange(form, "method"),
-        action: formActionFact(form),
-        fields: uniqueFields(fields),
-        unsupportedControls,
-        range: elementStartTagRange(form),
-      };
-    })
-    .sort((left, right) => compareText(left.id, right.id));
+  return {
+    path: documentPath,
+    contentDigest: createContentDigest(html),
+    sourceKind: staticHtmlSourceKind,
+    inspection: { state: "complete" },
+    forms: forms.map((form) => indexedFormFact(form, forms, controls)),
+  };
 }
 
-function formActionFact(
+function indexedFormFact(
   form: DefaultTreeAdapterTypes.Element,
-): FormActionFact {
+  forms: readonly DefaultTreeAdapterTypes.Element[],
+  controls: readonly DefaultTreeAdapterTypes.Element[],
+): IndexedFormFact {
+  const ownedControls = controls.filter(
+    (control) => associatedForm(control, forms) === form,
+  );
+  return {
+    identity: stringAttributeEvidence(form, "id"),
+    method: methodEvidence(form),
+    action: actionEvidence(form),
+    range: elementStartTagRange(form),
+    controls: ownedControls.map((control) =>
+      indexedControlFact(control, ownedControls),
+    ),
+  };
+}
+
+function indexedControlFact(
+  control: DefaultTreeAdapterTypes.Element,
+  ownedControls: readonly DefaultTreeAdapterTypes.Element[],
+): IndexedControlFact {
+  const range = elementStartTagRange(control);
+  const kind = control.tagName as "button" | "input" | "select" | "textarea";
+  const inputType = controlInputType(control);
+  return {
+    name: stringAttributeEvidence(control, "name"),
+    controlKind: known(kind, range),
+    inputType: known(inputType, range),
+    multiple: known(attribute(control, "multiple") !== null, range),
+    multiplicity: known(controlMultiplicity(control, ownedControls), range),
+    successful: successfulEvidence(control, inputType, range),
+    range,
+  };
+}
+
+function methodEvidence(
+  form: DefaultTreeAdapterTypes.Element,
+): IndexedFormFact["method"] {
+  const value = attribute(form, "method");
+  const range = elementAttributeRange(form, "method");
+  return value === null
+    ? { state: "absent", range }
+    : known(asciiLowercase(value), range);
+}
+
+function actionEvidence(
+  form: DefaultTreeAdapterTypes.Element,
+): IndexedFormFact["action"] {
   const value = attribute(form, "action");
   const range = elementAttributeRange(form, "action");
   return value === null || value.length === 0
-    ? { kind: "current-document", range }
-    : { kind: "literal", value, range };
+    ? { state: "current-document", range }
+    : known(value, range);
 }
 
-function unsupportedControlFact(
+function stringAttributeEvidence(
   element: DefaultTreeAdapterTypes.Element,
-): readonly UnsupportedFormControlFact[] {
-  if (isEffectivelyDisabled(element)) {
-    return [];
+  name: string,
+): IndexedEvidence<string> {
+  const value = attribute(element, name);
+  const range = elementAttributeRange(element, name);
+  return value === null || value.length === 0
+    ? { state: "absent", range }
+    : known(value, range);
+}
+
+function successfulEvidence(
+  control: DefaultTreeAdapterTypes.Element,
+  inputType: string,
+  range: SourceRange,
+): IndexedControlFact["successful"] {
+  if (isEffectivelyDisabled(control)) {
+    return known(false, range);
   }
-  const name = attribute(element, "name") ?? "";
-  const inputType =
-    element.tagName === "input"
-      ? asciiUppercase(attribute(element, "type") ?? "text").toLowerCase()
-      : element.tagName === "button"
-        ? asciiUppercase(attribute(element, "type") ?? "submit").toLowerCase()
-        : "";
+  const unsupportedReason = unsupportedControlReason(control, inputType);
+  if (unsupportedReason !== undefined) {
+    return {
+      state: "unsupported",
+      reason: unsupportedReason,
+      range,
+    };
+  }
+  return known(isSuccessfulFieldCandidate(control), range);
+}
+
+function unsupportedControlReason(
+  control: DefaultTreeAdapterTypes.Element,
+  inputType: string,
+): UnsupportedReason | undefined {
+  const name = attribute(control, "name") ?? "";
   const isSubmitter =
-    element.tagName === "button" ||
-    (element.tagName === "input" && ["image", "submit"].includes(inputType));
-  const reason =
+    control.tagName === "button" ||
+    (control.tagName === "input" && ["image", "submit"].includes(inputType));
+  if (
     isSubmitter &&
-    (attribute(element, "formaction") !== null ||
-      attribute(element, "formmethod") !== null)
-      ? "submitter-route-override"
-      : isSubmitter && name.length > 0
-        ? "named-submitter"
-        : element.tagName === "input" && inputType === "file" && name.length > 0
-          ? "file-input"
-          : undefined;
-  if (reason === undefined) {
-    return [];
+    (attribute(control, "formaction") !== null ||
+      attribute(control, "formmethod") !== null)
+  ) {
+    return "submitter-route-override";
   }
-  return [{
-    kind: element.tagName === "button" ? "button" : "input",
-    inputType,
-    name,
-    reason,
-    range: elementStartTagRange(element),
-  }];
-}
-
-function asciiUppercase(value: string): string {
-  return value.replace(/[a-z]/gu, (character) =>
-    String.fromCharCode(character.charCodeAt(0) - 32),
-  );
-}
-
-function uniqueFields(fields: readonly FormFieldFact[]): readonly FormFieldFact[] {
-  const byName = new Map<string, FormFieldFact>();
-  for (const field of fields) {
-    const existing = byName.get(field.name);
-    if (existing === undefined) {
-      byName.set(field.name, field);
-    } else {
-      byName.set(field.name, {
-        ...existing,
-        controls: [...existing.controls, ...field.controls],
-      });
-    }
+  if (isSubmitter && name.length > 0) {
+    return "named-submitter";
   }
-  return [...byName.values()].sort((left, right) =>
-    compareText(left.name, right.name),
-  );
+  if (control.tagName === "input" && inputType === "file" && name.length > 0) {
+    return "file-input";
+  }
+  return undefined;
 }
 
-function controlFact(
-  element: DefaultTreeAdapterTypes.Element,
-): FormControlFact {
-  const kind =
-    element.tagName === "input"
-      ? "input"
-      : element.tagName === "select"
-        ? "select"
-        : "textarea";
-  return {
-    kind,
-    inputType:
-      element.tagName === "input"
-        ? asciiUppercase(attribute(element, "type") ?? "text").toLowerCase()
-        : "",
-    multiple: attribute(element, "multiple") !== null,
-    range: elementStartTagRange(element),
-  };
+function controlMultiplicity(
+  control: DefaultTreeAdapterTypes.Element,
+  ownedControls: readonly DefaultTreeAdapterTypes.Element[],
+): "mutually-exclusive" | "repeated" | "scalar" {
+  const name = attribute(control, "name");
+  if (name === null || name.length === 0 || !isSuccessfulFieldCandidate(control)) {
+    return "scalar";
+  }
+  const group = ownedControls.filter(
+    (candidate) =>
+      attribute(candidate, "name") === name &&
+      isSuccessfulFieldCandidate(candidate),
+  );
+  if (
+    group.length > 0 &&
+    group.every(
+      (candidate) =>
+        candidate.tagName === "input" && controlInputType(candidate) === "radio",
+    )
+  ) {
+    return "mutually-exclusive";
+  }
+  if (
+    (control.tagName === "select" && attribute(control, "multiple") !== null) ||
+    group.length > 1
+  ) {
+    return "repeated";
+  }
+  return "scalar";
+}
+
+function known<T>(value: T, range: SourceRange): IndexedEvidence<T> {
+  return { state: "known", value, range };
+}
+
+function controlInputType(element: DefaultTreeAdapterTypes.Element): string {
+  if (element.tagName === "input") {
+    return asciiLowercase(attribute(element, "type") ?? "text");
+  }
+  if (element.tagName === "button") {
+    return asciiLowercase(attribute(element, "type") ?? "submit");
+  }
+  return "";
+}
+
+function asciiLowercase(value: string): string {
+  return value.replace(/[A-Z]/gu, (character) =>
+    String.fromCharCode(character.charCodeAt(0) + 32),
+  );
 }
 
 function collectElements(
@@ -210,7 +296,7 @@ function isSuccessfulFieldCandidate(
   if (element.tagName !== "input") {
     return true;
   }
-  const type = (attribute(element, "type") ?? "text").toLowerCase();
+  const type = controlInputType(element);
   return !["button", "file", "image", "reset", "submit"].includes(type);
 }
 

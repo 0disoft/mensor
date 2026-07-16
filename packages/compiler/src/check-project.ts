@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import { performance } from "node:perf_hooks";
 
 import {
   parseFeatureContract,
@@ -15,8 +16,15 @@ import {
   discoverProjectFiles,
   readProjectFile,
 } from "./filesystem.js";
+import {
+  CompilerTiming,
+  type CompilerPerformanceMetrics,
+  type CompilerPhase,
+} from "./compiler-timing.js";
 import { checkFeatureForms } from "./form-rule.js";
+import { FormIndexFailure } from "./form-index.js";
 import { checkFeatureHandlers } from "./handler-rule.js";
+import { createStaticHtmlFormIndexProvider } from "./html-forms.js";
 import { handlerFileRange } from "./locations.js";
 import { checkImportBoundaries } from "./module-boundary-rule.js";
 import { checkOwnershipRules, type FeatureOwnerFact } from "./ownership-rule.js";
@@ -42,6 +50,30 @@ const defaultProducerVersion = "0.0.0";
 
 export async function checkProject(
   options: CheckProjectOptions,
+): Promise<CheckProjectResult> {
+  return checkProjectInternal(options);
+}
+
+export interface MeasuredCheckProjectResult {
+  readonly result: CheckProjectResult;
+  readonly metrics: CompilerPerformanceMetrics;
+}
+
+export async function checkProjectWithMetrics(
+  options: CheckProjectOptions,
+): Promise<MeasuredCheckProjectResult> {
+  const timing = new CompilerTiming();
+  const startedAt = performance.now();
+  const result = await checkProjectInternal(options, timing);
+  return {
+    result,
+    metrics: timing.snapshot(performance.now() - startedAt),
+  };
+}
+
+async function checkProjectInternal(
+  options: CheckProjectOptions,
+  timing?: CompilerTiming,
 ): Promise<CheckProjectResult> {
   try {
     const producerVersion = options.producerVersion ?? defaultProducerVersion;
@@ -97,19 +129,29 @@ export async function checkProject(
 
     const project = projectResult.value;
     validateFileRoles(project.fileRoles);
-    const discoveredFiles = await discoverProjectFiles(
-      root,
-      project.sourceRoot,
-      maxFiles,
-      maxTotalBytes,
-      maxDepth,
+    const discoveredFiles = await measure(
+      timing,
+      "discovery",
+      () => discoverProjectFiles(
+        root,
+        project.sourceRoot,
+        maxFiles,
+        maxTotalBytes,
+        maxDepth,
+      ),
     );
     const discovered = new Set(discoveredFiles);
     const diagnostics: Diagnostic[] = [];
     const featureOwners: FeatureOwnerFact[] = [];
-    const sourceFacts = createSourceFactIndex((file) =>
-      readProjectFile(root, file, maxFileBytes),
+    const sourceFacts = createSourceFactIndex(
+      (file) => readProjectFile(root, file, maxFileBytes),
+      timing,
     );
+    const formIndexProvider = createStaticHtmlFormIndexProvider({
+      producerVersion,
+      readSource: (file) => readProjectFile(root, file, maxFileBytes),
+      ...(timing === undefined ? {} : { timing }),
+    });
 
     for (const featureContractPath of [...project.featureContracts].sort(compareText)) {
       const safeFeatureContractPath = assertRelativePosixPath(
@@ -138,54 +180,78 @@ export async function checkProject(
         root: path.posix.dirname(safeFeatureContractPath),
       });
       diagnostics.push(
-        ...checkFeaturePlacement(
-          safeFeatureContractPath,
-          featureText,
-          featureResult.value,
-          project.fileRoles,
-          discovered,
+        ...measureSync(
+          timing,
+          "ruleEvaluation",
+          () => checkFeaturePlacement(
+            safeFeatureContractPath,
+            featureText,
+            featureResult.value,
+            project.fileRoles,
+            discovered,
+          ),
         ),
       );
       diagnostics.push(
-        ...(await checkFeatureHandlers({
-          featureContractPath: safeFeatureContractPath,
-          featureText,
-          feature: featureResult.value,
-          discovered,
-          sourceFacts,
-        })),
+        ...(await measure(
+          timing,
+          "ruleEvaluation",
+          () => checkFeatureHandlers({
+            featureContractPath: safeFeatureContractPath,
+            featureText,
+            feature: featureResult.value,
+            discovered,
+            sourceFacts,
+          }),
+        )),
       );
+      const templatePaths = featureTemplatePaths(
+        safeFeatureContractPath,
+        featureResult.value,
+        discovered,
+      );
+      const formIndex = await formIndexProvider.getIndex(templatePaths);
       diagnostics.push(
-        ...(await checkFeatureForms({
-          root,
-          featureContractPath: safeFeatureContractPath,
-          featureText,
-          feature: featureResult.value,
-          discovered,
-          maxFileBytes,
-        })),
+        ...measureSync(
+          timing,
+          "ruleEvaluation",
+          () => checkFeatureForms({
+            featureContractPath: safeFeatureContractPath,
+            featureText,
+            feature: featureResult.value,
+            formIndex,
+          }),
+        ),
       );
     }
 
     diagnostics.push(
-      ...(await checkImportBoundaries({
-        projectContractPath: configFile,
-        projectText,
-        featureContractPaths: project.featureContracts,
-        fileRoles: project.fileRoles,
-        boundaries: project.boundaries ?? [],
-        discoveredFiles,
-        sourceFacts,
-      })),
+      ...(await measure(
+        timing,
+        "ruleEvaluation",
+        () => checkImportBoundaries({
+          projectContractPath: configFile,
+          projectText,
+          featureContractPaths: project.featureContracts,
+          fileRoles: project.fileRoles,
+          boundaries: project.boundaries ?? [],
+          discoveredFiles,
+          sourceFacts,
+        }),
+      )),
     );
     diagnostics.push(
-      ...checkOwnershipRules({
-        projectContractPath: configFile,
-        projectText,
-        features: featureOwners,
-        rules: project.ownershipRules ?? [],
-        discoveredFiles,
-      }),
+      ...measureSync(
+        timing,
+        "ruleEvaluation",
+        () => checkOwnershipRules({
+          projectContractPath: configFile,
+          projectText,
+          features: featureOwners,
+          rules: project.ownershipRules ?? [],
+          discoveredFiles,
+        }),
+      ),
     );
 
     diagnostics.sort(compareDiagnostics);
@@ -205,12 +271,61 @@ export async function checkProject(
         ...(error.file === undefined ? {} : { file: error.file }),
       });
     }
+    if (error instanceof FormIndexFailure) {
+      return failure({
+        kind: "configuration",
+        code: error.code,
+        message: error.message,
+      });
+    }
     return failure({
       kind: "internal",
       code: "compiler.unexpected_failure",
       message: "The compiler failed unexpectedly.",
     });
   }
+}
+
+function featureTemplatePaths(
+  featureContractPath: string,
+  feature: FeatureContract,
+  discovered: ReadonlySet<string>,
+): readonly string[] {
+  const featureRoot = path.posix.dirname(featureContractPath);
+  const templates = new Set<string>();
+  for (const action of feature.actions) {
+    const templateFile = assertRelativePosixPath(
+      action.form.template,
+      "form template",
+    );
+    const projectTemplate = joinProjectPath(featureRoot, templateFile);
+    if (!discovered.has(projectTemplate)) {
+      throw new InputFailure(
+        "configuration",
+        "form.template_not_discovered",
+        `Form template ${JSON.stringify(projectTemplate)} is not a discovered source file.`,
+        projectTemplate,
+      );
+    }
+    templates.add(projectTemplate);
+  }
+  return [...templates].sort(compareText);
+}
+
+function measure<T>(
+  timing: CompilerTiming | undefined,
+  phase: CompilerPhase,
+  operation: () => Promise<T>,
+): Promise<T> {
+  return timing === undefined ? operation() : timing.measure(phase, operation);
+}
+
+function measureSync<T>(
+  timing: CompilerTiming | undefined,
+  phase: CompilerPhase,
+  operation: () => T,
+): T {
+  return timing === undefined ? operation() : timing.measureSync(phase, operation);
 }
 
 function checkFeaturePlacement(

@@ -74,8 +74,9 @@ paths before source parsing.
    observed SonicJS form corpus completely.
 3. Contract verbosity is secondary when the existing template source is not
    eligible at all.
-4. A future Hono experiment needs a serialized `FormIndex` boundary before a
-   `RouteIndex`; neither justifies a generic in-process plugin API.
+4. The private serialized `FormIndex` boundary now exists before any future
+   `RouteIndex`; neither justifies a generic in-process plugin API or external
+   provider execution.
 5. Any TypeScript template extractor must preserve explicit unsupported facts
    for interpolation, loops, generated identifiers, dynamic actions, and custom
    helpers instead of pretending they are static HTML.

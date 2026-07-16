@@ -49,6 +49,11 @@ a supported public wire format. The eventual machine-readable schema must use
 a positive independent schema revision and does not inherit the package
 version.
 
+The built-in provider integration is complete: current static HTML documents
+round-trip through canonical index JSON, source digest and range validation,
+and semantic translation before rules run. This implementation note does not
+authorize public index exports, CLI ingestion, or an external extractor.
+
 ## Consequences
 
 - Static HTML behavior can remain narrow while compiler rules stop depending

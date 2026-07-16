@@ -1,7 +1,25 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { extractFormFacts } from "../dist/src/html-forms.js";
+import { formFactsForLinkedForm } from "../dist/src/form-index-semantics.js";
+import { extractStaticHtmlFormDocument } from "../dist/src/html-forms.js";
+
+const documentPath = "src/features/test/views/index.html";
+
+function extractFormFacts(html) {
+  const document = extractStaticHtmlFormDocument(documentPath, html);
+  const index = {
+    schemaVersion: 1,
+    producer: { name: "mensor/static-html", version: "0.0.0-test" },
+    documents: [document],
+  };
+  const formIds = [...new Set(document.forms.flatMap((form) =>
+    form.identity.state === "known" ? [form.identity.value] : [],
+  ))];
+  return formIds.flatMap((formId) =>
+    formFactsForLinkedForm(index, documentPath, formId),
+  );
+}
 
 test("normalizes static forms and successful named field candidates", () => {
   const facts = extractFormFacts(`<!doctype html>

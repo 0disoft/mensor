@@ -9,7 +9,14 @@ import {
   verifyFormIndexContent,
 } from "../dist/src/form-index.js";
 
-const source = '<form id="task"><input name="title"></form>\n';
+const source = [
+  "",
+  "",
+  "",
+  "",
+  '<form id="task"><input name="title"></form>',
+  "",
+].join("\n");
 
 test("canonicalizes FormIndex objects and round-trips strict JSON", () => {
   const index = validIndex();
@@ -225,6 +232,23 @@ test("binds indexed documents to current source bytes", () => {
     "form_index.digest_mismatch",
     "/documents/0/contentDigest",
   );
+
+  const outsideSource = validIndex();
+  outsideSource.documents[0].forms[0].range = range(99, 0, 99, 1);
+  assertFailure(
+    () => verifyFormIndexContent(outsideSource, () => source),
+    "form_index.range_invalid",
+    "/documents/0/forms/0/range/start",
+  );
+
+  const invalidUtf8 = Uint8Array.from([0xff]);
+  const invalidEncoding = validIndex();
+  invalidEncoding.documents[0].contentDigest = createContentDigest(invalidUtf8);
+  assertFailure(
+    () => verifyFormIndexContent(invalidEncoding, () => invalidUtf8),
+    "form_index.source_encoding_invalid",
+    "/documents/0",
+  );
 });
 
 function validIndex() {
@@ -232,7 +256,7 @@ function validIndex() {
     schemaVersion: 1,
     producer: {
       name: "mensor/static-html",
-      version: "0.0.51",
+      version: "0.0.52",
     },
     documents: [
       {
@@ -269,6 +293,11 @@ function validIndex() {
                   range: range(4, 16, 4, 36),
                 },
                 inputType: { state: "absent" },
+                multiple: {
+                  state: "known",
+                  value: false,
+                  range: range(4, 16, 4, 36),
+                },
                 multiplicity: {
                   state: "known",
                   value: "scalar",

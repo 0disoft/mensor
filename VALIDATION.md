@@ -59,9 +59,12 @@ an agent and must not be reported as repair-rate evidence.
 
 `performance` creates bounded temporary projects with 1,000, 5,000, and 10,000
 source files. Each case runs in two isolated Node processes and reports elapsed
-time plus peak RSS. The first and immediate repeat runs do not flush the host OS
-filesystem cache, so the output is a local engineering baseline rather than a
-portable cold/warm performance claim or a pass/fail budget.
+time, peak RSS, template document and byte counts, and exclusive durations for
+discovery, source reads, TypeScript extraction, HTML reads, HTML extraction,
+FormIndex validation, semantic rules, and other compiler work. The first and
+immediate repeat runs do not flush the host OS filesystem cache, so the output
+is a local engineering baseline rather than a portable cold/warm performance
+claim or a pass/fail budget.
 
 The aggregate `check` command runs `performance:smoke`, which uses the same
 measurement path with only 1,000 source files. Full scale measurement remains an

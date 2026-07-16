@@ -91,16 +91,18 @@ frontend-only repository, a usage demo, a dynamic framework template, or a
 client-mediated JSON form. Those substitutions would produce attractive
 metrics for a contract that the upstream application does not actually own.
 
-The next product decision must choose between two honest paths:
+The product decision had two honest paths:
 
 1. Keep native static HTML as the product boundary and recruit maintainers who
    explicitly use or want that architecture.
 2. Introduce a serialized `FormIndex` boundary and separately approve one
    narrow template extractor without executing application source.
 
-ADR-0030 selects the second architectural boundary while deliberately deferring
-the extractor. Static HTML remains the only implemented provider until the
-internal refactor preserves current diagnostics byte-for-byte.
+ADR-0030 selected the second architectural boundary while deliberately
+deferring the extractor. The built-in static HTML provider now passes through
+the private index with byte-identical diagnostics. The external dogfood gate
+and separate extractor approval remain blocked; completing the internal
+boundary does not supply either missing input.
 
 No generic plugin API, TypeScript renderer execution, or copied upstream
 fixture follows from this search.

@@ -1,6 +1,6 @@
 # FormIndex v0 Design
 
-- Status: Private kernel implemented; provider integration pending
+- Status: Built-in static HTML provider integrated; external ingestion unavailable
 - Authority: ADR-0030
 - Public compatibility: None
 
@@ -86,6 +86,9 @@ accepts these exact codes:
 - `repeated-generation`;
 - `computed-attribute`;
 - `custom-helper-semantics`;
+- `file-input`;
+- `named-submitter`;
+- `submitter-route-override`;
 - `unsupported-control-kind`; and
 - `provider-resource-limit`.
 
@@ -98,7 +101,7 @@ forward-compatibility policy exists.
 ```ts
 interface IndexedFormFact {
   readonly identity: IndexedEvidence<string>;
-  readonly method: IndexedEvidence<"get" | "post">;
+  readonly method: IndexedEvidence<string>;
   readonly action:
     | IndexedEvidence<string>
     | {
@@ -115,6 +118,7 @@ interface IndexedControlFact {
     "input" | "select" | "textarea" | "button"
   >;
   readonly inputType: IndexedEvidence<string>;
+  readonly multiple: IndexedEvidence<boolean>;
   readonly multiplicity: IndexedEvidence<
     "scalar" | "repeated" | "mutually-exclusive"
   >;
@@ -133,6 +137,13 @@ must preserve these semantics:
   distinguishable; and
 - a dynamic successful-control decision cannot be reported as statically
   present or absent.
+
+The built-in provider records the lower-case static method token and preserves
+an absent method separately; semantic form rules retain the previous `GET`
+default. `multiple` records the control-local HTML attribute, while
+`multiplicity` records the wire-name group shape. Both are required because two
+scalar controls sharing one name and one `select[multiple]` are repeated wire
+values for different reasons and produce different diagnostic facts.
 
 Providers may add no arbitrary attribute map. Every new fact requires a
 Mensor-owned semantic field and compatibility decision.
@@ -173,8 +184,10 @@ missing source, extra root-escaping path, or duplicate path fails before rule
 execution. The design does not use a Git commit as freshness proof because
 uncommitted source and unrelated commits are valid compiler inputs.
 
-The built-in static HTML provider may construct the same values in memory, but
-tests must serialize and parse them to prove the boundary remains JSON-safe.
+The built-in static HTML provider constructs the values in memory, then
+serializes, parses, validates, and rebinds them to the current source bytes
+before semantic rules consume them. Tests prove that repeated document reads
+are cached and the boundary remains JSON-safe.
 
 ## Failure Rules
 
@@ -187,9 +200,9 @@ tests must serialize and parse them to prove the boundary remains JSON-safe.
 - An empty forms array is valid only when the provider successfully inspected
   the complete document and found no forms.
 
-Diagnostic codes for index validation and unresolved template evidence are a
-separate implementation decision. Existing static HTML diagnostic codes must
-not change during the internal refactor.
+Private `form_index.*` configuration failures cover malformed, stale,
+incomplete, and unresolved evidence. Existing static HTML diagnostic codes and
+reports remain unchanged through the internal refactor.
 
 ## Adoption Sequence
 
@@ -206,9 +219,12 @@ not change during the internal refactor.
 No step adds a CLI provider flag, process launcher, package loader, network
 access, generic plugin interface, Hono dependency, or renderer execution.
 
-Step 1 is implemented in the private compiler modules. The public compiler
-entry point does not export the index, and no current compiler path consumes it
-yet.
+Steps 1 through 4 are implemented in private compiler modules. The built-in
+provider is now the only static HTML path used by semantic form rules, and the
+maintained report corpus remains byte-identical across absolute roots. Step 5
+instrumentation separates source reads, TypeScript extraction, HTML reads,
+HTML extraction, index validation, rule evaluation, and unclassified compiler
+time. The public compiler entry point still does not export or ingest an index.
 
 ## Exit Criteria for v0
 

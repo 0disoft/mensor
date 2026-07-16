@@ -10,7 +10,10 @@ export type DynamicReason =
   | "repeated-generation";
 
 export type UnsupportedReason =
+  | "file-input"
+  | "named-submitter"
   | "provider-resource-limit"
+  | "submitter-route-override"
   | "unsupported-control-kind";
 
 export type IndexedEvidence<T> =
@@ -70,7 +73,7 @@ export interface FormDocumentFact {
 
 export interface IndexedFormFact {
   readonly identity: IndexedEvidence<string>;
-  readonly method: IndexedEvidence<"get" | "post">;
+  readonly method: IndexedEvidence<string>;
   readonly action: FormActionEvidence;
   readonly range: SourceRange;
   readonly controls: readonly IndexedControlFact[];
@@ -82,6 +85,7 @@ export interface IndexedControlFact {
     "button" | "input" | "select" | "textarea"
   >;
   readonly inputType: IndexedEvidence<string>;
+  readonly multiple: IndexedEvidence<boolean>;
   readonly multiplicity: IndexedEvidence<
     "mutually-exclusive" | "repeated" | "scalar"
   >;
@@ -98,6 +102,7 @@ export type FormIndexFailureCode =
   | "form_index.path_invalid"
   | "form_index.range_invalid"
   | "form_index.shape_invalid"
+  | "form_index.source_encoding_invalid"
   | "form_index.source_missing";
 
 export class FormIndexFailure extends Error {

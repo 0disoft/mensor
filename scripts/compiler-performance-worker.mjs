@@ -1,15 +1,14 @@
-import { performance } from "node:perf_hooks";
-
-import { checkProject } from "../packages/compiler/dist/src/index.js";
+import { checkProjectWithMetrics } from "../packages/compiler/dist/src/check-project.js";
 
 const root = process.argv[2];
 if (root === undefined) {
   throw new Error("Expected a project root argument.");
 }
 
-const startedAt = performance.now();
-const result = await checkProject({ root, producerVersion: "0.0.0-performance" });
-const durationMs = performance.now() - startedAt;
+const { result, metrics } = await checkProjectWithMetrics({
+  root,
+  producerVersion: "0.0.0-performance",
+});
 if (!result.ok) {
   throw new Error(`Compiler performance fixture failed: ${result.failure.code}`);
 }
@@ -18,7 +17,15 @@ if (result.report.diagnostics.length !== 0) {
 }
 
 process.stdout.write(`${JSON.stringify({
-  durationMs: round(durationMs),
+  durationMs: round(metrics.totalDurationMs),
+  phaseDurationMs: Object.fromEntries(
+    Object.entries(metrics.phaseDurationMs).map(([phase, duration]) => [
+      phase,
+      round(duration),
+    ]),
+  ),
+  templateDocumentCount: metrics.templateDocumentCount,
+  templateBytes: metrics.templateBytes,
   peakRssBytes: process.resourceUsage().maxRSS * 1024,
 })}\n`);
 

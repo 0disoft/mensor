@@ -11,8 +11,9 @@ import type {
   FormMethodMismatchDiagnostic,
 } from "@mensor/contract";
 
-import { readProjectFile } from "./filesystem.js";
-import { extractFormFacts, type FormFact } from "./html-forms.js";
+import type { FormFact } from "./form-facts.js";
+import { formFactsForLinkedForm } from "./form-index-semantics.js";
+import type { FormIndex } from "./form-index.js";
 import {
   actionFormPropertyRange,
   actionFormCodecPropertyRange,
@@ -27,16 +28,13 @@ import {
   joinProjectPath,
 } from "./paths.js";
 
-export async function checkFeatureForms(options: {
-  readonly root: string;
+export function checkFeatureForms(options: {
   readonly featureContractPath: string;
   readonly featureText: string;
   readonly feature: FeatureContract;
-  readonly discovered: ReadonlySet<string>;
-  readonly maxFileBytes: number;
-}): Promise<readonly Diagnostic[]> {
+  readonly formIndex: FormIndex;
+}): readonly Diagnostic[] {
   const featureRoot = path.posix.dirname(options.featureContractPath);
-  const templateCache = new Map<string, readonly FormFact[]>();
   const diagnostics: Diagnostic[] = [];
 
   for (let actionIndex = 0; actionIndex < options.feature.actions.length; actionIndex += 1) {
@@ -49,26 +47,11 @@ export async function checkFeatureForms(options: {
       "form template",
     );
     const projectTemplate = joinProjectPath(featureRoot, templateFile);
-    if (!options.discovered.has(projectTemplate)) {
-      throw new InputFailure(
-        "configuration",
-        "form.template_not_discovered",
-        `Form template ${JSON.stringify(projectTemplate)} is not a discovered source file.`,
-        projectTemplate,
-      );
-    }
-
-    let forms = templateCache.get(projectTemplate);
-    if (forms === undefined) {
-      const html = await readProjectFile(
-        options.root,
-        projectTemplate,
-        options.maxFileBytes,
-      );
-      forms = extractFormFacts(html);
-      templateCache.set(projectTemplate, forms);
-    }
-    const matchingForms = forms.filter((form) => form.id === action.form.id);
+    const matchingForms = formFactsForLinkedForm(
+      options.formIndex,
+      projectTemplate,
+      action.form.id,
+    );
     if (matchingForms.length !== 1) {
       throw new InputFailure(
         "configuration",

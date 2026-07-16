@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import type { SourcePosition, SourceRange } from "@mensor/contract";
+
 import {
   FormIndexFailure,
   type ContentDigest,
@@ -77,6 +79,89 @@ export function verifyFormIndexContent(
         "Indexed source digest does not match the current source bytes.",
       );
     }
+    verifyDocumentRanges(document, source, `/documents/${index}`);
   }
   return canonical;
+}
+
+function verifyDocumentRanges(
+  document: FormIndex["documents"][number],
+  source: string | Uint8Array,
+  instancePath: string,
+): void {
+  const text = sourceText(source, instancePath);
+  const lines = text.split(/\r\n|\n|\r/u);
+  const ranges: Array<{
+    readonly instancePath: string;
+    readonly range: SourceRange;
+  }> = [];
+
+  if (document.inspection.state === "incomplete" && document.inspection.range !== undefined) {
+    ranges.push({
+      instancePath: `${instancePath}/inspection/range`,
+      range: document.inspection.range,
+    });
+  }
+  document.forms.forEach((form, formIndex) => {
+    const formPath = `${instancePath}/forms/${formIndex}`;
+    ranges.push({ instancePath: `${formPath}/range`, range: form.range });
+    pushEvidenceRange(ranges, `${formPath}/identity`, form.identity);
+    pushEvidenceRange(ranges, `${formPath}/method`, form.method);
+    pushEvidenceRange(ranges, `${formPath}/action`, form.action);
+    form.controls.forEach((control, controlIndex) => {
+      const controlPath = `${formPath}/controls/${controlIndex}`;
+      ranges.push({ instancePath: `${controlPath}/range`, range: control.range });
+      pushEvidenceRange(ranges, `${controlPath}/name`, control.name);
+      pushEvidenceRange(ranges, `${controlPath}/controlKind`, control.controlKind);
+      pushEvidenceRange(ranges, `${controlPath}/inputType`, control.inputType);
+      pushEvidenceRange(ranges, `${controlPath}/multiple`, control.multiple);
+      pushEvidenceRange(ranges, `${controlPath}/multiplicity`, control.multiplicity);
+      pushEvidenceRange(ranges, `${controlPath}/successful`, control.successful);
+    });
+  });
+
+  for (const entry of ranges) {
+    assertPositionWithinSource(entry.range.start, lines, `${entry.instancePath}/start`);
+    assertPositionWithinSource(entry.range.end, lines, `${entry.instancePath}/end`);
+  }
+}
+
+function pushEvidenceRange(
+  ranges: Array<{ readonly instancePath: string; readonly range: SourceRange }>,
+  instancePath: string,
+  evidence: { readonly range?: SourceRange },
+): void {
+  if (evidence.range !== undefined) {
+    ranges.push({ instancePath: `${instancePath}/range`, range: evidence.range });
+  }
+}
+
+function assertPositionWithinSource(
+  position: SourcePosition,
+  lines: readonly string[],
+  instancePath: string,
+): void {
+  const line = lines[position.line];
+  if (line === undefined || position.character > line.length) {
+    throw new FormIndexFailure(
+      "form_index.range_invalid",
+      instancePath,
+      "Indexed range falls outside the bound source document.",
+    );
+  }
+}
+
+function sourceText(source: string | Uint8Array, instancePath: string): string {
+  if (typeof source === "string") {
+    return source;
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(source);
+  } catch {
+    throw new FormIndexFailure(
+      "form_index.source_encoding_invalid",
+      instancePath,
+      "Indexed source bytes must be valid UTF-8.",
+    );
+  }
 }

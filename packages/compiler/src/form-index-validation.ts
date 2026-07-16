@@ -25,7 +25,10 @@ const dynamicReasons = new Set<DynamicReason>([
 ]);
 
 const unsupportedReasons = new Set<UnsupportedReason>([
+  "file-input",
+  "named-submitter",
   "provider-resource-limit",
+  "submitter-route-override",
   "unsupported-control-kind",
 ]);
 
@@ -154,7 +157,7 @@ function formValue(value: unknown, instancePath: string): IndexedFormFact {
     method: evidenceValue(
       form["method"],
       `${instancePath}/method`,
-      (entry, entryPath) => enumValue(entry, entryPath, ["get", "post"]),
+      stringValue,
     ),
     action: actionValue(form["action"], `${instancePath}/action`),
     range,
@@ -171,6 +174,7 @@ function controlValue(
     "name",
     "controlKind",
     "inputType",
+    "multiple",
     "multiplicity",
     "successful",
     "range",
@@ -191,6 +195,11 @@ function controlValue(
       control["inputType"],
       `${instancePath}/inputType`,
       stringValue,
+    ),
+    multiple: evidenceValue(
+      control["multiple"],
+      `${instancePath}/multiple`,
+      booleanValue,
     ),
     multiplicity: evidenceValue(
       control["multiplicity"],
