@@ -86,7 +86,7 @@ test("rejects host paths and forged success while canonicalizing facts", () => {
 function createObservation(overrides = {}) {
   return createAgentAuthoredBuildExploratoryObservation({
     observationId: "guestbook.glm-5.2.1",
-    producerVersion: "0.0.55",
+    producerVersion: "0.0.56",
     baselineCommit: "a".repeat(40),
     identity: {
       runnerId: "codex-subagent",

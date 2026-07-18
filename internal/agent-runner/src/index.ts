@@ -199,3 +199,15 @@ export type {
   ProtectedNodeSemanticTestPortOptions,
   RunAgentAuthoredBuildTrialOptions,
 } from "./agent-authored-build.js";
+export {
+  materializeAgentAuthoredProjectArtifact,
+  parseAgentAuthoredProjectArtifact,
+  serializeAgentAuthoredProjectArtifact,
+  validateAgentAuthoredProjectArtifact,
+} from "./agent-authored-artifact.js";
+export type {
+  AgentAuthoredProjectArtifact,
+  AgentAuthoredProjectArtifactFile,
+  AgentAuthoredProjectArtifactLimits,
+  MaterializeAgentAuthoredProjectArtifactOptions,
+} from "./agent-authored-artifact.js";

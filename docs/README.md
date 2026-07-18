@@ -32,10 +32,14 @@
 - Second agent-authored brief: `../internal/agent-runner/briefs/rsvp-v1.md`
 - First Codex subagent cohort: `../internal/agent-runner/cohorts/codex-subagents-v1.json`
 - Current Codex subagent cohort: `../internal/agent-runner/cohorts/codex-subagents-v2.json`
+- Response-only subagent cohort: `../internal/agent-runner/cohorts/codex-subagents-response-v1.json`
+- Response artifact transport: `../internal/agent-runner/briefs/response-artifact-v1.md`
+- Response artifact schema: `../internal/agent-runner/spec/agent-authored-project-artifact-v1.schema.json`
 - Exploratory subagent observation schema: `../internal/agent-runner/spec/agent-authored-build-exploratory-observation-v2.schema.json`
 - FormIndex v0 design: `docs/architecture/form-index-v0.md`
 - FormIndex boundary decision: `docs/adr/0030-form-index-is-the-template-fact-boundary.md`
 - Evaluator-owned semantic oracle decision: `docs/adr/0031-semantic-oracles-are-evaluator-owned.md`
+- Model response materialization decision: `docs/adr/0032-agent-projects-cross-the-model-boundary-as-data.md`
 
 Summary pages may link to these contracts but must not redefine them. When two
 documents disagree, update the owning source first and then synchronize its

@@ -9,6 +9,8 @@
 - Current model cohort: `internal/agent-runner/cohorts/codex-subagents-v2.json`
 - Historical model cohort: `internal/agent-runner/cohorts/codex-subagents-v1.json`
 - Current semantic oracle: `internal/agent-runner/oracles/guestbook-v2.test.mjs`
+- Response transport: `internal/agent-runner/briefs/response-artifact-v1.md`
+- Response cohort: `internal/agent-runner/cohorts/codex-subagents-response-v1.json`
 
 ## Purpose
 
@@ -90,6 +92,19 @@ An agent cannot certify its own behavior by writing a weak test.
    changes protected trial instructions, or depends on another trial's state.
 9. Dispose the trial workspace after bounded result extraction unless its
    source is explicitly accepted as a reviewed fixture.
+
+## Response Artifact Transport
+
+The preferred host integration asks the model for one
+`agent-authored-project-artifact` JSON document instead of giving the model a
+writable project path. The model receives pinned brief and documentation text.
+The host validates the complete response, canonicalizes file order, and writes
+only portable bounded UTF-8 text files into a real empty project root.
+
+This removes model-chosen filesystem paths from the normal generation path.
+It does not upgrade a Codex subagent run to sandbox evidence when the host still
+advertises tools and relies on a prompt instruction not to call them. Record
+that distinction in the cohort and result wording.
 
 ## Measurements
 
@@ -195,6 +210,12 @@ enforced.
 
 The project-owned smoke-test port result never replaces the protected oracle
 verdict.
+
+`validateAgentAuthoredProjectArtifact` and
+`materializeAgentAuthoredProjectArtifact` own the response-only write boundary.
+They reject the entire artifact before writing on contract, path, text, size,
+or target-root failure. ADR-0032 records why this is preferred to asking a
+host-native model to write directly into the workspace.
 
 ## Stop Conditions
 

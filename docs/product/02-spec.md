@@ -294,6 +294,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     guestbook trial copies a versioned semantic oracle into protected input,
     records its digest, and runs it against the required `src/app.mjs`
     Request/Response interface after generation.
+48. A model-generated project may cross the provider boundary as a bounded
+    response artifact. The evaluator validates the complete JSON file map and
+    materializes it into a real empty project root; model-authored filesystem
+    operations are not the trusted write boundary.
 
 ## Next Product Validation Gate
 
