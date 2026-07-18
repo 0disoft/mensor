@@ -30,11 +30,17 @@ const briefFile = fileURLToPath(
 const rsvpBriefFile = fileURLToPath(
   new URL("../briefs/rsvp-v1.md", import.meta.url),
 );
+const rsvpV2BriefFile = fileURLToPath(
+  new URL("../briefs/rsvp-v2.md", import.meta.url),
+);
 const guestbookV2BriefFile = fileURLToPath(
   new URL("../briefs/guestbook-v2.md", import.meta.url),
 );
 const guestbookV3OracleFile = fileURLToPath(
   new URL("../oracles/guestbook-v3.test.mjs", import.meta.url),
+);
+const rsvpV2OracleFile = fileURLToPath(
+  new URL("../oracles/rsvp-v2.test.mjs", import.meta.url),
 );
 const codexSubagentCohortFile = fileURLToPath(
   new URL("../cohorts/codex-subagents-v1.json", import.meta.url),
@@ -121,6 +127,27 @@ test("the current protected oracle accepts the maintained reference app", async 
       `${result.stdout ?? ""}\n${result.stderr ?? ""}`,
     );
   });
+});
+
+test("the RSVP v2 oracle accepts the maintained Node reference app", () => {
+  const projectRoot = path.join(
+    repositoryRoot,
+    "fixtures",
+    "valid",
+    "node-static-rsvp",
+  );
+  const result = spawnSync(
+    process.execPath,
+    ["--test", rsvpV2OracleFile],
+    {
+      cwd: projectRoot,
+      env: {},
+      encoding: "utf8",
+      timeout: 5_000,
+      windowsHide: true,
+    },
+  );
+  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
 });
 
 test("keeps semantic behavior independent from a clean Mensor check", async () => {
@@ -306,6 +333,15 @@ test("the second brief exercises one mutually exclusive radio field", async () =
   );
   assert.match(brief, /Do not read or copy Mensor fixtures/);
   assert.match(brief, /Both must pass/);
+});
+
+test("RSVP v2 gives the evaluator ownership of the radio-group oracle", async () => {
+  const brief = await readFile(rsvpV2BriefFile, "utf8");
+  assert.match(brief, /evaluator\s+owns the semantic oracle/i);
+  assert.match(brief, /Export a runtime function named `createRsvpApp`/);
+  assert.match(brief, /GET rendering must use the supplied `templateHtml`/);
+  assert.match(brief, /three same-name radio controls as one mutually exclusive wire/);
+  assert.match(brief, /Agent-authored tests and completion claims are not evidence/);
 });
 
 test("guestbook v2 gives the evaluator ownership of the semantic oracle", async () => {

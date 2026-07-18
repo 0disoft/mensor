@@ -5,9 +5,16 @@ import { createRsvpRouter } from "./features/rsvp/routes/rsvp.mjs";
 
 const templateUrl = new URL("./features/rsvp/views/index.html", import.meta.url);
 
+export function createRsvpApp({ templateHtml }) {
+  return {
+    fetch: createRsvpRouter({
+      store: createRsvpStore(),
+      template: templateHtml,
+    }),
+  };
+}
+
 export async function createNodeStaticRsvpApp() {
-  return createRsvpRouter({
-    store: createRsvpStore(),
-    template: await readFile(templateUrl, "utf8"),
-  });
+  const templateHtml = await readFile(templateUrl, "utf8");
+  return createRsvpApp({ templateHtml }).fetch;
 }

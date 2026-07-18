@@ -33,11 +33,15 @@
 - Evaluator-owned guestbook brief: `../internal/agent-runner/briefs/guestbook-v2.md`
 - Historical guestbook semantic oracle: `../internal/agent-runner/oracles/guestbook-v2.test.mjs`
 - Current guestbook semantic oracle: `../internal/agent-runner/oracles/guestbook-v3.test.mjs`
-- Second agent-authored brief: `../internal/agent-runner/briefs/rsvp-v1.md`
+- Historical RSVP brief: `../internal/agent-runner/briefs/rsvp-v1.md`
+- Current RSVP brief: `../internal/agent-runner/briefs/rsvp-v2.md`
+- Current RSVP semantic oracle: `../internal/agent-runner/oracles/rsvp-v2.test.mjs`
 - First Codex subagent cohort: `../internal/agent-runner/cohorts/codex-subagents-v1.json`
 - Current Codex subagent cohort: `../internal/agent-runner/cohorts/codex-subagents-v2.json`
 - Response-only subagent cohort: `../internal/agent-runner/cohorts/codex-subagents-response-v1.json`
 - Corrected response replay cohort: `../internal/agent-runner/cohorts/codex-subagents-response-v1-oracle-v3-replay.json`
+- Repeated RSVP response cohort:
+  `../internal/agent-runner/cohorts/codex-subagents-rsvp-response-v1.json`
 - Response artifact transport: `../internal/agent-runner/briefs/response-artifact-v1.md`
 - Response artifact schema: `../internal/agent-runner/spec/agent-authored-project-artifact-v1.schema.json`
 - Exploratory subagent observation schema: `../internal/agent-runner/spec/agent-authored-build-exploratory-observation-v4.schema.json`

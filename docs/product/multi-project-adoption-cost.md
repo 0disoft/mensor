@@ -30,7 +30,7 @@ person maintaining their canonical JSON by hand.
 | Target | Project contract | Feature contract | Application source | RouteIndex | Total ratio | Feature ratio |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `hono-static-tasks` | 21 | 41 | 99 | 45 | `0.626` | `0.414` |
-| `node-static-rsvp` | 21 | 53 | 146 | 45 | `0.507` | `0.363` |
+| `node-static-rsvp` | 21 | 53 | 152 | 45 | `0.487` | `0.349` |
 
 The optional RouteIndex path increased project fixed cost from 20 to 21 lines.
 Marginal feature cost remains 41 to 53 lines. The lower feature ratio in the

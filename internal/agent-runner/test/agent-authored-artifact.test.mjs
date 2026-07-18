@@ -30,6 +30,10 @@ const responseReplayCohortFile = fileURLToPath(new URL(
   "../cohorts/codex-subagents-response-v1-oracle-v3-replay.json",
   import.meta.url,
 ));
+const rsvpResponseCohortFile = fileURLToPath(new URL(
+  "../cohorts/codex-subagents-rsvp-response-v1.json",
+  import.meta.url,
+));
 
 test("canonicalizes and materializes one bounded response artifact", async () => {
   const artifact = validateAgentAuthoredProjectArtifact({
@@ -164,4 +168,25 @@ test("pins corrected replay to response bytes and semantic oracle v3", async () 
     id: "guestbook-semantic-oracle",
     revision: "v3",
   });
+});
+
+test("pins three fresh RSVP response trials per requested model", async () => {
+  const cohort = JSON.parse(await readFile(rsvpResponseCohortFile, "utf8"));
+  assert.equal(cohort.cohortId, "codex-subagents-rsvp-response-v1");
+  assert.equal(cohort.evaluationMode, "fresh-response-artifact");
+  assert.equal(cohort.trialsPerModel, 3);
+  assert.deepEqual(cohort.applicationBrief, { id: "rsvp", revision: "v2" });
+  assert.deepEqual(cohort.semanticOracle, {
+    id: "rsvp-semantic-oracle",
+    revision: "v2",
+  });
+  assert.deepEqual(
+    cohort.models.map(({ modelId }) => modelId),
+    [
+      "umans/umans-glm-5.2",
+      "umans/umans-kimi-k2.7",
+      "opencode-go/minimax-m3",
+      "opencode-go/deepseek-v4-flash",
+    ],
+  );
 });

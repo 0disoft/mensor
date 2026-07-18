@@ -1,17 +1,20 @@
 # Agent-Authored Dogfood Protocol
 
-- Status: Evaluator-owned semantic oracle implemented; controlled provider run pending
+- Status: Guestbook exploratory run complete; RSVP repeated response run pending
 - Owner: Maintainer
 - External maintainer participation: Not planned
-- Current brief: `internal/agent-runner/briefs/guestbook-v2.md`
+- Current brief: `internal/agent-runner/briefs/rsvp-v2.md`
 - Historical first brief: `internal/agent-runner/briefs/guestbook-v1.md`
-- Second brief: `internal/agent-runner/briefs/rsvp-v1.md`
+- Historical RSVP brief: `internal/agent-runner/briefs/rsvp-v1.md`
 - Current model cohort: `internal/agent-runner/cohorts/codex-subagents-v2.json`
 - Historical model cohort: `internal/agent-runner/cohorts/codex-subagents-v1.json`
-- Current semantic oracle: `internal/agent-runner/oracles/guestbook-v3.test.mjs`
+- Current semantic oracle: `internal/agent-runner/oracles/rsvp-v2.test.mjs`
+- Historical guestbook oracle: `internal/agent-runner/oracles/guestbook-v3.test.mjs`
 - Response transport: `internal/agent-runner/briefs/response-artifact-v1.md`
 - Response cohort: `internal/agent-runner/cohorts/codex-subagents-response-v1.json`
 - Corrected replay cohort: `internal/agent-runner/cohorts/codex-subagents-response-v1-oracle-v3-replay.json`
+- Current RSVP response cohort:
+  `internal/agent-runner/cohorts/codex-subagents-rsvp-response-v1.json`
 
 ## Purpose
 
@@ -49,11 +52,13 @@ Node ESM guestbook with a static URL-encoded form, in-memory state, independent
 semantic tests, strict malformed-input handling, and HTML escaping. It does not
 reuse the existing task fixtures.
 
-The second maintained brief is `rsvp-v1`. It changes the domain and requires a
-three-control radio group to remain one scalar wire field. It probes whether an
-agent can apply the documented control-shape contract instead of copying the
-guestbook structure. Checkbox decoding remains outside the implemented codec
-boundary and is intentionally absent from this brief.
+The historical second brief is `rsvp-v1`. Its agent-authored test could not own
+the semantic verdict. The current `rsvp-v2` revision keeps the three-control
+radio group but adds the evaluator-owned `createRsvpApp({ templateHtml })`
+interface and protected oracle. It probes whether an agent can apply the
+documented control-shape contract instead of copying the guestbook structure.
+Checkbox decoding remains outside the implemented codec boundary and is
+intentionally absent from this brief.
 
 ## Required Output
 
@@ -165,6 +170,12 @@ It cannot be relabeled as sandbox evidence, and it excludes prompt text, model
 response text, absolute paths, command output, environment values, and source
 content.
 
+The RSVP response cohort runs three fresh trials per requested model. Each
+trial remains separate. A model unavailable from the current host is recorded
+three times as unavailable and is not replaced. Cross-trial summaries may state
+`any-trial-pass` and `all-trials-pass`; they must not turn the available subset
+into a claim about the unavailable model or a public repair rate.
+
 Versions 2 and 3 remain immutable historical schemas. Version 2 does not bind
 an output transport or artifact-acceptance gate. Version 3 adds those facts but
 does not bind the exact model response bytes, so it cannot support artifact
@@ -243,9 +254,7 @@ Agent-authored dogfood may guide documentation, diagnostics, contract
 ergonomics, and fixture coverage. It cannot support claims about external
 maintainer adoption or human usability.
 
-The local guestbook v2 vertical slice is implemented with a fake injected
-agent and protected oracle. Run the next provider-backed trial only after its
-allowed documentation set, model adapter, credential boundary, sandbox
-enforcement, process limits, and result wording are reviewed together. Do not
-add a new evidence or attestation layer merely to start it; reuse the existing
-private fixture-kit and bounded agent-runner boundaries where they fit.
+The local guestbook and RSVP evaluator interfaces have maintained reference
+applications and protected oracles. Provider-backed response trials reuse the
+bounded artifact materializer and exploratory observation contract. Do not add
+a new evidence or attestation layer merely to run them.

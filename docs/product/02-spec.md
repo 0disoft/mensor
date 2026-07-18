@@ -322,8 +322,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 
 ## Next Product Validation Gate
 
-The next milestone is repeated agent-authored dogfood with the second
-`rsvp-v1` application shape. The narrow RouteIndex slice opened by the
+The next milestone is repeated agent-authored dogfood with the evaluator-owned
+`rsvp-v2` application shape. The narrow RouteIndex slice opened by the
 two-project route-drift result is implemented and returns to product validation
 only when a real consumer needs an index producer. External maintainer
 recruitment and another agent attestation layer remain out of scope. A coding

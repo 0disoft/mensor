@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "cohortId": "codex-subagents-rsvp-response-v1",
+  "runnerId": "codex-subagent",
+  "evaluationMode": "fresh-response-artifact",
+  "applicationBrief": {
+    "id": "rsvp",
+    "revision": "v2"
+  },
+  "outputTransport": {
+    "id": "response-artifact",
+    "revision": "v1"
+  },
+  "semanticOracle": {
+    "id": "rsvp-semantic-oracle",
+    "revision": "v2"
+  },
+  "contextPolicy": "fresh-agent-no-inherited-conversation",
+  "toolPolicy": "instruct-no-tools-not-host-enforced",
+  "availabilityPolicy": "record-unavailable-without-substitution",
+  "aggregationPolicy": "report-each-trial-and-model-separately",
+  "trialsPerModel": 3,
+  "models": [
+    {
+      "providerId": "umans",
+      "modelId": "umans/umans-glm-5.2",
+      "reasoningEffort": "high"
+    },
+    {
+      "providerId": "umans",
+      "modelId": "umans/umans-kimi-k2.7",
+      "reasoningEffort": "high"
+    },
+    {
+      "providerId": "opencode-go",
+      "modelId": "opencode-go/minimax-m3",
+      "reasoningEffort": "high"
+    },
+    {
+      "providerId": "opencode-go",
+      "modelId": "opencode-go/deepseek-v4-flash",
+      "reasoningEffort": "high"
+    }
+  ]
+}
