@@ -1,15 +1,15 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "kind": "agent-authored-build-exploratory-observation",
-  "observationId": "guestbook-response.minimax-m3.1",
-  "producerVersion": "0.0.57",
+  "observationId": "guestbook-response.kimi-k2.7.oracle-v3",
+  "producerVersion": "0.0.58",
   "baselineCommit": "f2768532ac970b322876c984fe93f1a61ce25c41",
   "identity": {
     "runnerId": "codex-subagent",
-    "providerId": "opencode-go",
-    "modelId": "opencode-go/minimax-m3",
+    "providerId": "umans",
+    "modelId": "umans/umans-kimi-k2.7",
     "reasoningEffort": "high",
-    "cohortId": "codex-subagents-response-v1"
+    "cohortId": "codex-subagents-response-v1-oracle-v3-replay"
   },
   "brief": {
     "id": "guestbook",
@@ -18,8 +18,8 @@
   },
   "semanticOracle": {
     "id": "guestbook-semantic-oracle",
-    "revision": "v2",
-    "sha256": "9ac9d1498edfd39f308ec052438c783a10348defe1c62a973e99140c658a9597"
+    "revision": "v3",
+    "sha256": "72c76dd42a68c7118c024d53ce43d5fa40955e74abce43e9412fc211d1e092c5"
   },
   "outputTransport": {
     "id": "response-artifact",
@@ -36,8 +36,9 @@
   "finalState": {
     "artifactCompleted": true,
     "artifactAccepted": true,
+    "artifactResponseSha256": "018c63cda39d724d62ee0389a593c7dd7b5394c99e56084664ac43b35aae49a1",
     "semanticTestCompleted": true,
-    "semanticTestsPassed": true,
+    "semanticTestsPassed": false,
     "mensorCheckCompleted": true,
     "mensorCheckPassed": true,
     "diagnosticCodes": [],
@@ -51,6 +52,6 @@
       "src/features/guestbook/views/index.html"
     ]
   },
-  "success": true,
+  "success": false,
   "claimLevel": "exploratory-only"
 }

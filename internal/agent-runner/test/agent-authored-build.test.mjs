@@ -33,8 +33,8 @@ const rsvpBriefFile = fileURLToPath(
 const guestbookV2BriefFile = fileURLToPath(
   new URL("../briefs/guestbook-v2.md", import.meta.url),
 );
-const guestbookV2OracleFile = fileURLToPath(
-  new URL("../oracles/guestbook-v2.test.mjs", import.meta.url),
+const guestbookV3OracleFile = fileURLToPath(
+  new URL("../oracles/guestbook-v3.test.mjs", import.meta.url),
 );
 const codexSubagentCohortFile = fileURLToPath(
   new URL("../cohorts/codex-subagents-v1.json", import.meta.url),
@@ -75,11 +75,11 @@ test("runs a complete agent-authored build trial in a fresh workspace", async ()
     assert.equal(result.failureCategory, null);
     assert.deepEqual(result.semanticOracle, {
       id: "guestbook-semantic-oracle",
-      revision: "v2",
+      revision: "v3",
       sha256: (await source(
         "guestbook-semantic-oracle",
-        "v2",
-        guestbookV2OracleFile,
+        "v3",
+        guestbookV3OracleFile,
       )).sha256,
     });
     assert.deepEqual(result.adapter, {
@@ -99,14 +99,14 @@ test("runs a complete agent-authored build trial in a fresh workspace", async ()
   });
 });
 
-test("the protected oracle accepts the maintained reference app", async () => {
+test("the current protected oracle accepts the maintained reference app", async () => {
   await withTemporaryParent(async (temporaryRoot) => {
     const projectRoot = path.join(temporaryRoot, "project");
     await mkdir(projectRoot);
     await writeAgentAuthoredGuestbook(projectRoot);
     const result = spawnSync(
       process.execPath,
-      ["--test", guestbookV2OracleFile],
+      ["--test", guestbookV3OracleFile],
       {
         cwd: projectRoot,
         env: {},
@@ -380,8 +380,8 @@ async function baseOptions(temporaryRoot) {
     brief: await source("guestbook", "v2", guestbookV2BriefFile),
     semanticOracle: await source(
       "guestbook-semantic-oracle",
-      "v2",
-      guestbookV2OracleFile,
+      "v3",
+      guestbookV3OracleFile,
     ),
     documents: await Promise.all(
       approvedDocuments.map(([id, relativePath]) =>

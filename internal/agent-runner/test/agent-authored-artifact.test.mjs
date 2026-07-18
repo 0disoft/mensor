@@ -26,6 +26,10 @@ const responseCohortFile = fileURLToPath(new URL(
   "../cohorts/codex-subagents-response-v1.json",
   import.meta.url,
 ));
+const responseReplayCohortFile = fileURLToPath(new URL(
+  "../cohorts/codex-subagents-response-v1-oracle-v3-replay.json",
+  import.meta.url,
+));
 
 test("canonicalizes and materializes one bounded response artifact", async () => {
   const artifact = validateAgentAuthoredProjectArtifact({
@@ -146,4 +150,18 @@ test("pins the no-write response cohort without claiming tool enforcement", asyn
       "opencode-go/deepseek-v4-flash",
     ],
   );
+});
+
+test("pins corrected replay to response bytes and semantic oracle v3", async () => {
+  const cohort = JSON.parse(await readFile(responseReplayCohortFile, "utf8"));
+  assert.equal(
+    cohort.cohortId,
+    "codex-subagents-response-v1-oracle-v3-replay",
+  );
+  assert.equal(cohort.generationCohortId, "codex-subagents-response-v1");
+  assert.equal(cohort.evaluationMode, "replay-pinned-response-artifact");
+  assert.deepEqual(cohort.semanticOracle, {
+    id: "guestbook-semantic-oracle",
+    revision: "v3",
+  });
 });

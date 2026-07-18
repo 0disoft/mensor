@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 4,
+  "kind": "agent-authored-build-exploratory-observation",
+  "observationId": "guestbook-response.minimax-m3.oracle-v3",
+  "producerVersion": "0.0.58",
+  "baselineCommit": "f2768532ac970b322876c984fe93f1a61ce25c41",
+  "identity": {
+    "runnerId": "codex-subagent",
+    "providerId": "opencode-go",
+    "modelId": "opencode-go/minimax-m3",
+    "reasoningEffort": "high",
+    "cohortId": "codex-subagents-response-v1-oracle-v3-replay"
+  },
+  "brief": {
+    "id": "guestbook",
+    "revision": "v2",
+    "sha256": "ef4317e8eb4eccaa31417fc4f56e787a2b3dde30a6f0327154f3651dee71d925"
+  },
+  "semanticOracle": {
+    "id": "guestbook-semantic-oracle",
+    "revision": "v3",
+    "sha256": "72c76dd42a68c7118c024d53ce43d5fa40955e74abce43e9412fc211d1e092c5"
+  },
+  "outputTransport": {
+    "id": "response-artifact",
+    "revision": "v1",
+    "sha256": "df2a08425eeeadb4268d3b5de6d1fac8d0f76ee5840b970665c9a178a38db491"
+  },
+  "environment": {
+    "workspaceIsolation": "prompt-restricted-not-enforced",
+    "repositoryVisibility": "not-enforced",
+    "networkControl": "not-enforced",
+    "toolControl": "not-enforced",
+    "conversationInheritance": "none-declared"
+  },
+  "finalState": {
+    "artifactCompleted": true,
+    "artifactAccepted": true,
+    "artifactResponseSha256": "d700b2d49055047ee41b611948f2fb587ffed39db01086472c05fb241da79fa7",
+    "semanticTestCompleted": true,
+    "semanticTestsPassed": true,
+    "mensorCheckCompleted": true,
+    "mensorCheckPassed": true,
+    "diagnosticCodes": [],
+    "generatedFiles": [
+      "mensor.project.jsonc",
+      "package.json",
+      "src/app.mjs",
+      "src/features/guestbook/feature.mensor.jsonc",
+      "src/features/guestbook/routes/guestbook.mjs",
+      "src/features/guestbook/server/create-entry.mjs",
+      "src/features/guestbook/views/index.html"
+    ]
+  },
+  "success": true,
+  "claimLevel": "exploratory-only"
+}

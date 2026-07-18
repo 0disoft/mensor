@@ -41,3 +41,9 @@ diagnostic contract.
 
 Version 1 guestbook cohort results cannot be upgraded after the fact. They are
 historical exploratory evidence only.
+
+Oracle v2 later missed a near-match media type accepted by one generated
+runtime. Oracle v3 adds invalid `application/x-www-form-urlencoded` lookalikes.
+Changing an oracle is an evaluation migration: exact response artifacts must be
+digest-bound and replayed, and an old green result cannot be relabeled as a v3
+pass without that replay.

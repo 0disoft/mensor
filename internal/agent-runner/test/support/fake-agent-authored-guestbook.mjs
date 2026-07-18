@@ -83,7 +83,8 @@ export function createGuestbookApp({ templateHtml }) {
       }
       if (request.method === "POST" && url.pathname === "/guestbook") {
         const contentType = request.headers.get("content-type") ?? "";
-        if (!contentType.startsWith("application/x-www-form-urlencoded")) {
+        const mediaType = contentType.split(";", 1)[0]?.trim().toLowerCase();
+        if (mediaType !== "application/x-www-form-urlencoded") {
           return new Response("Bad Request", { status: 400 });
         }
         const form = new URLSearchParams(await request.text());

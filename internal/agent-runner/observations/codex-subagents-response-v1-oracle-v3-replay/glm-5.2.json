@@ -1,15 +1,15 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "kind": "agent-authored-build-exploratory-observation",
-  "observationId": "guestbook-response.kimi-k2.7.1",
-  "producerVersion": "0.0.57",
+  "observationId": "guestbook-response.glm-5.2.oracle-v3",
+  "producerVersion": "0.0.58",
   "baselineCommit": "f2768532ac970b322876c984fe93f1a61ce25c41",
   "identity": {
     "runnerId": "codex-subagent",
     "providerId": "umans",
-    "modelId": "umans/umans-kimi-k2.7",
+    "modelId": "umans/umans-glm-5.2",
     "reasoningEffort": "high",
-    "cohortId": "codex-subagents-response-v1"
+    "cohortId": "codex-subagents-response-v1-oracle-v3-replay"
   },
   "brief": {
     "id": "guestbook",
@@ -18,8 +18,8 @@
   },
   "semanticOracle": {
     "id": "guestbook-semantic-oracle",
-    "revision": "v2",
-    "sha256": "9ac9d1498edfd39f308ec052438c783a10348defe1c62a973e99140c658a9597"
+    "revision": "v3",
+    "sha256": "72c76dd42a68c7118c024d53ce43d5fa40955e74abce43e9412fc211d1e092c5"
   },
   "outputTransport": {
     "id": "response-artifact",
@@ -34,23 +34,16 @@
     "conversationInheritance": "none-declared"
   },
   "finalState": {
-    "artifactCompleted": true,
-    "artifactAccepted": true,
-    "semanticTestCompleted": true,
-    "semanticTestsPassed": true,
-    "mensorCheckCompleted": true,
-    "mensorCheckPassed": true,
+    "artifactCompleted": false,
+    "artifactAccepted": false,
+    "artifactResponseSha256": null,
+    "semanticTestCompleted": false,
+    "semanticTestsPassed": false,
+    "mensorCheckCompleted": false,
+    "mensorCheckPassed": false,
     "diagnosticCodes": [],
-    "generatedFiles": [
-      "mensor.project.jsonc",
-      "package.json",
-      "src/app.mjs",
-      "src/features/guestbook/feature.mensor.jsonc",
-      "src/features/guestbook/routes/guestbook.mjs",
-      "src/features/guestbook/server/create-entry.mjs",
-      "src/features/guestbook/views/index.html"
-    ]
+    "generatedFiles": []
   },
-  "success": true,
+  "success": false,
   "claimLevel": "exploratory-only"
 }

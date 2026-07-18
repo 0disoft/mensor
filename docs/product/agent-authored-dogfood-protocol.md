@@ -8,9 +8,10 @@
 - Second brief: `internal/agent-runner/briefs/rsvp-v1.md`
 - Current model cohort: `internal/agent-runner/cohorts/codex-subagents-v2.json`
 - Historical model cohort: `internal/agent-runner/cohorts/codex-subagents-v1.json`
-- Current semantic oracle: `internal/agent-runner/oracles/guestbook-v2.test.mjs`
+- Current semantic oracle: `internal/agent-runner/oracles/guestbook-v3.test.mjs`
 - Response transport: `internal/agent-runner/briefs/response-artifact-v1.md`
 - Response cohort: `internal/agent-runner/cohorts/codex-subagents-response-v1.json`
+- Corrected replay cohort: `internal/agent-runner/cohorts/codex-subagents-response-v1-oracle-v3-replay.json`
 
 ## Purpose
 
@@ -154,19 +155,20 @@ other trial workspaces, or inherited conversation. Prompt instructions alone
 do not prove that isolation. Such runs must not claim
 `sandboxed-workspace-only` merely because the subagent used a separate task.
 
-Exploratory response-artifact runs use
-`agent-authored-build-exploratory-observation-v3.schema.json`. That observation
+Current exploratory response-artifact runs use
+`agent-authored-build-exploratory-observation-v4.schema.json`. That observation
 records the baseline commit, exact adapter identity, brief, semantic-oracle,
-and output-transport digests, artifact acceptance, generated project-relative
-files, semantic result, and Mensor diagnostic codes. Its
+and output-transport digests, artifact response digest, artifact acceptance,
+generated project-relative files, semantic result, and Mensor diagnostic codes. Its
 environment and claim level are fixed to `not-enforced` and `exploratory-only`.
 It cannot be relabeled as sandbox evidence, and it excludes prompt text, model
 response text, absolute paths, command output, environment values, and source
 content.
 
-Version 2 remains the immutable historical schema for direct-workspace runs.
-It does not bind an output transport or artifact-acceptance gate and must not be
-used for the response-only cohort.
+Versions 2 and 3 remain immutable historical schemas. Version 2 does not bind
+an output transport or artifact-acceptance gate. Version 3 adds those facts but
+does not bind the exact model response bytes, so it cannot support artifact
+replay. Neither should be used for current response-only observations.
 
 ## Privacy and Security
 

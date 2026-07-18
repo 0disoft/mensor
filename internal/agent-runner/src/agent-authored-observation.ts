@@ -26,6 +26,7 @@ export interface AgentAuthoredBuildExploratoryObservationInput {
   readonly artifact: {
     readonly completed: boolean;
     readonly accepted: boolean;
+    readonly responseSha256: string | null;
   };
   readonly semanticTest: {
     readonly completed: boolean;
@@ -36,7 +37,7 @@ export interface AgentAuthoredBuildExploratoryObservationInput {
 }
 
 export interface AgentAuthoredBuildExploratoryObservation {
-  readonly schemaVersion: 3;
+  readonly schemaVersion: 4;
   readonly kind: "agent-authored-build-exploratory-observation";
   readonly observationId: string;
   readonly producerVersion: string;
@@ -67,6 +68,7 @@ export interface AgentAuthoredBuildExploratoryObservation {
   readonly finalState: {
     readonly artifactCompleted: boolean;
     readonly artifactAccepted: boolean;
+    readonly artifactResponseSha256: string | null;
     readonly semanticTestCompleted: boolean;
     readonly semanticTestsPassed: boolean;
     readonly mensorCheckCompleted: boolean;
@@ -89,8 +91,19 @@ export function createAgentAuthoredBuildExploratoryObservation(
     input.artifact.accepted,
     "artifact.accepted",
   );
+  const artifactResponseSha256 = input.artifact.responseSha256 === null
+    ? null
+    : requireDigest(
+      input.artifact.responseSha256,
+      "artifact.responseSha256",
+    );
   if (!artifactCompleted && artifactAccepted) {
     throw new Error("An incomplete response artifact cannot be accepted.");
+  }
+  if (artifactCompleted !== (artifactResponseSha256 !== null)) {
+    throw new Error(
+      "Response artifact completion must match its response digest.",
+    );
   }
   const semanticTestCompleted = requireBoolean(
     input.semanticTest.completed,
@@ -135,7 +148,7 @@ export function createAgentAuthoredBuildExploratoryObservation(
   }
   const identity = validateIdentity(input.identity);
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     kind: "agent-authored-build-exploratory-observation",
     observationId: requireIdentifier(input.observationId, "observationId"),
     producerVersion: requireIdentifier(input.producerVersion, "producerVersion"),
@@ -178,6 +191,7 @@ export function createAgentAuthoredBuildExploratoryObservation(
     finalState: {
       artifactCompleted,
       artifactAccepted,
+      artifactResponseSha256,
       semanticTestCompleted,
       semanticTestsPassed,
       mensorCheckCompleted,
@@ -219,7 +233,7 @@ export function validateAgentAuthoredBuildExploratoryObservation(
     "observation",
   );
   if (
-    observation["schemaVersion"] !== 3
+    observation["schemaVersion"] !== 4
     || observation["kind"] !== "agent-authored-build-exploratory-observation"
     || observation["claimLevel"] !== "exploratory-only"
   ) {
@@ -272,6 +286,7 @@ export function validateAgentAuthoredBuildExploratoryObservation(
     [
       "artifactCompleted",
       "artifactAccepted",
+      "artifactResponseSha256",
       "semanticTestCompleted",
       "semanticTestsPassed",
       "mensorCheckCompleted",
@@ -322,6 +337,12 @@ export function validateAgentAuthoredBuildExploratoryObservation(
         finalState["artifactAccepted"],
         "artifactAccepted",
       ),
+      responseSha256: finalState["artifactResponseSha256"] === null
+        ? null
+        : requireString(
+          finalState["artifactResponseSha256"],
+          "artifactResponseSha256",
+        ),
     },
     semanticTest: {
       completed: requireBoolean(

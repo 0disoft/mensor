@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -15,12 +16,24 @@ import {
 
 const schemaFile = fileURLToPath(
   new URL(
-    "../spec/agent-authored-build-exploratory-observation-v3.schema.json",
+    "../spec/agent-authored-build-exploratory-observation-v4.schema.json",
     import.meta.url,
   ),
 );
 const responseObservationRoot = fileURLToPath(new URL(
-  "../observations/codex-subagents-response-v1/",
+  "../observations/codex-subagents-response-v1-oracle-v3-replay/",
+  import.meta.url,
+));
+const responseBriefFile = fileURLToPath(new URL(
+  "../briefs/guestbook-v2.md",
+  import.meta.url,
+));
+const responseTransportFile = fileURLToPath(new URL(
+  "../briefs/response-artifact-v1.md",
+  import.meta.url,
+));
+const responseOracleFile = fileURLToPath(new URL(
+  "../oracles/guestbook-v3.test.mjs",
   import.meta.url,
 ));
 
@@ -66,12 +79,20 @@ test("derives failure without allowing isolation upgrades", () => {
 test("does not evaluate a rejected response artifact", () => {
   assert.throws(
     () => createObservation({
-      artifact: { completed: true, accepted: false },
+      artifact: {
+        completed: true,
+        accepted: false,
+        responseSha256: "e".repeat(64),
+      },
     }),
     /cannot produce evaluated project state/,
   );
   const rejected = createObservation({
-    artifact: { completed: true, accepted: false },
+    artifact: {
+      completed: true,
+      accepted: false,
+      responseSha256: "e".repeat(64),
+    },
     semanticTest: { completed: false, passed: false },
     mensorCheck: { completed: false, passed: false, diagnosticCodes: [] },
     generatedFiles: [],
@@ -114,25 +135,35 @@ test("keeps response-cohort observations canonical and exploratory", async () =>
       await readFile(path.join(responseObservationRoot, file), "utf8"),
     )
   ));
-  assert.deepEqual(observations.map(({ success }) => success), [false, true, true]);
+  const [briefSha256, transportSha256, oracleSha256] = await Promise.all([
+    digestFile(responseBriefFile),
+    digestFile(responseTransportFile),
+    digestFile(responseOracleFile),
+  ]);
+  assert.deepEqual(observations.map(({ success }) => success), [false, false, true]);
   assert.ok(observations.every((observation) =>
     observation.claimLevel === "exploratory-only"
     && observation.environment.toolControl === "not-enforced"
     && observation.outputTransport.id === "response-artifact"
     && observation.outputTransport.revision === "v1"
+    && observation.brief.sha256 === briefSha256
+    && observation.outputTransport.sha256 === transportSha256
+    && observation.semanticOracle.sha256 === oracleSha256
   ));
   assert.equal(observations[0].finalState.artifactAccepted, false);
+  assert.equal(observations[1].finalState.semanticTestsPassed, false);
+  assert.equal(observations[2].finalState.semanticTestsPassed, true);
   assert.ok(observations.slice(1).every((observation) =>
     observation.finalState.artifactAccepted
-    && observation.finalState.semanticTestsPassed
     && observation.finalState.mensorCheckPassed
+    && observation.finalState.artifactResponseSha256 !== null
   ));
 });
 
 function createObservation(overrides = {}) {
   return createAgentAuthoredBuildExploratoryObservation({
     observationId: "guestbook.glm-5.2.1",
-    producerVersion: "0.0.57",
+    producerVersion: "0.0.58",
     baselineCommit: "a".repeat(40),
     identity: {
       runnerId: "codex-subagent",
@@ -156,7 +187,11 @@ function createObservation(overrides = {}) {
       revision: "v1",
       sha256: "d".repeat(64),
     },
-    artifact: { completed: true, accepted: true },
+    artifact: {
+      completed: true,
+      accepted: true,
+      responseSha256: "e".repeat(64),
+    },
     semanticTest: { completed: true, passed: true },
     mensorCheck: { completed: true, passed: true, diagnosticCodes: [] },
     generatedFiles: [
@@ -165,4 +200,8 @@ function createObservation(overrides = {}) {
     ],
     ...overrides,
   });
+}
+
+async function digestFile(file) {
+  return createHash("sha256").update(await readFile(file)).digest("hex");
 }

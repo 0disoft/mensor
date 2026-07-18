@@ -302,6 +302,9 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     oracle, and output transport digests. They record artifact acceptance as a
     separate final-state gate and fix tool control to `not-enforced` when the
     host exposes tools despite a prompt-only prohibition.
+50. Replayable response observations bind the exact model response bytes. A
+    semantic-oracle revision is a behavior migration: old green results must be
+    replayed or downgraded, not silently carried forward under the new oracle.
 
 ## Next Product Validation Gate
 
