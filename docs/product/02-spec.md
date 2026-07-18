@@ -285,6 +285,11 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     cohort pins GLM 5.2, Kimi K2.7, MiniMax M3, and DeepSeek V4 Flash; an
     unavailable model is recorded without substitution and every model result
     remains separate.
+46. A host-native subagent result that lacks enforced workspace and repository
+    isolation can be retained only as an `exploratory-only` observation. Its
+    schema fixes all isolation claims to not enforced and retains only baseline
+    commit, model identity, brief digest, generated paths, semantic outcome,
+    and Mensor diagnostic codes.
 
 ## Next Product Validation Gate
 

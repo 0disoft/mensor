@@ -170,6 +170,16 @@ export {
   createNodeSemanticTestPort,
   runAgentAuthoredBuildTrial,
 } from "./agent-authored-build.js";
+export {
+  createAgentAuthoredBuildExploratoryObservation,
+  parseAgentAuthoredBuildExploratoryObservation,
+  serializeAgentAuthoredBuildExploratoryObservation,
+  validateAgentAuthoredBuildExploratoryObservation,
+} from "./agent-authored-observation.js";
+export type {
+  AgentAuthoredBuildExploratoryObservation,
+  AgentAuthoredBuildExploratoryObservationInput,
+} from "./agent-authored-observation.js";
 export type {
   AgentAuthoredBuildAdapterContext,
   AgentAuthoredBuildAdapterIdentity,

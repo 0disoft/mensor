@@ -26,6 +26,106 @@ value is explicit in the authoring contract.
 - `feature-contract-v1.schema.json`: one feature and its form-backed actions
 - `diagnostic-report-v1.schema.json`: canonical check output
 
+## Complete Authoring Example
+
+The following pair is the smallest complete form-backed contract shape. Field
+names are exact; aliases such as `schemaVersion`, `features`, `formRef`,
+`templatePath`, `formId`, `exportName`, or `expectedRole` are not accepted.
+
+Project contract at `mensor.project.jsonc`:
+
+```json
+{
+  "version": 1,
+  "sourceRoot": "src",
+  "featureContracts": [
+    "src/features/guestbook/feature.mensor.jsonc"
+  ],
+  "fileRoles": [
+    {
+      "role": "server",
+      "withinFeature": "server"
+    },
+    {
+      "role": "route",
+      "withinFeature": "routes"
+    },
+    {
+      "role": "view",
+      "withinFeature": "views"
+    }
+  ]
+}
+```
+
+Feature contract at `src/features/guestbook/feature.mensor.jsonc`:
+
+```json
+{
+  "version": 1,
+  "feature": {
+    "id": "guestbook"
+  },
+  "actions": [
+    {
+      "id": "guestbook.create",
+      "route": {
+        "method": "POST",
+        "path": "/guestbook"
+      },
+      "form": {
+        "template": "views/index.html",
+        "id": "create-entry",
+        "documentPath": "/guestbook"
+      },
+      "handler": {
+        "file": "server/create-entry.ts",
+        "export": "createEntry",
+        "role": "server"
+      },
+      "input": {
+        "schema": {
+          "kind": "object",
+          "properties": {
+            "author": {
+              "kind": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          "required": ["author"]
+        },
+        "formCodec": {
+          "encoding": "urlencoded",
+          "unknownFields": "reject",
+          "bindings": [
+            {
+              "name": "author",
+              "path": ["author"],
+              "decode": {
+                "kind": "text",
+                "trim": true,
+                "empty": "reject"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+`sourceRoot` and each `featureContracts` entry are project-root-relative.
+`fileRoles[].withinFeature`, action template paths, and handler files are
+relative to the directory containing that feature contract. The optional
+`$schema` property is only an editor hint; its path depends on the consumer's
+installation layout and is not required by Mensor.
+
+The feature contract declares only the POST action. The application may serve
+the GET page through its own framework or server; revision 1 has no GET page
+contract.
+
 ## Placement Slice
 
 `ProjectContract.fileRoles` maps role names to non-overlapping directories

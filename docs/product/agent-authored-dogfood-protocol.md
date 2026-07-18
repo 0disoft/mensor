@@ -4,6 +4,7 @@
 - Owner: Maintainer
 - External maintainer participation: Not planned
 - First brief: `internal/agent-runner/briefs/guestbook-v1.md`
+- Second brief: `internal/agent-runner/briefs/rsvp-v1.md`
 - First model cohort: `internal/agent-runner/cohorts/codex-subagents-v1.json`
 
 ## Purpose
@@ -39,6 +40,12 @@ The first maintained brief is `guestbook-v1`. It requests a dependency-free
 Node ESM guestbook with a static URL-encoded form, in-memory state, independent
 semantic tests, strict malformed-input handling, and HTML escaping. It does not
 reuse the existing task fixtures.
+
+The second maintained brief is `rsvp-v1`. It changes the domain and requires a
+three-control radio group to remain one scalar wire field. It probes whether an
+agent can apply the documented control-shape contract instead of copying the
+guestbook structure. Checkbox decoding remains outside the implemented codec
+boundary and is intentionally absent from this brief.
 
 ## Required Output
 
@@ -116,6 +123,15 @@ other trial workspaces, or inherited conversation. Prompt instructions alone
 do not prove that isolation. Such runs must not claim
 `sandboxed-workspace-only` merely because the subagent used a separate task.
 
+Exploratory runs use
+`agent-authored-build-exploratory-observation-v1.schema.json`. That observation
+records the baseline commit, exact adapter identity, brief digest, generated
+project-relative files, semantic result, and Mensor diagnostic codes. Its
+environment and claim level are fixed to `not-enforced` and `exploratory-only`.
+It cannot be relabeled as sandbox evidence, and it excludes prompt text, model
+response text, absolute paths, command output, environment values, and source
+content.
+
 ## Privacy and Security
 
 - Trial inputs are project-owned synthetic briefs, not third-party source.
@@ -143,6 +159,12 @@ workspace on every outcome.
 The adapter identity is part of the canonical result. This prevents results
 from different Codex runners, providers, model aliases, reasoning settings, or
 cohorts from being merged after the fact.
+
+The exploratory observation parser and serializer are separate from the
+sandbox trial evidence contracts. A successful exploratory observation proves
+only that the generated final state passed the two local oracles under the
+recorded baseline. It does not prove repository invisibility, network denial,
+credential containment, or trajectory compliance.
 
 `createNodeSemanticTestPort` runs one project-relative Node test file with a
 closed stdin, empty environment, timeout, and combined output limit. Its

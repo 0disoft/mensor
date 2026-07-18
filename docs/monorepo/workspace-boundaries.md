@@ -99,6 +99,11 @@ and SDKs remain adapter concerns. Adapter identity is canonical trial output:
 runner, provider, exact model, reasoning effort, and cohort must be supplied
 before mutable workspace state is created.
 
+Host-native subagent observations are a separate internal contract from Docker
+sandbox evidence. They may retain bounded final-state facts for product
+learning, but their fixed `exploratory-only` claim cannot satisfy public
+repair-rate, sandbox, network-denial, or repository-invisibility gates.
+
 ## Build Artifact Boundary
 
 Every workspace build removes known output directories before invoking the

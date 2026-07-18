@@ -25,6 +25,9 @@ const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const briefFile = fileURLToPath(
   new URL("../briefs/guestbook-v1.md", import.meta.url),
 );
+const rsvpBriefFile = fileURLToPath(
+  new URL("../briefs/rsvp-v1.md", import.meta.url),
+);
 const codexSubagentCohortFile = fileURLToPath(
   new URL("../cohorts/codex-subagents-v1.json", import.meta.url),
 );
@@ -236,6 +239,27 @@ test("the first brief is self-contained and forbids fixture copying", async () =
     assert.ok(brief.includes(heading));
   }
   assert.match(brief, /empty `project\/` directory/);
+  assert.match(brief, /Do not read or copy Mensor fixtures/);
+  assert.match(brief, /Both must pass/);
+});
+
+test("the second brief exercises one mutually exclusive radio field", async () => {
+  const brief = await readFile(rsvpBriefFile, "utf8");
+  for (const heading of [
+    "## Goal",
+    "## Product Behavior",
+    "## Mensor Contract",
+    "## Required Files",
+    "## Constraints",
+    "## Completion Evidence",
+  ]) {
+    assert.ok(brief.includes(heading));
+  }
+  assert.match(brief, /exact values `yes`, `no`, and `maybe`/);
+  assert.match(
+    brief,
+    /same-name radio controls as one mutually exclusive wire\s+field/,
+  );
   assert.match(brief, /Do not read or copy Mensor fixtures/);
   assert.match(brief, /Both must pass/);
 });

@@ -21,3 +21,6 @@ coverage/
 tmp/
 *.tsbuildinfo
 # <<< ssealed ignore patterns <<<
+
+# Project-owned exploratory outputs
+internal/agent-runner/trial-output/
