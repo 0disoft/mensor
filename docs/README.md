@@ -22,6 +22,8 @@
 - HonoX compatibility boundary: `docs/engineering/honox-compatibility-spike.md`
 - Local compiler performance baseline: `docs/engineering/compiler-performance-baseline.md`
 - Hono adoption cost report: `docs/product/hono-adoption-cost.md`
+- Current multi-project adoption cost report:
+  `docs/product/multi-project-adoption-cost.md`
 - SonicJS external adoption study: `docs/product/sonicjs-adoption-study.md`
 - External static HTML candidate search: `docs/product/external-static-html-candidate-search.md`
 - Agent-authored dogfood protocol: `docs/product/agent-authored-dogfood-protocol.md`

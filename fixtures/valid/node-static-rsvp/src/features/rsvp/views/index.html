@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>RSVP</title>
+  </head>
+  <body>
+    <main>
+      <h1>RSVP</h1>
+      <form id="rsvp-response" method="post" action="/rsvp">
+        <label>
+          Name
+          <input name="name" type="text" maxlength="80" required />
+        </label>
+        <label>
+          Email
+          <input name="email" type="email" maxlength="254" required />
+        </label>
+        <fieldset>
+          <legend>Attendance</legend>
+          <label><input name="attendance" type="radio" value="yes" required /> Yes</label>
+          <label><input name="attendance" type="radio" value="no" /> No</label>
+          <label><input name="attendance" type="radio" value="maybe" /> Maybe</label>
+        </fieldset>
+        <button type="submit">Respond</button>
+      </form>
+      <ul data-rsvp-responses>{{responses}}</ul>
+    </main>
+  </body>
+</html>

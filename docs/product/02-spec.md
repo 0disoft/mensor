@@ -305,16 +305,27 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 50. Replayable response observations bind the exact model response bytes. A
     semantic-oracle revision is a behavior migration: old green results must be
     replayed or downgraded, not silently carried forward under the new oracle.
+51. The local adoption pilot separates project-level fixed contract cost from
+    feature-level marginal contract cost across the maintained Hono task and
+    dependency-free Node RSVP applications. Both valid projects remain green,
+    both static field mutations produce the expected diagnostics, and both
+    application-only route mutations remain undetected. This repeated blind
+    spot opens the design gate for a serialized `RouteIndex`; it does not
+    authorize framework execution, a generic plugin API, or a framework-specific
+    extractor.
 
 ## Next Product Validation Gate
 
-The next milestone is agent-authored dogfood, not external maintainer
-recruitment and not another evidence layer. Give a coding agent a fresh empty
-workspace, a versioned application brief, maintained Mensor documentation, and
-the bounded check commands. The agent must build the application and contracts
-without reading or copying existing Mensor fixtures, evaluator-owned semantic
-oracles, or third-party application source. The evaluator supplies and runs the
-semantic oracle independently after generation.
+The next milestone has two evidence-backed slices: repeat agent-authored
+dogfood with the second `rsvp-v1` application shape, and design the narrow
+serialized `RouteIndex` opened by the two-project route-drift result. External
+maintainer recruitment and another agent attestation layer remain out of
+scope. A coding agent receives a fresh empty workspace, a versioned application
+brief, maintained Mensor documentation, and bounded check commands. It must
+build the application and contracts without reading or copying existing Mensor
+fixtures, evaluator-owned semantic oracles, or third-party application source.
+The evaluator supplies and runs the semantic oracle independently after
+generation.
 
 `docs/product/agent-authored-dogfood-protocol.md` owns the input, output,
 evaluation, privacy, security, and stop rules. These trials measure whether an
@@ -346,6 +357,12 @@ dynamic template compatibility or authorize an external extractor.
 The private `FormIndex` types, validator, canonical serializer/parser, source
 digest and range binding, built-in provider, and semantic translator remain
 compiler internals. They are not public exports or CLI inputs.
+
+`docs/product/multi-project-adoption-cost.md` owns the current authoring-cost
+and route-drift evidence. The project-contract fixed cost is measured separately
+from each feature contract. Two valid maintained projects have zero observed
+diagnostics, but that count is not a false-positive rate or external adoption
+claim.
 
 Compiler performance claims remain local engineering baselines until the
 agent-authored corpus includes representative project shapes. Performance

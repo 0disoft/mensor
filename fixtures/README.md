@@ -12,6 +12,9 @@ files, and canonical expected report needed for one behavior.
 - `valid/hono-static-tasks`: a runnable Hono application that keeps form markup
   in static HTML, passes the same compiler contract, and exercises GET and POST
   routes through Hono's in-process request API
+- `valid/node-static-rsvp`: a dependency-free Node Request/Response application
+  with a three-control radio group, strict URL-encoded decoding, and semantic
+  checks for malformed input and escaped output
 - `invalid/file-role-mismatch`: an action handler discovered in the route slot
   while its contract requires the server role
 - `invalid/form-field-missing`: the same action with its required `title`

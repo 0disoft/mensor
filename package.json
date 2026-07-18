@@ -1,6 +1,6 @@
 {
   "name": "mensor-workspace",
-  "version": "0.0.58",
+  "version": "0.0.59",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.11.0",
@@ -14,7 +14,7 @@
     "lint": "pnpm run check:structure",
     "typecheck": "tsc6 -b --pretty false",
     "build": "node scripts/clean-build-output.mjs && tsc6 -b --pretty false",
-    "test": "pnpm run build && node --test packages/contract/test/*.test.mjs packages/compiler/test/*.test.mjs packages/cli/test/*.test.mjs internal/fixture-kit/test/*.test.mjs internal/agent-runner/test/*.test.mjs examples/dogfood-tasks/test/*.test.mjs fixtures/valid/hono-static-tasks/test/*.test.mjs",
+    "test": "pnpm run build && node --test packages/contract/test/*.test.mjs packages/compiler/test/*.test.mjs packages/cli/test/*.test.mjs internal/fixture-kit/test/*.test.mjs internal/agent-runner/test/*.test.mjs examples/dogfood-tasks/test/*.test.mjs fixtures/valid/hono-static-tasks/test/*.test.mjs fixtures/valid/node-static-rsvp/test/*.test.mjs",
     "contract": "pnpm run build && node scripts/validate-contract-fixtures.mjs",
     "migration-check": "pnpm run build && node scripts/check-schema-revisions.mjs",
     "smoke": "pnpm run build && node scripts/smoke-contract.mjs",

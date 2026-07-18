@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../packages/contract/spec/feature-contract-v1.schema.json",
+  "version": 1,
+  "feature": { "id": "rsvp" },
+  "actions": [
+    {
+      "id": "rsvp.respond",
+      "route": { "method": "POST", "path": "/rsvp" },
+      "form": {
+        "template": "views/index.html",
+        "id": "rsvp-response",
+        "documentPath": "/rsvp"
+      },
+      "handler": {
+        "file": "server/create-rsvp.mjs",
+        "export": "createRsvp",
+        "role": "server"
+      },
+      "input": {
+        "schema": {
+          "kind": "object",
+          "properties": {
+            "name": { "kind": "string", "minLength": 1, "maxLength": 80 },
+            "email": { "kind": "string", "minLength": 1, "maxLength": 254 },
+            "attendance": { "kind": "string", "minLength": 1, "maxLength": 5 }
+          },
+          "required": ["name", "email", "attendance"]
+        },
+        "formCodec": {
+          "encoding": "urlencoded",
+          "unknownFields": "reject",
+          "bindings": [
+            {
+              "name": "name",
+              "path": ["name"],
+              "decode": { "kind": "text", "trim": true, "empty": "reject" }
+            },
+            {
+              "name": "email",
+              "path": ["email"],
+              "decode": { "kind": "text", "trim": true, "empty": "reject" }
+            },
+            {
+              "name": "attendance",
+              "path": ["attendance"],
+              "decode": { "kind": "text", "trim": true, "empty": "reject" }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

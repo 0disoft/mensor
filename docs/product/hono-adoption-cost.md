@@ -5,6 +5,10 @@
 - Target: `fixtures/valid/hono-static-tasks`
 - Measurement command: `pnpm run adoption`
 
+This one-fixture report is retained as historical evidence. The current
+cross-project decision is owned by
+[`multi-project-adoption-cost.md`](multi-project-adoption-cost.md).
+
 ## Decision
 
 The current static HTML boundary can check a runnable Hono application without
@@ -84,7 +88,8 @@ integration, not execution of Hono configuration or application modules.
 4. Preserve semantic application tests because the compiler does not yet own
    framework route facts.
 5. Explore a narrow serialized `RouteIndex` only after a second application
-   reproduces the route-drift problem.
+   reproduces the route-drift problem. That condition was later met by the
+   maintained Node RSVP pilot.
 6. Do not report a false-positive rate until the corpus contains multiple
    independently authored valid projects.
 

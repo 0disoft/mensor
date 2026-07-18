@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "producer": {
+    "name": "mensor",
+    "version": "0.0.0-rsvp-pilot"
+  },
+  "status": "passed",
+  "diagnostics": [],
+  "summary": {
+    "errorCount": 0,
+    "warningCount": 0
+  }
+}

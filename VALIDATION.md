@@ -71,10 +71,12 @@ measurement path with only 1,000 source files. Full scale measurement remains an
 explicit `performance` command so ordinary validation does not absorb volatile
 10,000-file timing cost.
 
-`adoption` measures contract and application line counts for the runnable Hono
-fixture, checks one form-field drift and one framework-route drift, and reports
-local diagnostic latency samples. It is a one-fixture adoption probe, not a
-framework support matrix, false-positive rate, or external-user study.
+`adoption` measures project-level fixed contract cost, feature-level marginal
+contract cost, and application line counts across the runnable Hono task and
+dependency-free Node RSVP fixtures. It checks one form-field drift and one
+application-route drift per target and reports local diagnostic latency samples.
+It is a maintained two-fixture probe, not a framework support matrix,
+false-positive rate, or external-user study.
 
 `docker-integration` builds the private runner, explicitly preloads one
 digest-pinned public probe image when absent, and exercises success, timeout,
