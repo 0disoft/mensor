@@ -256,7 +256,7 @@ function validIndex() {
     schemaVersion: 1,
     producer: {
       name: "mensor/static-html",
-      version: "0.0.56",
+      version: "0.0.57",
     },
     documents: [
       {

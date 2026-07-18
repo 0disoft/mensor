@@ -18,6 +18,15 @@ export interface AgentAuthoredBuildExploratoryObservationInput {
     readonly revision: string;
     readonly sha256: string;
   };
+  readonly outputTransport: {
+    readonly id: string;
+    readonly revision: string;
+    readonly sha256: string;
+  };
+  readonly artifact: {
+    readonly completed: boolean;
+    readonly accepted: boolean;
+  };
   readonly semanticTest: {
     readonly completed: boolean;
     readonly passed: boolean;
@@ -27,7 +36,7 @@ export interface AgentAuthoredBuildExploratoryObservationInput {
 }
 
 export interface AgentAuthoredBuildExploratoryObservation {
-  readonly schemaVersion: 2;
+  readonly schemaVersion: 3;
   readonly kind: "agent-authored-build-exploratory-observation";
   readonly observationId: string;
   readonly producerVersion: string;
@@ -43,13 +52,21 @@ export interface AgentAuthoredBuildExploratoryObservation {
     readonly revision: string;
     readonly sha256: string;
   };
+  readonly outputTransport: {
+    readonly id: string;
+    readonly revision: string;
+    readonly sha256: string;
+  };
   readonly environment: {
     readonly workspaceIsolation: "prompt-restricted-not-enforced";
     readonly repositoryVisibility: "not-enforced";
     readonly networkControl: "not-enforced";
+    readonly toolControl: "not-enforced";
     readonly conversationInheritance: "none-declared";
   };
   readonly finalState: {
+    readonly artifactCompleted: boolean;
+    readonly artifactAccepted: boolean;
     readonly semanticTestCompleted: boolean;
     readonly semanticTestsPassed: boolean;
     readonly mensorCheckCompleted: boolean;
@@ -64,6 +81,17 @@ export interface AgentAuthoredBuildExploratoryObservation {
 export function createAgentAuthoredBuildExploratoryObservation(
   input: AgentAuthoredBuildExploratoryObservationInput,
 ): AgentAuthoredBuildExploratoryObservation {
+  const artifactCompleted = requireBoolean(
+    input.artifact.completed,
+    "artifact.completed",
+  );
+  const artifactAccepted = requireBoolean(
+    input.artifact.accepted,
+    "artifact.accepted",
+  );
+  if (!artifactCompleted && artifactAccepted) {
+    throw new Error("An incomplete response artifact cannot be accepted.");
+  }
   const semanticTestCompleted = requireBoolean(
     input.semanticTest.completed,
     "semanticTest.completed",
@@ -93,9 +121,21 @@ export function createAgentAuthoredBuildExploratoryObservation(
     throw new Error("Mensor check pass state must match diagnostic codes.");
   }
   const generatedFiles = canonicalGeneratedFiles(input.generatedFiles);
+  if (
+    !artifactAccepted
+    && (
+      semanticTestCompleted
+      || mensorCheckCompleted
+      || generatedFiles.length > 0
+    )
+  ) {
+    throw new Error(
+      "A rejected response artifact cannot produce evaluated project state.",
+    );
+  }
   const identity = validateIdentity(input.identity);
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     kind: "agent-authored-build-exploratory-observation",
     observationId: requireIdentifier(input.observationId, "observationId"),
     producerVersion: requireIdentifier(input.producerVersion, "producerVersion"),
@@ -117,13 +157,27 @@ export function createAgentAuthoredBuildExploratoryObservation(
         "semanticOracle.sha256",
       ),
     },
+    outputTransport: {
+      id: requireIdentifier(input.outputTransport.id, "outputTransport.id"),
+      revision: requireIdentifier(
+        input.outputTransport.revision,
+        "outputTransport.revision",
+      ),
+      sha256: requireDigest(
+        input.outputTransport.sha256,
+        "outputTransport.sha256",
+      ),
+    },
     environment: {
       workspaceIsolation: "prompt-restricted-not-enforced",
       repositoryVisibility: "not-enforced",
       networkControl: "not-enforced",
+      toolControl: "not-enforced",
       conversationInheritance: "none-declared",
     },
     finalState: {
+      artifactCompleted,
+      artifactAccepted,
       semanticTestCompleted,
       semanticTestsPassed,
       mensorCheckCompleted,
@@ -131,7 +185,9 @@ export function createAgentAuthoredBuildExploratoryObservation(
       diagnosticCodes,
       generatedFiles,
     },
-    success: semanticTestCompleted
+    success: artifactCompleted
+      && artifactAccepted
+      && semanticTestCompleted
       && semanticTestsPassed
       && mensorCheckCompleted
       && mensorCheckPassed,
@@ -154,6 +210,7 @@ export function validateAgentAuthoredBuildExploratoryObservation(
       "identity",
       "brief",
       "semanticOracle",
+      "outputTransport",
       "environment",
       "finalState",
       "success",
@@ -162,7 +219,7 @@ export function validateAgentAuthoredBuildExploratoryObservation(
     "observation",
   );
   if (
-    observation["schemaVersion"] !== 2
+    observation["schemaVersion"] !== 3
     || observation["kind"] !== "agent-authored-build-exploratory-observation"
     || observation["claimLevel"] !== "exploratory-only"
   ) {
@@ -179,6 +236,15 @@ export function validateAgentAuthoredBuildExploratoryObservation(
     ["id", "revision", "sha256"],
     "semanticOracle",
   );
+  const outputTransport = requireRecord(
+    observation["outputTransport"],
+    "outputTransport",
+  );
+  requireExactKeys(
+    outputTransport,
+    ["id", "revision", "sha256"],
+    "outputTransport",
+  );
   const environment = requireRecord(observation["environment"], "environment");
   requireExactKeys(
     environment,
@@ -186,6 +252,7 @@ export function validateAgentAuthoredBuildExploratoryObservation(
       "workspaceIsolation",
       "repositoryVisibility",
       "networkControl",
+      "toolControl",
       "conversationInheritance",
     ],
     "environment",
@@ -194,6 +261,7 @@ export function validateAgentAuthoredBuildExploratoryObservation(
     environment["workspaceIsolation"] !== "prompt-restricted-not-enforced"
     || environment["repositoryVisibility"] !== "not-enforced"
     || environment["networkControl"] !== "not-enforced"
+    || environment["toolControl"] !== "not-enforced"
     || environment["conversationInheritance"] !== "none-declared"
   ) {
     throw new Error("Exploratory observation environment claims are fixed.");
@@ -202,6 +270,8 @@ export function validateAgentAuthoredBuildExploratoryObservation(
   requireExactKeys(
     finalState,
     [
+      "artifactCompleted",
+      "artifactAccepted",
       "semanticTestCompleted",
       "semanticTestsPassed",
       "mensorCheckCompleted",
@@ -230,6 +300,27 @@ export function validateAgentAuthoredBuildExploratoryObservation(
       sha256: requireString(
         semanticOracle["sha256"],
         "semanticOracle.sha256",
+      ),
+    },
+    outputTransport: {
+      id: requireString(outputTransport["id"], "outputTransport.id"),
+      revision: requireString(
+        outputTransport["revision"],
+        "outputTransport.revision",
+      ),
+      sha256: requireString(
+        outputTransport["sha256"],
+        "outputTransport.sha256",
+      ),
+    },
+    artifact: {
+      completed: requireBoolean(
+        finalState["artifactCompleted"],
+        "artifactCompleted",
+      ),
+      accepted: requireBoolean(
+        finalState["artifactAccepted"],
+        "artifactAccepted",
       ),
     },
     semanticTest: {

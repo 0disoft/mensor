@@ -154,15 +154,19 @@ other trial workspaces, or inherited conversation. Prompt instructions alone
 do not prove that isolation. Such runs must not claim
 `sandboxed-workspace-only` merely because the subagent used a separate task.
 
-Exploratory runs use
-`agent-authored-build-exploratory-observation-v2.schema.json`. That observation
-records the baseline commit, exact adapter identity, brief and semantic-oracle
-digests, generated project-relative files, semantic result, and Mensor
-diagnostic codes. Its
+Exploratory response-artifact runs use
+`agent-authored-build-exploratory-observation-v3.schema.json`. That observation
+records the baseline commit, exact adapter identity, brief, semantic-oracle,
+and output-transport digests, artifact acceptance, generated project-relative
+files, semantic result, and Mensor diagnostic codes. Its
 environment and claim level are fixed to `not-enforced` and `exploratory-only`.
 It cannot be relabeled as sandbox evidence, and it excludes prompt text, model
 response text, absolute paths, command output, environment values, and source
 content.
+
+Version 2 remains the immutable historical schema for direct-workspace runs.
+It does not bind an output transport or artifact-acceptance gate and must not be
+used for the response-only cohort.
 
 ## Privacy and Security
 

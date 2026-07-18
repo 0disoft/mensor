@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-authored-build-exploratory-observation-v3.schema.json",
+  "title": "Mensor Agent-Authored Build Exploratory Observation v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "observationId",
+    "producerVersion",
+    "baselineCommit",
+    "identity",
+    "brief",
+    "semanticOracle",
+    "outputTransport",
+    "environment",
+    "finalState",
+    "success",
+    "claimLevel"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 3
+    },
+    "kind": {
+      "const": "agent-authored-build-exploratory-observation"
+    },
+    "observationId": {
+      "$ref": "#/$defs/identifier"
+    },
+    "producerVersion": {
+      "$ref": "#/$defs/identifier"
+    },
+    "baselineCommit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runnerId",
+        "providerId",
+        "modelId",
+        "reasoningEffort",
+        "cohortId"
+      ],
+      "properties": {
+        "runnerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "providerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "modelId": {
+          "$ref": "#/$defs/modelId"
+        },
+        "reasoningEffort": {
+          "enum": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ]
+        },
+        "cohortId": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "revision": {
+          "$ref": "#/$defs/identifier"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "semanticOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "revision": {
+          "$ref": "#/$defs/identifier"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "outputTransport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "revision": {
+          "$ref": "#/$defs/identifier"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspaceIsolation",
+        "repositoryVisibility",
+        "networkControl",
+        "toolControl",
+        "conversationInheritance"
+      ],
+      "properties": {
+        "workspaceIsolation": {
+          "const": "prompt-restricted-not-enforced"
+        },
+        "repositoryVisibility": {
+          "const": "not-enforced"
+        },
+        "networkControl": {
+          "const": "not-enforced"
+        },
+        "conversationInheritance": {
+          "const": "none-declared"
+        },
+        "toolControl": {
+          "const": "not-enforced"
+        }
+      }
+    },
+    "finalState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactCompleted",
+        "artifactAccepted",
+        "semanticTestCompleted",
+        "semanticTestsPassed",
+        "mensorCheckCompleted",
+        "mensorCheckPassed",
+        "diagnosticCodes",
+        "generatedFiles"
+      ],
+      "properties": {
+        "artifactCompleted": {
+          "type": "boolean"
+        },
+        "artifactAccepted": {
+          "type": "boolean"
+        },
+        "semanticTestCompleted": {
+          "type": "boolean"
+        },
+        "semanticTestsPassed": {
+          "type": "boolean"
+        },
+        "mensorCheckCompleted": {
+          "type": "boolean"
+        },
+        "mensorCheckPassed": {
+          "type": "boolean"
+        },
+        "diagnosticCodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$"
+          }
+        },
+        "generatedFiles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/projectPath"
+          }
+        }
+      }
+    },
+    "success": {
+      "type": "boolean"
+    },
+    "claimLevel": {
+      "const": "exploratory-only"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "modelId": {
+      "type": "string",
+      "maxLength": 255,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "projectPath": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//).+$"
+    }
+  }
+}

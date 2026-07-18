@@ -298,6 +298,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     response artifact. The evaluator validates the complete JSON file map and
     materializes it into a real empty project root; model-authored filesystem
     operations are not the trusted write boundary.
+49. Exploratory response observations bind the application brief, semantic
+    oracle, and output transport digests. They record artifact acceptance as a
+    separate final-state gate and fix tool control to `not-enforced` when the
+    host exposes tools despite a prompt-only prohibition.
 
 ## Next Product Validation Gate
 

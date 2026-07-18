@@ -26,6 +26,7 @@
 - External static HTML candidate search: `docs/product/external-static-html-candidate-search.md`
 - Agent-authored dogfood protocol: `docs/product/agent-authored-dogfood-protocol.md`
 - First Codex subagent run report: `docs/product/agent-authored-dogfood-run-2026-07-18.md`
+- Response-artifact subagent run report: `docs/product/agent-authored-response-run-2026-07-18.md`
 - First agent-authored brief: `../internal/agent-runner/briefs/guestbook-v1.md`
 - Evaluator-owned guestbook brief: `../internal/agent-runner/briefs/guestbook-v2.md`
 - Guestbook semantic oracle: `../internal/agent-runner/oracles/guestbook-v2.test.mjs`
@@ -35,7 +36,8 @@
 - Response-only subagent cohort: `../internal/agent-runner/cohorts/codex-subagents-response-v1.json`
 - Response artifact transport: `../internal/agent-runner/briefs/response-artifact-v1.md`
 - Response artifact schema: `../internal/agent-runner/spec/agent-authored-project-artifact-v1.schema.json`
-- Exploratory subagent observation schema: `../internal/agent-runner/spec/agent-authored-build-exploratory-observation-v2.schema.json`
+- Exploratory subagent observation schema: `../internal/agent-runner/spec/agent-authored-build-exploratory-observation-v3.schema.json`
+- Response-artifact observations: `../internal/agent-runner/observations/codex-subagents-response-v1/`
 - FormIndex v0 design: `docs/architecture/form-index-v0.md`
 - FormIndex boundary decision: `docs/adr/0030-form-index-is-the-template-fact-boundary.md`
 - Evaluator-owned semantic oracle decision: `docs/adr/0031-semantic-oracles-are-evaluator-owned.md`
