@@ -17,6 +17,29 @@ JSON that a person, CI job, or coding agent can act on.
 The diagnostic-first MVP is implemented and exercised by canonical fixtures.
 No package has been published and no compatibility promise exists yet.
 
+## Local Source Preview
+
+The current preview runs from a source checkout with Node.js 22 or newer and
+pnpm 11:
+
+```text
+pnpm install --frozen-lockfile
+pnpm build
+pnpm mensor check fixtures/valid/tiny-tasks --json
+```
+
+The last command exits `0` and prints one canonical JSON report with
+`"status": "passed"`. To inspect a deterministic contract failure, run:
+
+```text
+pnpm mensor check fixtures/invalid/form-field-missing --json
+```
+
+That command exits `1` and reports `form.field_missing`. The complete project
+and feature contract authoring example lives in
+[`packages/contract/spec/README.md`](packages/contract/spec/README.md). This is
+a repository preview, not a published-package installation guide.
+
 ## First Proof
 
 The current proof:

@@ -44,6 +44,8 @@
   `../internal/agent-runner/cohorts/codex-subagents-rsvp-response-v1.json`
 - Repeated RSVP response run:
   `product/agent-authored-rsvp-response-run-2026-07-18.md`
+- 0.1.0 release-candidate audit:
+  `product/0.1.0-release-candidate-audit.md`
 - Response artifact transport: `../internal/agent-runner/briefs/response-artifact-v1.md`
 - Response artifact schema: `../internal/agent-runner/spec/agent-authored-project-artifact-v1.schema.json`
 - Exploratory subagent observation schema: `../internal/agent-runner/spec/agent-authored-build-exploratory-observation-v4.schema.json`

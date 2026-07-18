@@ -322,16 +322,17 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 
 ## Next Product Validation Gate
 
-The repeated evaluator-owned `rsvp-v2` response run is complete. Its two
-materialized, Mensor-clean projects both failed the independent semantic oracle,
-which confirms that runtime application tests remain a separate required gate.
-The next milestone is a release-candidate audit of the packaged first-contract
-journey, public limitations, and migration/version surfaces. The narrow
-RouteIndex slice returns to product validation only when a real consumer needs
-an index producer. External maintainer recruitment and another agent
-attestation layer remain out of scope. Future coding-agent trials must continue
-to receive a fresh application brief and maintained public documentation
-without access to existing fixtures or evaluator-owned semantic oracles.
+The repeated evaluator-owned `rsvp-v2` response run and the `0.1.0`
+release-candidate audit are complete. Runtime application tests remain a
+separate required gate even when Mensor passes. Publication is blocked on
+maintainer-owned name, license, package-scope, security-contact, and publishing
+decisions recorded in
+`docs/product/0.1.0-release-candidate-audit.md`; more compiler behavior does not
+resolve those blockers. The narrow RouteIndex slice returns to product
+validation only when a real consumer needs an index producer. External
+maintainer recruitment and another agent attestation layer remain out of scope.
+Future coding-agent trials must continue to use fresh briefs and evaluator-owned
+semantic oracles without access to existing fixtures.
 
 `docs/product/agent-authored-dogfood-protocol.md` owns the input, output,
 evaluation, privacy, security, and stop rules. These trials measure whether an
