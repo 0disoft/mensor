@@ -36,6 +36,18 @@ const responseOracleFile = fileURLToPath(new URL(
   "../oracles/guestbook-v3.test.mjs",
   import.meta.url,
 ));
+const rsvpObservationRoot = fileURLToPath(new URL(
+  "../observations/codex-subagents-rsvp-response-v1/",
+  import.meta.url,
+));
+const rsvpBriefFile = fileURLToPath(new URL(
+  "../briefs/rsvp-v2.md",
+  import.meta.url,
+));
+const rsvpOracleFile = fileURLToPath(new URL(
+  "../oracles/rsvp-v2.test.mjs",
+  import.meta.url,
+));
 
 test("creates a bounded exploratory-only observation", async () => {
   const observation = createObservation();
@@ -158,6 +170,83 @@ test("keeps response-cohort observations canonical and exploratory", async () =>
     && observation.finalState.mensorCheckPassed
     && observation.finalState.artifactResponseSha256 !== null
   ));
+});
+
+test("keeps every repeated RSVP response trial separate and canonical", async () => {
+  const files = (await readdir(rsvpObservationRoot)).sort();
+  assert.deepEqual(files, [
+    "deepseek-v4-flash-trial-1.json",
+    "deepseek-v4-flash-trial-2.json",
+    "deepseek-v4-flash-trial-3.json",
+    "glm-5.2-trial-1.json",
+    "glm-5.2-trial-2.json",
+    "glm-5.2-trial-3.json",
+    "kimi-k2.7-trial-1.json",
+    "kimi-k2.7-trial-2.json",
+    "kimi-k2.7-trial-3.json",
+    "minimax-m3-trial-1.json",
+    "minimax-m3-trial-2.json",
+    "minimax-m3-trial-3.json",
+  ]);
+  const observations = await Promise.all(files.map(async (file) => {
+    const serialized = await readFile(path.join(rsvpObservationRoot, file), "utf8");
+    const observation = parseAgentAuthoredBuildExploratoryObservation(serialized);
+    assert.equal(
+      serializeAgentAuthoredBuildExploratoryObservation(observation),
+      serialized,
+    );
+    return observation;
+  }));
+  const [briefSha256, transportSha256, oracleSha256] = await Promise.all([
+    digestFile(rsvpBriefFile),
+    digestFile(responseTransportFile),
+    digestFile(rsvpOracleFile),
+  ]);
+  assert.ok(observations.every((observation) =>
+    observation.baselineCommit === "f4046e0f2f11f6f18df0aeb2998f45208d5dc2aa"
+    && observation.identity.cohortId === "codex-subagents-rsvp-response-v1"
+    && observation.claimLevel === "exploratory-only"
+    && observation.environment.toolControl === "not-enforced"
+    && observation.brief.sha256 === briefSha256
+    && observation.outputTransport.sha256 === transportSha256
+    && observation.semanticOracle.sha256 === oracleSha256
+  ));
+
+  const byModel = new Map();
+  for (const observation of observations) {
+    const modelTrials = byModel.get(observation.identity.modelId) ?? [];
+    modelTrials.push(observation);
+    byModel.set(observation.identity.modelId, modelTrials);
+  }
+  assert.deepEqual([...byModel.keys()].sort(), [
+    "opencode-go/deepseek-v4-flash",
+    "opencode-go/minimax-m3",
+    "umans/umans-glm-5.2",
+    "umans/umans-kimi-k2.7",
+  ]);
+  assert.ok([...byModel.values()].every((trials) => trials.length === 3));
+  assert.deepEqual(
+    byModel.get("umans/umans-kimi-k2.7").map((observation) => ({
+      completed: observation.finalState.artifactCompleted,
+      accepted: observation.finalState.artifactAccepted,
+      semantic: observation.finalState.semanticTestsPassed,
+      mensor: observation.finalState.mensorCheckPassed,
+      success: observation.success,
+    })),
+    [
+      { completed: true, accepted: true, semantic: false, mensor: true, success: false },
+      { completed: true, accepted: false, semantic: false, mensor: false, success: false },
+      { completed: true, accepted: true, semantic: false, mensor: true, success: false },
+    ],
+  );
+  assert.ok(observations
+    .filter(({ identity }) => identity.modelId !== "umans/umans-kimi-k2.7")
+    .every((observation) =>
+      !observation.finalState.artifactCompleted
+      && observation.finalState.artifactResponseSha256 === null
+      && observation.finalState.generatedFiles.length === 0
+      && !observation.success
+    ));
 });
 
 function createObservation(overrides = {}) {

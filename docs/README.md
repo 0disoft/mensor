@@ -42,6 +42,8 @@
 - Corrected response replay cohort: `../internal/agent-runner/cohorts/codex-subagents-response-v1-oracle-v3-replay.json`
 - Repeated RSVP response cohort:
   `../internal/agent-runner/cohorts/codex-subagents-rsvp-response-v1.json`
+- Repeated RSVP response run:
+  `product/agent-authored-rsvp-response-run-2026-07-18.md`
 - Response artifact transport: `../internal/agent-runner/briefs/response-artifact-v1.md`
 - Response artifact schema: `../internal/agent-runner/spec/agent-authored-project-artifact-v1.schema.json`
 - Exploratory subagent observation schema: `../internal/agent-runner/spec/agent-authored-build-exploratory-observation-v4.schema.json`

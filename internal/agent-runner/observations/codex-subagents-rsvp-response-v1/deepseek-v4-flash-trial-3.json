@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 4,
+  "kind": "agent-authored-build-exploratory-observation",
+  "observationId": "rsvp-response.deepseek-v4-flash.3",
+  "producerVersion": "0.1.0",
+  "baselineCommit": "f4046e0f2f11f6f18df0aeb2998f45208d5dc2aa",
+  "identity": {
+    "runnerId": "codex-subagent",
+    "providerId": "opencode-go",
+    "modelId": "opencode-go/deepseek-v4-flash",
+    "reasoningEffort": "high",
+    "cohortId": "codex-subagents-rsvp-response-v1"
+  },
+  "brief": {
+    "id": "rsvp",
+    "revision": "v2",
+    "sha256": "d8e275f1cdfb98cc3532731defd7371ead26dbb931455f7297364a9f45162cb1"
+  },
+  "semanticOracle": {
+    "id": "rsvp-semantic-oracle",
+    "revision": "v2",
+    "sha256": "d3bcc766ce3cff6d79326c8aa805f7e09643d403d771b9e029ac0e86db3f5ef4"
+  },
+  "outputTransport": {
+    "id": "response-artifact",
+    "revision": "v1",
+    "sha256": "df2a08425eeeadb4268d3b5de6d1fac8d0f76ee5840b970665c9a178a38db491"
+  },
+  "environment": {
+    "workspaceIsolation": "prompt-restricted-not-enforced",
+    "repositoryVisibility": "not-enforced",
+    "networkControl": "not-enforced",
+    "toolControl": "not-enforced",
+    "conversationInheritance": "none-declared"
+  },
+  "finalState": {
+    "artifactCompleted": false,
+    "artifactAccepted": false,
+    "artifactResponseSha256": null,
+    "semanticTestCompleted": false,
+    "semanticTestsPassed": false,
+    "mensorCheckCompleted": false,
+    "mensorCheckPassed": false,
+    "diagnosticCodes": [],
+    "generatedFiles": []
+  },
+  "success": false,
+  "claimLevel": "exploratory-only"
+}

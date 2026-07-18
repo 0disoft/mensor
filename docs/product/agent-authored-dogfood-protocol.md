@@ -1,6 +1,6 @@
 # Agent-Authored Dogfood Protocol
 
-- Status: Guestbook exploratory run complete; RSVP repeated response run pending
+- Status: Guestbook and RSVP exploratory response runs complete
 - Owner: Maintainer
 - External maintainer participation: Not planned
 - Current brief: `internal/agent-runner/briefs/rsvp-v2.md`
@@ -15,6 +15,8 @@
 - Corrected replay cohort: `internal/agent-runner/cohorts/codex-subagents-response-v1-oracle-v3-replay.json`
 - Current RSVP response cohort:
   `internal/agent-runner/cohorts/codex-subagents-rsvp-response-v1.json`
+- Current RSVP response run:
+  `docs/product/agent-authored-rsvp-response-run-2026-07-18.md`
 
 ## Purpose
 
@@ -170,7 +172,7 @@ It cannot be relabeled as sandbox evidence, and it excludes prompt text, model
 response text, absolute paths, command output, environment values, and source
 content.
 
-The RSVP response cohort runs three fresh trials per requested model. Each
+The RSVP response cohort ran three fresh slots per requested model. Each
 trial remains separate. A model unavailable from the current host is recorded
 three times as unavailable and is not replaced. Cross-trial summaries may state
 `any-trial-pass` and `all-trials-pass`; they must not turn the available subset
