@@ -290,15 +290,20 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     schema fixes all isolation claims to not enforced and retains only baseline
     commit, model identity, brief digest, generated paths, semantic outcome,
     and Mensor diagnostic codes.
+47. Agent-authored tests cannot certify agent-authored behavior. The current
+    guestbook trial copies a versioned semantic oracle into protected input,
+    records its digest, and runs it against the required `src/app.mjs`
+    Request/Response interface after generation.
 
 ## Next Product Validation Gate
 
 The next milestone is agent-authored dogfood, not external maintainer
 recruitment and not another evidence layer. Give a coding agent a fresh empty
 workspace, a versioned application brief, maintained Mensor documentation, and
-the bounded check and semantic-test commands. The agent must build the
-application, contracts, and independent semantic tests without reading or
-copying existing Mensor fixtures or third-party application source.
+the bounded check commands. The agent must build the application and contracts
+without reading or copying existing Mensor fixtures, evaluator-owned semantic
+oracles, or third-party application source. The evaluator supplies and runs the
+semantic oracle independently after generation.
 
 `docs/product/agent-authored-dogfood-protocol.md` owns the input, output,
 evaluation, privacy, security, and stop rules. These trials measure whether an
@@ -306,11 +311,12 @@ agent can learn and apply Mensor from its documented contract. They do not
 claim external adoption, human authoring ergonomics, market demand, or general
 framework compatibility.
 
-The first local vertical slice uses the versioned `guestbook-v1` brief, an
-injected fake agent, a process-only Node semantic-test port, and the real Mensor
-compiler port. It proves harness control flow and oracle separation, not model
-quality, provider compatibility, network isolation, or sandbox enforcement.
-The first provider-backed cohort is versioned as `codex-subagents-v1`. A
+The maintained local vertical slice uses the versioned `guestbook-v2` brief,
+an injected fake agent, a protected process-only Node semantic-oracle port, and
+the real Mensor compiler port. It proves harness control flow and oracle
+separation, not model quality, provider compatibility, network isolation, or
+sandbox enforcement. The current provider-backed cohort is versioned as
+`codex-subagents-v2`; version 1 is retained as historical protocol evidence. A
 host-native subagent run remains exploratory until workspace and repository
 visibility are enforced rather than requested only through prompt text.
 

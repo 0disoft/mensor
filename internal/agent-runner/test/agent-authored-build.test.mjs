@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   mkdtemp,
+  mkdir,
   readFile,
   readdir,
   rm,
@@ -14,7 +16,7 @@ import { fileURLToPath } from "node:url";
 
 import { checkProject } from "../../../packages/compiler/dist/src/index.js";
 import {
-  createNodeSemanticTestPort,
+  createProtectedNodeSemanticTestPort,
   runAgentAuthoredBuildTrial,
 } from "../dist/src/index.js";
 import {
@@ -28,8 +30,17 @@ const briefFile = fileURLToPath(
 const rsvpBriefFile = fileURLToPath(
   new URL("../briefs/rsvp-v1.md", import.meta.url),
 );
+const guestbookV2BriefFile = fileURLToPath(
+  new URL("../briefs/guestbook-v2.md", import.meta.url),
+);
+const guestbookV2OracleFile = fileURLToPath(
+  new URL("../oracles/guestbook-v2.test.mjs", import.meta.url),
+);
 const codexSubagentCohortFile = fileURLToPath(
   new URL("../cohorts/codex-subagents-v1.json", import.meta.url),
+);
+const codexSubagentCohortV2File = fileURLToPath(
+  new URL("../cohorts/codex-subagents-v2.json", import.meta.url),
 );
 const fakeAdapterIdentity = Object.freeze({
   runnerId: "fixture-agent",
@@ -62,6 +73,15 @@ test("runs a complete agent-authored build trial in a fresh workspace", async ()
 
     assert.equal(result.success, true);
     assert.equal(result.failureCategory, null);
+    assert.deepEqual(result.semanticOracle, {
+      id: "guestbook-semantic-oracle",
+      revision: "v2",
+      sha256: (await source(
+        "guestbook-semantic-oracle",
+        "v2",
+        guestbookV2OracleFile,
+      )).sha256,
+    });
     assert.deepEqual(result.adapter, {
       identity: fakeAdapterIdentity,
       isolation: "injected-test",
@@ -76,6 +96,30 @@ test("runs a complete agent-authored build trial in a fresh workspace", async ()
     assert.ok(result.finalState.generatedFiles.includes("test/semantic.test.mjs"));
     assert.equal(JSON.stringify(result).includes(temporaryRoot), false);
     assert.deepEqual(await readdir(temporaryRoot), []);
+  });
+});
+
+test("the protected oracle accepts the maintained reference app", async () => {
+  await withTemporaryParent(async (temporaryRoot) => {
+    const projectRoot = path.join(temporaryRoot, "project");
+    await mkdir(projectRoot);
+    await writeAgentAuthoredGuestbook(projectRoot);
+    const result = spawnSync(
+      process.execPath,
+      ["--test", guestbookV2OracleFile],
+      {
+        cwd: projectRoot,
+        env: {},
+        encoding: "utf8",
+        shell: false,
+        windowsHide: true,
+      },
+    );
+    assert.equal(
+      result.status,
+      0,
+      `${result.stdout ?? ""}\n${result.stderr ?? ""}`,
+    );
   });
 });
 
@@ -264,6 +308,14 @@ test("the second brief exercises one mutually exclusive radio field", async () =
   assert.match(brief, /Both must pass/);
 });
 
+test("guestbook v2 gives the evaluator ownership of the semantic oracle", async () => {
+  const brief = await readFile(guestbookV2BriefFile, "utf8");
+  assert.match(brief, /evaluator owns the semantic oracle/i);
+  assert.match(brief, /Export a runtime function named `createGuestbookApp`/);
+  assert.match(brief, /GET rendering must use the supplied `templateHtml`/);
+  assert.match(brief, /Agent-authored tests and completion claims are not evidence/);
+});
+
 test("pins the first Codex subagent cohort without silent model substitution", async () => {
   const cohort = JSON.parse(await readFile(codexSubagentCohortFile, "utf8"));
   assert.deepEqual(
@@ -302,11 +354,35 @@ test("pins the first Codex subagent cohort without silent model substitution", a
   assert.ok(cohort.models.every(({ reasoningEffort }) => reasoningEffort === "high"));
 });
 
+test("pins cohort v2 to the evaluator-owned oracle", async () => {
+  const cohort = JSON.parse(await readFile(codexSubagentCohortV2File, "utf8"));
+  assert.equal(cohort.cohortId, "codex-subagents-v2");
+  assert.deepEqual(cohort.brief, { id: "guestbook", revision: "v2" });
+  assert.deepEqual(cohort.semanticOracle, {
+    id: "guestbook-semantic-oracle",
+    revision: "v2",
+  });
+  assert.deepEqual(
+    cohort.models.map(({ modelId }) => modelId),
+    [
+      "umans/umans-glm-5.2",
+      "umans/umans-kimi-k2.7",
+      "opencode-go/minimax-m3",
+      "opencode-go/deepseek-v4-flash",
+    ],
+  );
+});
+
 async function baseOptions(temporaryRoot) {
   return {
-    trialId: "guestbook-v1.fake.1",
+    trialId: "guestbook-v2.fake.1",
     producerVersion: "0.0.0-test",
-    brief: await source("guestbook", "v1", briefFile),
+    brief: await source("guestbook", "v2", guestbookV2BriefFile),
+    semanticOracle: await source(
+      "guestbook-semantic-oracle",
+      "v2",
+      guestbookV2OracleFile,
+    ),
     documents: await Promise.all(
       approvedDocuments.map(([id, relativePath]) =>
         source(id, "v1", path.join(repositoryRoot, ...relativePath.split("/")))
@@ -319,8 +395,8 @@ async function baseOptions(temporaryRoot) {
         throw new Error("adapter must be replaced by the test");
       },
     },
-    semanticTest: createNodeSemanticTestPort({
-      testFile: "test/semantic.test.mjs",
+    semanticTest: createProtectedNodeSemanticTestPort({
+      inputFile: "semantic-oracle.test.mjs",
       timeoutMs: 5_000,
       maxOutputBytes: 65_536,
     }),

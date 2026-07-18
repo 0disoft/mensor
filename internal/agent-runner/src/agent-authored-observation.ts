@@ -13,6 +13,11 @@ export interface AgentAuthoredBuildExploratoryObservationInput {
     readonly revision: string;
     readonly sha256: string;
   };
+  readonly semanticOracle: {
+    readonly id: string;
+    readonly revision: string;
+    readonly sha256: string;
+  };
   readonly semanticTest: {
     readonly completed: boolean;
     readonly passed: boolean;
@@ -22,13 +27,18 @@ export interface AgentAuthoredBuildExploratoryObservationInput {
 }
 
 export interface AgentAuthoredBuildExploratoryObservation {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly kind: "agent-authored-build-exploratory-observation";
   readonly observationId: string;
   readonly producerVersion: string;
   readonly baselineCommit: string;
   readonly identity: AgentAuthoredBuildAdapterIdentity;
   readonly brief: {
+    readonly id: string;
+    readonly revision: string;
+    readonly sha256: string;
+  };
+  readonly semanticOracle: {
     readonly id: string;
     readonly revision: string;
     readonly sha256: string;
@@ -85,7 +95,7 @@ export function createAgentAuthoredBuildExploratoryObservation(
   const generatedFiles = canonicalGeneratedFiles(input.generatedFiles);
   const identity = validateIdentity(input.identity);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     kind: "agent-authored-build-exploratory-observation",
     observationId: requireIdentifier(input.observationId, "observationId"),
     producerVersion: requireIdentifier(input.producerVersion, "producerVersion"),
@@ -95,6 +105,17 @@ export function createAgentAuthoredBuildExploratoryObservation(
       id: requireIdentifier(input.brief.id, "brief.id"),
       revision: requireIdentifier(input.brief.revision, "brief.revision"),
       sha256: requireDigest(input.brief.sha256, "brief.sha256"),
+    },
+    semanticOracle: {
+      id: requireIdentifier(input.semanticOracle.id, "semanticOracle.id"),
+      revision: requireIdentifier(
+        input.semanticOracle.revision,
+        "semanticOracle.revision",
+      ),
+      sha256: requireDigest(
+        input.semanticOracle.sha256,
+        "semanticOracle.sha256",
+      ),
     },
     environment: {
       workspaceIsolation: "prompt-restricted-not-enforced",
@@ -132,6 +153,7 @@ export function validateAgentAuthoredBuildExploratoryObservation(
       "baselineCommit",
       "identity",
       "brief",
+      "semanticOracle",
       "environment",
       "finalState",
       "success",
@@ -140,7 +162,7 @@ export function validateAgentAuthoredBuildExploratoryObservation(
     "observation",
   );
   if (
-    observation["schemaVersion"] !== 1
+    observation["schemaVersion"] !== 2
     || observation["kind"] !== "agent-authored-build-exploratory-observation"
     || observation["claimLevel"] !== "exploratory-only"
   ) {
@@ -148,6 +170,15 @@ export function validateAgentAuthoredBuildExploratoryObservation(
   }
   const brief = requireRecord(observation["brief"], "brief");
   requireExactKeys(brief, ["id", "revision", "sha256"], "brief");
+  const semanticOracle = requireRecord(
+    observation["semanticOracle"],
+    "semanticOracle",
+  );
+  requireExactKeys(
+    semanticOracle,
+    ["id", "revision", "sha256"],
+    "semanticOracle",
+  );
   const environment = requireRecord(observation["environment"], "environment");
   requireExactKeys(
     environment,
@@ -189,6 +220,17 @@ export function validateAgentAuthoredBuildExploratoryObservation(
       id: requireString(brief["id"], "brief.id"),
       revision: requireString(brief["revision"], "brief.revision"),
       sha256: requireString(brief["sha256"], "brief.sha256"),
+    },
+    semanticOracle: {
+      id: requireString(semanticOracle["id"], "semanticOracle.id"),
+      revision: requireString(
+        semanticOracle["revision"],
+        "semanticOracle.revision",
+      ),
+      sha256: requireString(
+        semanticOracle["sha256"],
+        "semanticOracle.sha256",
+      ),
     },
     semanticTest: {
       completed: requireBoolean(

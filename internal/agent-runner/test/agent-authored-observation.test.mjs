@@ -14,7 +14,7 @@ import {
 
 const schemaFile = fileURLToPath(
   new URL(
-    "../spec/agent-authored-build-exploratory-observation-v1.schema.json",
+    "../spec/agent-authored-build-exploratory-observation-v2.schema.json",
     import.meta.url,
   ),
 );
@@ -86,19 +86,24 @@ test("rejects host paths and forged success while canonicalizing facts", () => {
 function createObservation(overrides = {}) {
   return createAgentAuthoredBuildExploratoryObservation({
     observationId: "guestbook.glm-5.2.1",
-    producerVersion: "0.0.54",
+    producerVersion: "0.0.55",
     baselineCommit: "a".repeat(40),
     identity: {
       runnerId: "codex-subagent",
       providerId: "umans",
       modelId: "umans/umans-glm-5.2",
       reasoningEffort: "high",
-      cohortId: "codex-subagents-v1",
+      cohortId: "codex-subagents-v2",
     },
     brief: {
       id: "guestbook",
-      revision: "v1",
+      revision: "v2",
       sha256: "b".repeat(64),
+    },
+    semanticOracle: {
+      id: "guestbook-semantic-oracle",
+      revision: "v2",
+      sha256: "c".repeat(64),
     },
     semanticTest: { completed: true, passed: true },
     mensorCheck: { completed: true, passed: true, diagnosticCodes: [] },

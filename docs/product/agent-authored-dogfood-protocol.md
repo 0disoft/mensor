@@ -1,11 +1,14 @@
 # Agent-Authored Dogfood Protocol
 
-- Status: First local harness implemented; provider integration deferred
+- Status: Evaluator-owned semantic oracle implemented; controlled provider run pending
 - Owner: Maintainer
 - External maintainer participation: Not planned
-- First brief: `internal/agent-runner/briefs/guestbook-v1.md`
+- Current brief: `internal/agent-runner/briefs/guestbook-v2.md`
+- Historical first brief: `internal/agent-runner/briefs/guestbook-v1.md`
 - Second brief: `internal/agent-runner/briefs/rsvp-v1.md`
-- First model cohort: `internal/agent-runner/cohorts/codex-subagents-v1.json`
+- Current model cohort: `internal/agent-runner/cohorts/codex-subagents-v2.json`
+- Historical model cohort: `internal/agent-runner/cohorts/codex-subagents-v1.json`
+- Current semantic oracle: `internal/agent-runner/oracles/guestbook-v2.test.mjs`
 
 ## Purpose
 
@@ -29,7 +32,9 @@ Each trial receives:
 5. the command names required to check the project and run its semantic tests;
    and
 6. an explicit prohibition on reading or copying existing Mensor fixtures,
-   examples, golden reports, test implementations, or another trial workspace.
+   examples, golden reports, test implementations, or another trial workspace;
+   and
+7. a versioned evaluator-owned semantic oracle copied into protected input.
 
 The brief may name an allowed runtime such as plain Node or Hono, but it must
 stay inside the implemented TypeScript, static HTML, URL-encoded form, and
@@ -54,13 +59,17 @@ The agent must produce a complete runnable project containing:
 - application source;
 - one project contract and the necessary feature contracts;
 - static HTML owned by the generated application;
-- semantic application tests independent of Mensor diagnostics; and
+- optional agent-authored tests that never count as evaluator evidence; and
 - no credentials, network dependency, generated lockfile from an unapproved
   install, copied upstream source, or hidden fixture dependency.
 
 The generated project belongs to the trial workspace. It becomes a maintained
 repository fixture only after source review, license review, deterministic
 reproduction, and an explicit maintainer decision.
+
+The evaluator-owned oracle is pinned before generation, remains under
+protected input, and runs after workspace-boundary and input-integrity checks.
+An agent cannot certify its own behavior by writing a weak test.
 
 ## Evaluation Order
 
@@ -70,8 +79,9 @@ reproduction, and an explicit maintainer decision.
    process limits, and execution cohort without storing credentials or raw
    prompts in canonical results.
 3. Let the agent build the project without access to existing Mensor examples.
-4. Run the generated semantic tests first. A checker-clean project with missing
-   behavior fails the trial.
+4. Run the protected evaluator-owned semantic oracle first. A checker-clean
+   project with missing behavior fails the trial. Agent-authored tests do not
+   affect this verdict.
 5. Run Mensor and retain only diagnostic codes and bounded final-state facts.
 6. Permit bounded correction rounds using diagnostics, not private fixture
    hints.
@@ -99,9 +109,9 @@ Do not turn one successful run into a percentage. Repeated trials must use
 fresh workspaces and comparable execution cohorts. Pass-at-least-once and
 all-runs-pass answer different questions and must remain separate.
 
-## Codex Subagent Cohort v1
+## Codex Subagent Cohort v2
 
-The first provider-backed cohort uses fresh Codex subagents with no inherited
+The corrected provider-backed cohort uses fresh Codex subagents with no inherited
 conversation and the same pinned brief, documentation set, correction limit,
 semantic oracle, and Mensor version for every model:
 
@@ -117,6 +127,12 @@ silently replaced by another provider, model, main-thread run, or inherited
 agent. Results are reported per model; the first four runs are smoke evidence,
 not a cross-model ranking or a repair-rate percentage.
 
+Version 1 is historical protocol evidence. It let each agent author the test
+that judged its own application and therefore cannot support semantic success
+claims. Version 2 pins `guestbook-v2.test.mjs` and requires a stable
+`src/app.mjs` Web Request/Response interface so the evaluator owns behavior
+checks.
+
 Host-native subagent execution is exploratory until the host can bind each
 subagent to the fresh trial workspace without exposing the Mensor repository,
 other trial workspaces, or inherited conversation. Prompt instructions alone
@@ -124,9 +140,10 @@ do not prove that isolation. Such runs must not claim
 `sandboxed-workspace-only` merely because the subagent used a separate task.
 
 Exploratory runs use
-`agent-authored-build-exploratory-observation-v1.schema.json`. That observation
-records the baseline commit, exact adapter identity, brief digest, generated
-project-relative files, semantic result, and Mensor diagnostic codes. Its
+`agent-authored-build-exploratory-observation-v2.schema.json`. That observation
+records the baseline commit, exact adapter identity, brief and semantic-oracle
+digests, generated project-relative files, semantic result, and Mensor
+diagnostic codes. Its
 environment and claim level are fixed to `not-enforced` and `exploratory-only`.
 It cannot be relabeled as sandbox evidence, and it excludes prompt text, model
 response text, absolute paths, command output, environment values, and source
@@ -150,11 +167,11 @@ content.
 
 `runAgentAuthoredBuildTrial` in the private agent runner implements the local
 workflow shell. Before creating mutable state it validates SHA-256 commitments
-for the brief and allowed documents. It then creates a fresh workspace with
-protected `input/` and empty `project/` directories, invokes an injected agent
-port, rejects protected-input or root-boundary writes, runs separate semantic
-and Mensor check ports, returns only bounded final-state facts, and disposes the
-workspace on every outcome.
+for the brief, semantic oracle, and allowed documents. It then creates a fresh
+workspace with protected `input/` and empty `project/` directories, invokes an
+injected agent port, rejects protected-input or root-boundary writes, runs
+separate semantic and Mensor check ports, returns only bounded final-state
+facts, and disposes the workspace on every outcome.
 
 The adapter identity is part of the canonical result. This prevents results
 from different Codex runners, providers, model aliases, reasoning settings, or
@@ -166,13 +183,18 @@ only that the generated final state passed the two local oracles under the
 recorded baseline. It does not prove repository invisibility, network denial,
 credential containment, or trajectory compliance.
 
-`createNodeSemanticTestPort` runs one project-relative Node test file with a
-closed stdin, empty environment, timeout, and combined output limit. Its
-isolation is explicitly `process-only`: it does not enforce network denial or
-host-filesystem isolation and cannot support a sandbox claim. The current
-end-to-end tests use `injected-test` agents. A provider-backed trial must use an
-approved adapter and must record `sandboxed-workspace-only` only when that
-isolation is actually enforced.
+`createProtectedNodeSemanticTestPort` runs one protected-input Node test file
+against the generated project with a closed stdin, empty environment, timeout,
+and combined output limit. `createNodeSemanticTestPort` remains available for
+non-authoritative project-owned smoke tests. Both ports have
+`process-only` isolation: they do not enforce network denial or host-filesystem
+isolation and cannot support a sandbox claim. The current end-to-end tests use
+`injected-test` agents. A provider-backed trial must use an approved adapter
+and must record `sandboxed-workspace-only` only when that isolation is actually
+enforced.
+
+The project-owned smoke-test port result never replaces the protected oracle
+verdict.
 
 ## Stop Conditions
 
@@ -194,9 +216,9 @@ Agent-authored dogfood may guide documentation, diagnostics, contract
 ergonomics, and fixture coverage. It cannot support claims about external
 maintainer adoption or human usability.
 
-The local guestbook vertical slice is implemented with a fake injected agent.
-Implement the first provider-backed build trial only after its allowed
-documentation set, model adapter, credential boundary, sandbox enforcement,
-process limits, and result wording are reviewed together. Do not add a new
-evidence or attestation layer merely to start it; reuse the existing private
-fixture-kit and bounded agent-runner boundaries where they fit.
+The local guestbook v2 vertical slice is implemented with a fake injected
+agent and protected oracle. Run the next provider-backed trial only after its
+allowed documentation set, model adapter, credential boundary, sandbox
+enforcement, process limits, and result wording are reviewed together. Do not
+add a new evidence or attestation layer merely to start it; reuse the existing
+private fixture-kit and bounded agent-runner boundaries where they fit.

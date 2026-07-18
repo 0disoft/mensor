@@ -32,20 +32,51 @@ export async function writeAgentAuthoredGuestbook(
   return entry;
 }
 `,
-    "src/features/guestbook/routes/app.mjs": `import { readFile } from "node:fs/promises";
+    "src/app.mjs": `export { createGuestbookApp } from "./features/guestbook/routes/app.mjs";
+`,
+    "src/features/guestbook/routes/app.mjs": applicationSource(
+      options.semanticFailure === true,
+    ),
+    "src/features/guestbook/views/index.html": `<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>Guestbook</title></head>
+  <body>
+    <main>
+      <h1>Guestbook</h1>
+      <form id="create-entry" method="post" action="/guestbook">
+        <label>Author <input name="author" type="text" required></label>
+        <label>Message <textarea name="message" required></textarea></label>
+        <button type="submit">Sign</button>
+      </form>
+      <ul><!-- entries --></ul>
+    </main>
+  </body>
+</html>
+`,
+    "test/semantic.test.mjs": semanticTest,
+  };
 
-import { createGuestbookEntry } from "../server/create-entry.mjs";
+  for (const [relativePath, source] of Object.entries(files)) {
+    const file = path.join(projectRoot, ...relativePath.split("/"));
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(file, source, { encoding: "utf8", flag: "wx" });
+  }
+}
 
-const templateUrl = new URL("../views/index.html", import.meta.url);
+function applicationSource(semanticFailure) {
+  return `import { createGuestbookEntry } from "../server/create-entry.mjs";
 
-export function createGuestbookApp() {
+export function createGuestbookApp({ templateHtml }) {
+  if (typeof templateHtml !== "string") {
+    throw new TypeError("templateHtml must be a string");
+  }
   const entries = [];
   return {
     entries,
     async fetch(request) {
       const url = new URL(request.url);
       if (request.method === "GET" && url.pathname === "/guestbook") {
-        return new Response(await render(entries), {
+        return new Response(render(templateHtml, entries), {
           status: 200,
           headers: { "content-type": "text/html; charset=utf-8" },
         });
@@ -72,7 +103,7 @@ export function createGuestbookApp() {
         createGuestbookEntry({ author, message }, entries);
         return new Response(null, {
           status: 303,
-          headers: { location: "/guestbook" },
+          headers: { location: "${semanticFailure ? "/wrong" : "/guestbook"}" },
         });
       }
       return new Response("Not Found", { status: 404 });
@@ -80,12 +111,11 @@ export function createGuestbookApp() {
   };
 }
 
-async function render(entries) {
-  const template = await readFile(templateUrl, "utf8");
+function render(templateHtml, entries) {
   const rendered = entries
     .map((entry) => "<li><strong>" + escapeHtml(entry.author) + "</strong>: " + escapeHtml(entry.message) + "</li>")
     .join("");
-  return template.replace("<!-- entries -->", rendered);
+  return templateHtml.replace("<!-- entries -->", rendered);
 }
 
 function escapeHtml(value) {
@@ -96,39 +126,7 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
-`,
-    "src/features/guestbook/views/index.html": `<!doctype html>
-<html lang="en">
-  <head><meta charset="utf-8"><title>Guestbook</title></head>
-  <body>
-    <main>
-      <h1>Guestbook</h1>
-      <form id="create-entry" method="post" action="/guestbook">
-        <label>Author <input name="author" type="text" required></label>
-        <label>Message <textarea name="message" required></textarea></label>
-        <button type="submit">Sign</button>
-      </form>
-      <ul><!-- entries --></ul>
-    </main>
-  </body>
-</html>
-`,
-    "test/semantic.test.mjs": options.semanticFailure === true
-      ? `import assert from "node:assert/strict";
-import test from "node:test";
-
-test("intentional semantic failure", () => {
-  assert.equal(true, false);
-});
-`
-      : semanticTest,
-  };
-
-  for (const [relativePath, source] of Object.entries(files)) {
-    const file = path.join(projectRoot, ...relativePath.split("/"));
-    await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, source, { encoding: "utf8", flag: "wx" });
-  }
+`;
 }
 
 function featureContract(missingHandlerExport) {
@@ -182,12 +180,18 @@ function featureContract(missingHandlerExport) {
 }
 
 const semanticTest = `import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { createGuestbookApp } from "../src/features/guestbook/routes/app.mjs";
+import { createGuestbookApp } from "../src/app.mjs";
+
+const templateHtml = await readFile(new URL(
+  "../src/features/guestbook/views/index.html",
+  import.meta.url,
+), "utf8");
 
 test("serves the form and creates escaped entries", async () => {
-  const app = createGuestbookApp();
+  const app = createGuestbookApp({ templateHtml });
   const initial = await app.fetch(new Request("http://local/guestbook"));
   assert.equal(initial.status, 200);
   assert.match(await initial.text(), /id="create-entry"/);
@@ -208,7 +212,7 @@ test("serves the form and creates escaped entries", async () => {
 });
 
 test("rejects malformed forms without changing state", async () => {
-  const app = createGuestbookApp();
+  const app = createGuestbookApp({ templateHtml });
   for (const body of [
     "author=Ada&author=Grace&message=Hello",
     "author=Ada&message=Hello&extra=value",

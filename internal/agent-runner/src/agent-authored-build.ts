@@ -104,7 +104,10 @@ export type AgentAuthoredSemanticTestIsolation =
 
 export interface AgentAuthoredSemanticTestPort {
   readonly isolation: AgentAuthoredSemanticTestIsolation;
-  readonly run: (projectRoot: string) => boolean | Promise<boolean>;
+  readonly run: (
+    projectRoot: string,
+    inputRoot: string,
+  ) => boolean | Promise<boolean>;
 }
 
 export interface RunAgentAuthoredBuildTrialOptions {
@@ -112,6 +115,7 @@ export interface RunAgentAuthoredBuildTrialOptions {
   readonly producerVersion: string;
   readonly brief: AgentAuthoredBuildSource;
   readonly documents: readonly AgentAuthoredBuildSource[];
+  readonly semanticOracle: AgentAuthoredBuildSource;
   readonly adapter: AgentAuthoredBuildAdapterPort;
   readonly semanticTest: AgentAuthoredSemanticTestPort;
   readonly mensorCheck: AgentAuthoredMensorCheckPort;
@@ -125,6 +129,11 @@ export interface AgentAuthoredBuildTrialResult {
   readonly trialId: string;
   readonly producerVersion: string;
   readonly brief: {
+    readonly id: string;
+    readonly revision: string;
+    readonly sha256: string;
+  };
+  readonly semanticOracle: {
     readonly id: string;
     readonly revision: string;
     readonly sha256: string;
@@ -159,6 +168,12 @@ export interface NodeSemanticTestPortOptions {
   readonly maxOutputBytes: number;
 }
 
+export interface ProtectedNodeSemanticTestPortOptions {
+  readonly inputFile: string;
+  readonly timeoutMs: number;
+  readonly maxOutputBytes: number;
+}
+
 interface LoadedSource {
   readonly id: string;
   readonly revision: string;
@@ -184,9 +199,16 @@ export async function runAgentAuthoredBuildTrial(
     const documentationRoot = path.join(inputRoot, "docs");
     const projectRoot = path.join(workspaceRoot, "project");
     const briefFile = path.join(inputRoot, "brief.md");
+    const semanticOracleFile = path.join(
+      inputRoot,
+      "semantic-oracle.test.mjs",
+    );
     await mkdir(documentationRoot, { recursive: true });
     await mkdir(projectRoot);
     await writeFile(briefFile, validated.brief.bytes, { flag: "wx" });
+    await writeFile(semanticOracleFile, validated.semanticOracle.bytes, {
+      flag: "wx",
+    });
     for (const document of validated.documents) {
       await writeFile(
         path.join(documentationRoot, `${document.id}.md`),
@@ -256,7 +278,10 @@ export async function runAgentAuthoredBuildTrial(
       && !workspaceBoundaryViolated
     ) {
       try {
-        semanticTestsPassed = await options.semanticTest.run(projectRoot);
+        semanticTestsPassed = await options.semanticTest.run(
+          projectRoot,
+          inputRoot,
+        );
         semanticTestCompleted = true;
       } catch {
         semanticTestCompleted = false;
@@ -291,6 +316,7 @@ export async function runAgentAuthoredBuildTrial(
       trialId: validated.trialId,
       producerVersion: validated.producerVersion,
       brief: sourceReference(validated.brief),
+      semanticOracle: sourceReference(validated.semanticOracle),
       documents: validated.documents.map(sourceReference),
       adapter: {
         identity: validated.adapterIdentity,
@@ -330,7 +356,31 @@ export function createNodeSemanticTestPort(
     isolation: "process-only",
     run: (projectRoot) => runNodeSemanticTest({
       projectRoot,
+      testRoot: projectRoot,
       testFile,
+      timeoutMs,
+      maxOutputBytes,
+    }),
+  };
+}
+
+export function createProtectedNodeSemanticTestPort(
+  options: ProtectedNodeSemanticTestPortOptions,
+): AgentAuthoredSemanticTestPort {
+  const inputFile = requireRelativePath(options.inputFile, "inputFile");
+  const timeoutMs = requireLimit(options.timeoutMs, 1, 60_000, "timeoutMs");
+  const maxOutputBytes = requireLimit(
+    options.maxOutputBytes,
+    1,
+    1_048_576,
+    "maxOutputBytes",
+  );
+  return {
+    isolation: "process-only",
+    run: (projectRoot, inputRoot) => runNodeSemanticTest({
+      projectRoot,
+      testRoot: inputRoot,
+      testFile: inputFile,
       timeoutMs,
       maxOutputBytes,
     }),
@@ -339,23 +389,26 @@ export function createNodeSemanticTestPort(
 
 async function runNodeSemanticTest(options: {
   readonly projectRoot: string;
+  readonly testRoot: string;
   readonly testFile: string;
   readonly timeoutMs: number;
   readonly maxOutputBytes: number;
 }): Promise<boolean> {
   const projectRoot = path.resolve(options.projectRoot);
   await assertRealDirectory(projectRoot, "Generated project root");
+  const testRoot = path.resolve(options.testRoot);
+  await assertRealDirectory(testRoot, "Semantic test root");
   const testFile = path.resolve(
-    projectRoot,
+    testRoot,
     ...options.testFile.split("/"),
   );
-  assertContained(projectRoot, testFile);
+  assertContained(testRoot, testFile);
   const testStats = await lstat(testFile);
   if (testStats.isSymbolicLink() || !testStats.isFile()) {
     throw new Error("Semantic test entry must be a real file.");
   }
 
-  const child = spawn(process.execPath, ["--test", options.testFile], {
+  const child = spawn(process.execPath, ["--test", testFile], {
     cwd: projectRoot,
     env: {},
     detached: process.platform !== "win32",
@@ -396,6 +449,7 @@ async function validateOptions(
   readonly producerVersion: string;
   readonly brief: LoadedSource;
   readonly documents: readonly LoadedSource[];
+  readonly semanticOracle: LoadedSource;
   readonly adapterIdentity: AgentAuthoredBuildAdapterIdentity;
 }> {
   const trialId = requireIdentifier(options.trialId, "trialId");
@@ -432,6 +486,10 @@ async function validateOptions(
     throw new Error("mensorCheck must be a function.");
   }
   const brief = await loadSource(options.brief, "brief");
+  const semanticOracle = await loadSource(
+    options.semanticOracle,
+    "semanticOracle",
+  );
   if (options.documents.length === 0) {
     throw new Error("documents must contain at least one approved document.");
   }
@@ -452,6 +510,7 @@ async function validateOptions(
     producerVersion,
     brief,
     documents: sortedDocuments,
+    semanticOracle,
     adapterIdentity: canonicalAdapterIdentity(options.adapter.identity),
   };
 }

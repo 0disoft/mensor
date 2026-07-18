@@ -168,6 +168,7 @@ export {
   agentAuthoredBuildFailureCategories,
   agentAuthoredBuildIsolationKinds,
   createNodeSemanticTestPort,
+  createProtectedNodeSemanticTestPort,
   runAgentAuthoredBuildTrial,
 } from "./agent-authored-build.js";
 export {
@@ -195,5 +196,6 @@ export type {
   AgentAuthoredSemanticTestPort,
   AgentAuthoredSemanticTestIsolation,
   NodeSemanticTestPortOptions,
+  ProtectedNodeSemanticTestPortOptions,
   RunAgentAuthoredBuildTrialOptions,
 } from "./agent-authored-build.js";
