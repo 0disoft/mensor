@@ -275,23 +275,46 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     paths against a real daemon, and independently requires zero Mensor-owned
     containers before and after every case. Passing this gate proves only the
     tested daemon path, not independent provenance or an LLM repair rate.
+44. The first agent-authored build harness validates pinned brief and document
+    inputs before creating a fresh workspace, protects supplied input, allows
+    generation only under the project boundary, runs independent semantic and
+    Mensor checks, records each port's stated isolation without upgrading it,
+    and disposes the workspace on success and failure.
+45. Every agent-authored result records a canonical runner, provider, exact
+    model, reasoning effort, and cohort identity. The first Codex subagent
+    cohort pins GLM 5.2, Kimi K2.7, MiniMax M3, and DeepSeek V4 Flash; an
+    unavailable model is recorded without substitution and every model result
+    remains separate.
 
 ## Next Product Validation Gate
 
-The next milestone is external dogfood, not another evidence layer. Apply the
-checker to at least two small, independently maintained TypeScript and static
-HTML applications. Record contract authoring lines, first-diagnostic time,
-false positives, missed defects, and contract maintenance changes without
-copying application source into benchmark artifacts. Real-provider repair
-trials remain paused until at least one external project keeps the contract
-after its first maintenance change.
+The next milestone is agent-authored dogfood, not external maintainer
+recruitment and not another evidence layer. Give a coding agent a fresh empty
+workspace, a versioned application brief, maintained Mensor documentation, and
+the bounded check and semantic-test commands. The agent must build the
+application, contracts, and independent semantic tests without reading or
+copying existing Mensor fixtures or third-party application source.
+
+`docs/product/agent-authored-dogfood-protocol.md` owns the input, output,
+evaluation, privacy, security, and stop rules. These trials measure whether an
+agent can learn and apply Mensor from its documented contract. They do not
+claim external adoption, human authoring ergonomics, market demand, or general
+framework compatibility.
+
+The first local vertical slice uses the versioned `guestbook-v1` brief, an
+injected fake agent, a process-only Node semantic-test port, and the real Mensor
+compiler port. It proves harness control flow and oracle separation, not model
+quality, provider compatibility, network isolation, or sandbox enforcement.
+The first provider-backed cohort is versioned as `codex-subagents-v1`. A
+host-native subagent run remains exploratory until workspace and repository
+visibility are enforced rather than requested only through prompt text.
 
 The bounded candidate search recorded in
 `docs/product/external-static-html-candidate-search.md` found no application
 that met the current native static HTML and TypeScript server-handler boundary.
-This gate is blocked, not complete. Do not substitute frontend-only forms,
+External recruitment is not planned. Do not substitute frontend-only forms,
 usage demos, dynamic framework templates, multipart forms, or client-mediated
-JSON requests. ADR-0030 selects a serialized `FormIndex` as the template-fact
+JSON requests as product adoption evidence. ADR-0030 selects a serialized `FormIndex` as the template-fact
 boundary while retaining static HTML as the only implemented provider. The
 byte-preserving internal refactor is complete: the built-in provider
 serializes, validates, source-binds, and hands index facts to semantic rules
@@ -302,10 +325,11 @@ The private `FormIndex` types, validator, canonical serializer/parser, source
 digest and range binding, built-in provider, and semantic translator remain
 compiler internals. They are not public exports or CLI inputs.
 
-Compiler performance claims also wait for those repositories. The first
-performance report must distinguish cold and repeated process runs, file and
-byte counts, parse time, and peak RSS. The mutation benchmark remains a
-detection benchmark and cannot stand in for throughput evidence.
+Compiler performance claims remain local engineering baselines until the
+agent-authored corpus includes representative project shapes. Performance
+reports must distinguish first and repeated process runs, file and byte counts,
+parse time, and peak RSS. The mutation benchmark remains a detection benchmark
+and cannot stand in for throughput evidence.
 
 ## Deferred Decisions
 
@@ -314,13 +338,15 @@ detection benchmark and cannot stand in for throughput evidence.
   state, protected-contract integrity, semantic tests, and changed-file
   evidence with fake adapters. Claims remain deferred until real providers run
   repeated controlled trials with an explicit trajectory policy. Do not add
-  another attestation or eligibility layer before the external dogfood gate.
+  another attestation or eligibility layer before the first agent-authored
+  build trial.
 
 - Runtime manifest and reference runtime: add only if a real consumer needs a
   compiled artifact beyond diagnostics.
 - Dynamic template adapters: the built-in provider now preserves byte-identical
   diagnostics through `FormIndex`, but external extractors remain deferred
-  until one separately approved real template source and trust boundary exist.
+  until one separately approved agent-authored template trial and trust
+  boundary exist.
 - IDE, SARIF, watch mode, caching, and cloud services: post-MVP integrations.
 - Public diagnostic compatibility: begins with the first published preview,
   not with private pre-implementation drafts.

@@ -164,3 +164,26 @@ export type {
   AgentTrialEvidence,
   CommandExecutionMetadata,
 } from "./execution-descriptor.js";
+export {
+  agentAuthoredBuildFailureCategories,
+  agentAuthoredBuildIsolationKinds,
+  createNodeSemanticTestPort,
+  runAgentAuthoredBuildTrial,
+} from "./agent-authored-build.js";
+export type {
+  AgentAuthoredBuildAdapterContext,
+  AgentAuthoredBuildAdapterIdentity,
+  AgentAuthoredBuildAdapterPort,
+  AgentAuthoredBuildAdapterResult,
+  AgentAuthoredBuildFailureCategory,
+  AgentAuthoredBuildIsolation,
+  AgentAuthoredBuildReasoningEffort,
+  AgentAuthoredBuildSource,
+  AgentAuthoredBuildTrialResult,
+  AgentAuthoredMensorCheckPort,
+  AgentAuthoredMensorCheckResult,
+  AgentAuthoredSemanticTestPort,
+  AgentAuthoredSemanticTestIsolation,
+  NodeSemanticTestPortOptions,
+  RunAgentAuthoredBuildTrialOptions,
+} from "./agent-authored-build.js";

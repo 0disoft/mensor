@@ -24,6 +24,9 @@
 - Hono adoption cost report: `docs/product/hono-adoption-cost.md`
 - SonicJS external adoption study: `docs/product/sonicjs-adoption-study.md`
 - External static HTML candidate search: `docs/product/external-static-html-candidate-search.md`
+- Agent-authored dogfood protocol: `docs/product/agent-authored-dogfood-protocol.md`
+- First agent-authored brief: `../internal/agent-runner/briefs/guestbook-v1.md`
+- First Codex subagent cohort: `../internal/agent-runner/cohorts/codex-subagents-v1.json`
 - FormIndex v0 design: `docs/architecture/form-index-v0.md`
 - FormIndex boundary decision: `docs/adr/0030-form-index-is-the-template-fact-boundary.md`
 

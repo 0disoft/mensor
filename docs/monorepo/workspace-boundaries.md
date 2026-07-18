@@ -90,6 +90,15 @@ paths, environment values, prompts, transcripts, or credentials into reports.
 The high-level command-trial entrypoint constructs process behavior and evidence
 from one options object before any fixture mutation occurs.
 
+The agent runner also owns the provider-neutral agent-authored build harness.
+That harness validates pinned brief and documentation inputs, creates and
+disposes one empty project workspace, protects supplied input, separates the
+semantic oracle from the Mensor checker, and records process-only, injected, or
+sandboxed isolation without treating them as equivalent. Provider credentials
+and SDKs remain adapter concerns. Adapter identity is canonical trial output:
+runner, provider, exact model, reasoning effort, and cohort must be supplied
+before mutable workspace state is created.
+
 ## Build Artifact Boundary
 
 Every workspace build removes known output directories before invoking the

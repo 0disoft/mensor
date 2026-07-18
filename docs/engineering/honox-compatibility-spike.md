@@ -113,20 +113,21 @@ it does not satisfy the separate HonoX opt-in gate below.
 
 - **Applied:** retain this compatibility map, the corrected action model, and
   the runnable static HTML Hono fixture.
-- **Defer:** Hono JSX intrinsic extraction until an independently maintained
-  application is available.
+- **Defer:** Hono JSX intrinsic extraction until an agent-authored trial proves
+  a bounded application shape from an empty workspace.
 - **Reject:** generic TSX traversal, BYOR support, HonoX config execution, Vite
   plugin loading, schema inference from TypeScript generics, and component
   rendering inside the compiler.
-- **Research next:** find one maintained HonoX application with a progressively
-  enhanced URL-encoded form and a semantic test. Do not count the framework
-  documentation example as external adoption evidence.
+- **Research next:** define one synthetic HonoX application brief with a
+  progressively enhanced URL-encoded form and an independent semantic test.
+  Do not copy the framework documentation example into the generated project.
 
 ## Implementation Gate
 
 Implementation may start only when all of the following exist:
 
-- one independently maintained HonoX application that opts into the experiment;
+- one agent-authored HonoX project generated from an approved versioned brief;
+- proof that the agent did not read or copy existing Mensor fixtures;
 - synthetic pass and explicit-unsupported fixtures that do not copy upstream
   application code;
 - canonical output and cross-root determinism expectations; and

@@ -104,5 +104,5 @@ HTML refactor. It does not authorize a framework extractor.
 - a real template source requires facts that cannot be represented without raw
   AST or executable renderer state;
 - content digests create measured unacceptable cost; or
-- maintainer recruitment demonstrates that native static HTML alone is a
-  sufficient product boundary.
+- repeated agent-authored projects demonstrate that native static HTML alone
+  is a sufficient product boundary.

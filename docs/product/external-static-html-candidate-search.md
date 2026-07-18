@@ -1,6 +1,6 @@
 # External Static HTML Candidate Search
 
-- Status: No qualifying application found
+- Status: Historical research; external participation not planned
 - Search date: 2026-07-15
 - Scope: independently maintained TypeScript applications with native static
   HTML forms that submit to repository-owned server handlers
@@ -86,23 +86,23 @@ valid current dogfood target.
 
 ## Decision
 
-The external static HTML dogfood gate remains blocked. Do not satisfy it with a
-frontend-only repository, a usage demo, a dynamic framework template, or a
-client-mediated JSON form. Those substitutions would produce attractive
+The search found no qualifying application. Mensor will not recruit external
+project maintainers or request opt-in adoption trials. Do not satisfy the old
+gate with a frontend-only repository, usage demo, dynamic framework template,
+or client-mediated JSON form. Those substitutions would produce attractive
 metrics for a contract that the upstream application does not actually own.
 
 The product decision had two honest paths:
 
-1. Keep native static HTML as the product boundary and recruit maintainers who
-   explicitly use or want that architecture.
+1. Keep native static HTML as the implemented product boundary.
 2. Introduce a serialized `FormIndex` boundary and separately approve one
    narrow template extractor without executing application source.
 
 ADR-0030 selected the second architectural boundary while deliberately
 deferring the extractor. The built-in static HTML provider now passes through
-the private index with byte-identical diagnostics. The external dogfood gate
-and separate extractor approval remain blocked; completing the internal
-boundary does not supply either missing input.
+the private index with byte-identical diagnostics. Future product validation
+uses agent-authored projects created from empty workspaces. Completing the
+internal boundary does not itself authorize a template extractor.
 
 No generic plugin API, TypeScript renderer execution, or copied upstream
 fixture follows from this search.

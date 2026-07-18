@@ -80,8 +80,9 @@ paths before source parsing.
 5. Any TypeScript template extractor must preserve explicit unsupported facts
    for interpolation, loops, generated identifiers, dynamic actions, and custom
    helpers instead of pretending they are static HTML.
-6. HonoX extraction remains separately gated on maintainer opt-in and renderer
-   proof. SonicJS uses Hono templates and does not satisfy that gate.
+6. HonoX extraction remains separately gated on an agent-authored project and
+   renderer proof. SonicJS remains read-only historical input and will not be
+   recruited into that trial.
 
 ## Provenance Boundary
 
