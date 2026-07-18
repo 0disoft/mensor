@@ -8,9 +8,9 @@ keeps compiler checks tied to real GET/POST behavior instead of fixtures alone.
 
 The project turns architectural knowledge that normally lives in a maintainer's
 head into machine-readable project contracts. It links static HTML forms,
-action input contracts, source-file roles, import boundaries, and feature
-ownership, then reports violations in stable JSON that a person, CI job, or
-coding agent can act on.
+action input contracts, optional source-bound route facts, source-file roles,
+import boundaries, and feature ownership, then reports violations in stable
+JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
@@ -23,7 +23,8 @@ The current proof:
 
 1. loads JSONC project and feature contracts without executing project code;
 2. extracts static HTML forms and TypeScript/JavaScript source facts;
-3. detects form, handler, import-boundary, placement, and ownership violations;
+3. detects form, route, handler, import-boundary, placement, and ownership
+   violations;
 4. emits byte-stable diagnostics through `mensor check --json`; and
 5. rejects checker-clean repairs that weaken a protected contract or delete
    feature semantics.
@@ -36,6 +37,8 @@ Livewire, or a server framework. It checks contracts around applications built
 with those kinds of tools.
 
 The MVP supports TypeScript or JavaScript projects with static `.html` files.
+An optional canonical RouteIndex lets an external producer supply static route
+facts without granting the compiler code-execution authority.
 Dynamic template languages, runtime manifests, production HTTP handling,
 autofix, arbitrary plugins, cloud processing, and telemetry are deferred.
 

@@ -80,6 +80,37 @@ try {
     ].join("\n"),
     "utf8",
   );
+  await writeFile(
+    path.join(consumerRoot, "contract-smoke.mjs"),
+    `import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { parseRouteIndex, serializeRouteIndex } from "@mensor/contract";
+
+const text = serializeRouteIndex({
+  schemaVersion: 1,
+  producer: { name: "package-smoke", version: "1.0.0" },
+  routes: [{
+    method: "POST",
+    path: "/smoke",
+    source: {
+      file: "src/routes.mjs",
+      contentDigest: "sha256:${"0".repeat(64)}",
+      range: {
+        start: { line: 0, character: 0 },
+        end: { line: 0, character: 1 }
+      }
+    }
+  }]
+});
+assert.equal(parseRouteIndex(text).ok, true);
+const schemaUrl = import.meta.resolve(
+  "@mensor/contract/schemas/route-index-v1.schema.json"
+);
+const schema = JSON.parse(await readFile(new URL(schemaUrl), "utf8"));
+assert.equal(schema.$id, "route-index-v1.schema.json");
+`,
+    "utf8",
+  );
 
   await cp(path.join(repositoryRoot, "fixtures", "valid", "tiny-tasks"), path.join(consumerRoot, "valid"), {
     recursive: true,
@@ -91,6 +122,7 @@ try {
   );
 
   await runPnpm(["install", "--prefer-offline", "--ignore-scripts"], consumerRoot);
+  await run(process.execPath, ["contract-smoke.mjs"], consumerRoot);
 
   const valid = await runMensor(consumerRoot, "valid");
   assert.equal(valid.code, 0, valid.stderr);

@@ -7,12 +7,14 @@ import {
 import diagnosticReportSchema from "../spec/diagnostic-report-v1.schema.json" with { type: "json" };
 import featureContractSchema from "../spec/feature-contract-v1.schema.json" with { type: "json" };
 import projectContractSchema from "../spec/project-contract-v1.schema.json" with { type: "json" };
+import routeIndexSchema from "../spec/route-index-v1.schema.json" with { type: "json" };
 
 import type {
   ContractIssue,
   DiagnosticReport,
   FeatureContract,
   ProjectContract,
+  RouteIndex,
 } from "./types.js";
 
 const ajv = new Ajv2020({
@@ -36,6 +38,8 @@ export const validateFeatureContract = ajv.compile<FeatureContract>(
 export const validateDiagnosticReport = ajv.compile<DiagnosticReport>(
   diagnosticReportSchema,
 );
+
+export const validateRouteIndex = ajv.compile<RouteIndex>(routeIndexSchema);
 
 export function schemaIssues(
   validator: ValidateFunction,

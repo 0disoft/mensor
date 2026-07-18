@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "producer": {
+    "name": "mensor-fixture-route-index",
+    "version": "1.0.0"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/rsvp",
+      "source": {
+        "file": "src/features/rsvp/routes/rsvp.mjs",
+        "contentDigest": "sha256:7a085b9e13e485c82e4f94e321b0ac3b589a60fa4213d10a0ac78b3c9d26e28d",
+        "range": {
+          "start": {
+            "line": 10,
+            "character": 0
+          },
+          "end": {
+            "line": 10,
+            "character": 35
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/rsvp",
+      "source": {
+        "file": "src/features/rsvp/routes/rsvp.mjs",
+        "contentDigest": "sha256:7a085b9e13e485c82e4f94e321b0ac3b589a60fa4213d10a0ac78b3c9d26e28d",
+        "range": {
+          "start": {
+            "line": 10,
+            "character": 0
+          },
+          "end": {
+            "line": 10,
+            "character": 35
+          }
+        }
+      }
+    }
+  ]
+}

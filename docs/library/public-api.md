@@ -12,6 +12,7 @@ the first preview release and exports:
 - `parseProjectContract(text)`;
 - `parseFeatureContract(text)`;
 - `parseDiagnosticReport(text)`;
+- `parseRouteIndex(text)` and `serializeRouteIndex(value)`;
 - `isJsonValue(value)`; and
 - serializable contract, diagnostic, issue, and result types.
 
@@ -65,6 +66,12 @@ once per check. External package imports remain graph leaves.
 Optional ownership rules also enforce suffix-based test and i18n slots without
 inferring a feature owner from file content or naming conventions.
 
+An optional project `routeIndex` selects a canonical source-bound route
+artifact. The compiler verifies indexed files, digests, and ranges before
+checking each action's exact `POST` route. Stale artifacts are configuration
+failures; fresh-index disagreement emits `route.missing`. The compiler does not
+run an index producer or expose a plugin lifecycle.
+
 ## Export Policy
 
 - Only paths declared in package `exports` are public.
@@ -112,6 +119,10 @@ exists yet.
 
 Version `0.0.51` requires action form template paths to end in `.html`, aligning
 the authoring schema with the static-HTML-only compiler boundary.
+
+Version `0.1.0` adds the optional project `routeIndex`, the public RouteIndex v1
+schema/parser/serializer, source freshness verification, and the
+`route.missing` diagnostic.
 
 ## Deprecation
 

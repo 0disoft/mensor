@@ -6,6 +6,12 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { checkProject } from "@mensor/compiler";
+import {
+  parseDiagnosticReport,
+  parseRouteIndex,
+  serializeRouteIndex,
+} from "@mensor/contract";
+import { contentDigest } from "../dist/src/route-index.js";
 
 const fixtureRoot = fileURLToPath(new URL("../../../fixtures/", import.meta.url));
 
@@ -22,6 +28,149 @@ test("returns the canonical passing report for the layered valid fixture", async
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.deepEqual(result.report, await expectedReport("valid/layered-tasks"));
+  }
+});
+
+test("fails closed when a source-bound RouteIndex is stale", async () => {
+  const root = await copyFixture("valid/hono-static-tasks");
+  try {
+    const routeFile = path.join(root, "src/features/tasks/routes/tasks.mjs");
+    const source = await readFile(routeFile, "utf8");
+    await writeFile(
+      routeFile,
+      source.replace('app.post("/tasks"', 'app.post("/work-items"'),
+      "utf8",
+    );
+
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.failure.kind, "configuration");
+      assert.equal(result.failure.code, "route_index.digest_mismatch");
+      assert.equal(
+        result.failure.file,
+        "src/features/tasks/routes/tasks.mjs",
+      );
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("reports a missing contract route after RouteIndex regeneration", async () => {
+  const root = await copyFixture("valid/hono-static-tasks");
+  try {
+    const routeFile = path.join(root, "src/features/tasks/routes/tasks.mjs");
+    const routeIndexFile = path.join(root, "mensor.route-index.json");
+    const source = (await readFile(routeFile, "utf8"))
+      .replace('app.post("/tasks"', 'app.post("/work-items"');
+    await writeFile(routeFile, source, "utf8");
+
+    const parsed = parseRouteIndex(await readFile(routeIndexFile, "utf8"));
+    assert.equal(parsed.ok, true);
+    if (!parsed.ok) {
+      return;
+    }
+    const digest = contentDigest(source);
+    const refreshed = {
+      ...parsed.value,
+      routes: parsed.value.routes.map((route) => ({
+        ...route,
+        path: route.method === "POST" ? "/work-items" : route.path,
+        source: {
+          ...route.source,
+          contentDigest: digest,
+          range: route.method === "POST"
+            ? {
+                start: { line: 7, character: 0 },
+                end: { line: 7, character: 46 },
+              }
+            : route.source.range,
+        },
+      })),
+    };
+    await writeFile(routeIndexFile, serializeRouteIndex(refreshed), "utf8");
+
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+        "route.missing",
+      ]);
+      assert.deepEqual(result.report.diagnostics[0]?.facts, {
+        actionId: "tasks.create",
+        expectedMethod: "POST",
+        expectedPath: "/tasks",
+        routeIndex: "mensor.route-index.json",
+        sameMethodPaths: ["/work-items"],
+      });
+      assert.equal(
+        parseDiagnosticReport(`${JSON.stringify(result.report)}\n`).ok,
+        true,
+      );
+      const malformed = structuredClone(result.report);
+      delete malformed.diagnostics[0].facts.sameMethodPaths;
+      assert.equal(
+        parseDiagnosticReport(`${JSON.stringify(malformed)}\n`).ok,
+        false,
+      );
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a RouteIndex range outside its bound source", async () => {
+  const root = await copyFixture("valid/hono-static-tasks");
+  try {
+    const routeIndexFile = path.join(root, "mensor.route-index.json");
+    const parsed = parseRouteIndex(await readFile(routeIndexFile, "utf8"));
+    assert.equal(parsed.ok, true);
+    if (!parsed.ok) {
+      return;
+    }
+    const invalid = {
+      ...parsed.value,
+      routes: parsed.value.routes.map((route, index) => index === 0
+        ? {
+            ...route,
+            source: {
+              ...route.source,
+              range: {
+                start: { line: 999, character: 0 },
+                end: { line: 999, character: 1 },
+              },
+            },
+          }
+        : route),
+    };
+    await writeFile(routeIndexFile, serializeRouteIndex(invalid), "utf8");
+
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.failure.code, "route_index.range_invalid");
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects invalid UTF-8 before trusting a RouteIndex digest", async () => {
+  const root = await copyFixture("valid/hono-static-tasks");
+  try {
+    const routeFile = path.join(root, "src/features/tasks/routes/tasks.mjs");
+    await writeFile(routeFile, Uint8Array.from([0x65, 0x78, 0x70, 0x6f, 0x72, 0x74, 0x20, 0xc3, 0x28]));
+
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.failure.kind, "filesystem");
+      assert.equal(result.failure.code, "file.encoding_invalid");
+      assert.equal(result.failure.file, "src/features/tasks/routes/tasks.mjs");
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
 

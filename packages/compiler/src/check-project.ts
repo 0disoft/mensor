@@ -4,11 +4,13 @@ import { performance } from "node:perf_hooks";
 import {
   parseFeatureContract,
   parseProjectContract,
+  parseRouteIndex,
   type ContractIssue,
   type Diagnostic,
   type DiagnosticReport,
   type FeatureContract,
   type FileRoleContract,
+  type RouteIndex,
 } from "@mensor/contract";
 
 import {
@@ -28,6 +30,8 @@ import { createStaticHtmlFormIndexProvider } from "./html-forms.js";
 import { handlerFileRange } from "./locations.js";
 import { checkImportBoundaries } from "./module-boundary-rule.js";
 import { checkOwnershipRules, type FeatureOwnerFact } from "./ownership-rule.js";
+import { verifyRouteIndex } from "./route-index.js";
+import { checkFeatureRoutes } from "./route-rule.js";
 import {
   assertRelativePosixPath,
   compareText,
@@ -152,6 +156,28 @@ async function checkProjectInternal(
       readSource: (file) => readProjectFile(root, file, maxFileBytes),
       ...(timing === undefined ? {} : { timing }),
     });
+    let routeIndexPath: string | undefined;
+    let routeIndex: RouteIndex | undefined;
+    if (project.routeIndex !== undefined) {
+      routeIndexPath = assertRelativePosixPath(
+        project.routeIndex,
+        "routeIndex path",
+      );
+      const routeIndexText = await readProjectFile(
+        root,
+        routeIndexPath,
+        maxFileBytes,
+      );
+      const routeIndexResult = parseRouteIndex(routeIndexText);
+      if (!routeIndexResult.ok) {
+        return contractFailure(routeIndexPath, routeIndexResult.issues);
+      }
+      routeIndex = await verifyRouteIndex({
+        routeIndex: routeIndexResult.value,
+        discovered,
+        sourceFacts,
+      });
+    }
 
     for (const featureContractPath of [...project.featureContracts].sort(compareText)) {
       const safeFeatureContractPath = assertRelativePosixPath(
@@ -205,6 +231,23 @@ async function checkProjectInternal(
           }),
         )),
       );
+      if (routeIndex !== undefined && routeIndexPath !== undefined) {
+        diagnostics.push(
+          ...measureSync(
+            timing,
+            "ruleEvaluation",
+            () => checkFeatureRoutes({
+              featureContractPath: safeFeatureContractPath,
+              featureText,
+              feature: featureResult.value,
+              projectContractPath: configFile,
+              projectText,
+              routeIndexPath,
+              routeIndex,
+            }),
+          ),
+        );
+      }
       const templatePaths = featureTemplatePaths(
         safeFeatureContractPath,
         featureResult.value,

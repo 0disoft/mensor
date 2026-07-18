@@ -11,10 +11,12 @@ files, and canonical expected report needed for one behavior.
   database, test, and i18n files under enforced boundary and ownership rules
 - `valid/hono-static-tasks`: a runnable Hono application that keeps form markup
   in static HTML, passes the same compiler contract, and exercises GET and POST
-  routes through Hono's in-process request API
+  routes through Hono's in-process request API; its maintained RouteIndex is a
+  synthetic source-bound artifact, not a Hono adapter claim
 - `valid/node-static-rsvp`: a dependency-free Node Request/Response application
   with a three-control radio group, strict URL-encoded decoding, and semantic
-  checks for malformed input and escaped output
+  checks for malformed input and escaped output; its source-bound RouteIndex
+  covers the shared GET/POST request-path declaration
 - `invalid/file-role-mismatch`: an action handler discovered in the route slot
   while its contract requires the server role
 - `invalid/form-field-missing`: the same action with its required `title`

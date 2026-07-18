@@ -1,6 +1,6 @@
 # Hono Adoption Cost
 
-- Status: One-fixture pilot complete
+- Status: Historical one-fixture baseline before RouteIndex
 - Evidence date: 2026-07-15
 - Target: `fixtures/valid/hono-static-tasks`
 - Measurement command: `pnpm run adoption`

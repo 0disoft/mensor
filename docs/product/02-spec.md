@@ -309,23 +309,29 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     feature-level marginal contract cost across the maintained Hono task and
     dependency-free Node RSVP applications. Both valid projects remain green,
     both static field mutations produce the expected diagnostics, and both
-    application-only route mutations remain undetected. This repeated blind
-    spot opens the design gate for a serialized `RouteIndex`; it does not
+    application-only route mutations were initially undetected. This repeated
+    blind spot opened the design gate for a serialized `RouteIndex`; it did not
     authorize framework execution, a generic plugin API, or a framework-specific
     extractor.
+52. The optional project `routeIndex` selects a canonical RouteIndex v1 artifact
+    containing static GET/POST paths, source files, SHA-256 digests, and UTF-16
+    ranges. The compiler validates freshness before semantic rules. Stale input
+    fails with a `route_index.*` configuration failure, while a fresh index
+    missing an action's exact route emits `route.missing`. The compiler never
+    executes or discovers an index producer.
 
 ## Next Product Validation Gate
 
-The next milestone has two evidence-backed slices: repeat agent-authored
-dogfood with the second `rsvp-v1` application shape, and design the narrow
-serialized `RouteIndex` opened by the two-project route-drift result. External
-maintainer recruitment and another agent attestation layer remain out of
-scope. A coding agent receives a fresh empty workspace, a versioned application
-brief, maintained Mensor documentation, and bounded check commands. It must
-build the application and contracts without reading or copying existing Mensor
-fixtures, evaluator-owned semantic oracles, or third-party application source.
-The evaluator supplies and runs the semantic oracle independently after
-generation.
+The next milestone is repeated agent-authored dogfood with the second
+`rsvp-v1` application shape. The narrow RouteIndex slice opened by the
+two-project route-drift result is implemented and returns to product validation
+only when a real consumer needs an index producer. External maintainer
+recruitment and another agent attestation layer remain out of scope. A coding
+agent receives a fresh empty workspace, a versioned application brief,
+maintained Mensor documentation, and bounded check commands. It must build the
+application and contracts without reading or copying existing Mensor fixtures,
+evaluator-owned semantic oracles, or third-party application source. The
+evaluator supplies and runs the semantic oracle independently after generation.
 
 `docs/product/agent-authored-dogfood-protocol.md` owns the input, output,
 evaluation, privacy, security, and stop rules. These trials measure whether an
@@ -357,6 +363,11 @@ dynamic template compatibility or authorize an external extractor.
 The private `FormIndex` types, validator, canonical serializer/parser, source
 digest and range binding, built-in provider, and semantic translator remain
 compiler internals. They are not public exports or CLI inputs.
+
+ADR-0033 owns the public RouteIndex boundary. Unlike FormIndex, RouteIndex has a
+public schema, parser, serializer, and project-contract input. This accepts
+data, not executable adapter authority. Hono- and Node-specific extraction
+remain outside the compiler and are not implemented product claims.
 
 `docs/product/multi-project-adoption-cost.md` owns the current authoring-cost
 and route-drift evidence. The project-contract fixed cost is measured separately

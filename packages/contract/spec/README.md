@@ -25,6 +25,7 @@ value is explicit in the authoring contract.
 - `project-contract-v1.schema.json`: project root and feature-contract inputs
 - `feature-contract-v1.schema.json`: one feature and its form-backed actions
 - `diagnostic-report-v1.schema.json`: canonical check output
+- `route-index-v1.schema.json`: canonical source-bound application route facts
 
 ## Complete Authoring Example
 
@@ -188,6 +189,19 @@ summary counts, and ordered source ranges must agree with their diagnostics.
 `ProjectContract.ownershipRules` maps explicit filename suffixes to a test or
 i18n slot inside each feature. The compiler emits `file.ownership_mismatch` for
 files in the wrong slot and for matching files with no declared feature owner.
+
+## RouteIndex Slice
+
+`ProjectContract.routeIndex` optionally selects a project-root-relative strict
+JSON RouteIndex. The artifact records static `GET` and `POST` method/path pairs
+with their source file, SHA-256 digest, and UTF-16 range. It is parsed and
+canonicalized by `@mensor/contract`; the compiler verifies freshness against
+discovered source before using it.
+
+A stale digest, missing source, or out-of-bounds range is a configuration
+failure. A fresh index that lacks an action's exact `POST` route emits
+`route.missing`. Extra routes are allowed. The compiler never executes or
+loads an index producer, and producer identity is not a trust grant.
 
 HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.

@@ -42,6 +42,28 @@ export interface ProjectContract {
   readonly fileRoles: readonly FileRoleContract[];
   readonly boundaries?: readonly BoundaryContract[];
   readonly ownershipRules?: readonly OwnershipRuleContract[];
+  readonly routeIndex?: string;
+}
+
+export type ContentDigest = `sha256:${string}`;
+
+export interface RouteIndex {
+  readonly schemaVersion: 1;
+  readonly producer: {
+    readonly name: string;
+    readonly version: string;
+  };
+  readonly routes: readonly IndexedRoute[];
+}
+
+export interface IndexedRoute {
+  readonly method: "GET" | "POST";
+  readonly path: string;
+  readonly source: {
+    readonly file: string;
+    readonly contentDigest: ContentDigest;
+    readonly range: SourceRange;
+  };
 }
 
 export interface BoundaryContract {
@@ -299,6 +321,26 @@ export interface HandlerExportMissingDiagnostic {
   readonly repair: RepairInstruction;
 }
 
+export interface RouteMissingFacts {
+  readonly actionId: string;
+  readonly expectedMethod: "POST";
+  readonly expectedPath: string;
+  readonly routeIndex: string;
+  readonly sameMethodPaths: readonly string[];
+}
+
+export interface RouteMissingDiagnostic {
+  readonly code: "route.missing";
+  readonly severity: "error";
+  readonly category: "route-contract";
+  readonly message: string;
+  readonly file: string;
+  readonly range: SourceRange;
+  readonly facts: RouteMissingFacts;
+  readonly related: readonly RelatedLocation[];
+  readonly repair: RepairInstruction;
+}
+
 export interface ModuleBoundaryViolationFacts {
   readonly boundaryId: string;
   readonly edgeKind: "runtime" | "type";
@@ -391,6 +433,7 @@ export type Diagnostic =
   | FormFieldUnexpectedDiagnostic
   | FormMethodMismatchDiagnostic
   | HandlerExportMissingDiagnostic
+  | RouteMissingDiagnostic
   | ModuleBoundaryViolationDiagnostic
   | ModuleDynamicImportUnsupportedDiagnostic;
 

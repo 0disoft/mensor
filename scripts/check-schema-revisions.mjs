@@ -4,12 +4,15 @@ import {
   parseDiagnosticReport,
   parseFeatureContract,
   parseProjectContract,
+  parseRouteIndex,
 } from "../packages/contract/dist/src/index.js";
 
 const schemaRoot = new URL("../packages/contract/spec/", import.meta.url);
 const fixtures = [
   "../fixtures/valid/tiny-tasks/mensor.project.jsonc",
   "../fixtures/valid/layered-tasks/mensor.project.jsonc",
+  "../fixtures/valid/hono-static-tasks/mensor.project.jsonc",
+  "../fixtures/valid/node-static-rsvp/mensor.project.jsonc",
   "../examples/dogfood-tasks/mensor.project.jsonc",
   "../fixtures/invalid/form-field-missing/mensor.project.jsonc",
   "../fixtures/invalid/form-field-unexpected/mensor.project.jsonc",
@@ -26,6 +29,8 @@ const fixtures = [
   "../fixtures/invalid/file-role-mismatch/mensor.project.jsonc",
   "../fixtures/valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/valid/layered-tasks/src/features/tasks/feature.mensor.jsonc",
+  "../fixtures/valid/hono-static-tasks/src/features/tasks/feature.mensor.jsonc",
+  "../fixtures/valid/node-static-rsvp/src/features/rsvp/feature.mensor.jsonc",
   "../examples/dogfood-tasks/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/form-field-missing/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/invalid/form-field-unexpected/src/features/tasks/feature.mensor.jsonc",
@@ -42,6 +47,8 @@ const fixtures = [
   "../fixtures/invalid/file-role-mismatch/src/features/tasks/feature.mensor.jsonc",
   "../fixtures/valid/tiny-tasks/expected-report.json",
   "../fixtures/valid/layered-tasks/expected-report.json",
+  "../fixtures/valid/hono-static-tasks/expected-report.json",
+  "../fixtures/valid/node-static-rsvp/expected-report.json",
   "../examples/dogfood-tasks/expected-report.json",
   "../fixtures/invalid/form-field-missing/expected-report.json",
   "../fixtures/invalid/form-field-unexpected/expected-report.json",
@@ -56,12 +63,15 @@ const fixtures = [
   "../fixtures/invalid/ownership-test-slot/expected-report.json",
   "../fixtures/invalid/ownership-i18n-unowned/expected-report.json",
   "../fixtures/invalid/file-role-mismatch/expected-report.json",
+  "../fixtures/valid/hono-static-tasks/mensor.route-index.json",
+  "../fixtures/valid/node-static-rsvp/mensor.route-index.json",
 ];
 
 for (const file of [
   "project-contract-v1.schema.json",
   "feature-contract-v1.schema.json",
   "diagnostic-report-v1.schema.json",
+  "route-index-v1.schema.json",
 ]) {
   const schema = JSON.parse(await readFile(new URL(file, schemaRoot), "utf8"));
   if (schema.$id !== file) {
@@ -73,6 +83,8 @@ for (const fixture of fixtures) {
   const text = await readFile(new URL(fixture, import.meta.url), "utf8");
   const parsed = fixture.endsWith("expected-report.json")
     ? parseDiagnosticReport(text)
+    : fixture.endsWith("mensor.route-index.json")
+      ? parseRouteIndex(text)
     : fixture.endsWith("feature.mensor.jsonc")
       ? parseFeatureContract(text)
       : parseProjectContract(text);

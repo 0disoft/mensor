@@ -74,9 +74,11 @@ explicit `performance` command so ordinary validation does not absorb volatile
 `adoption` measures project-level fixed contract cost, feature-level marginal
 contract cost, and application line counts across the runnable Hono task and
 dependency-free Node RSVP fixtures. It checks one form-field drift and one
-application-route drift per target and reports local diagnostic latency samples.
-It is a maintained two-fixture probe, not a framework support matrix,
-false-positive rate, or external-user study.
+application-route drift per target, proving stale-index rejection before
+regenerating each RouteIndex and expecting `route.missing`. It reports local
+diagnostic latency samples. It is a maintained two-fixture probe, not a
+framework support matrix, false-positive rate, adapter-quality claim, or
+external-user study.
 
 `docker-integration` builds the private runner, explicitly preloads one
 digest-pinned public probe image when absent, and exercises success, timeout,

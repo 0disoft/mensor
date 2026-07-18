@@ -163,7 +163,7 @@ test("keeps response-cohort observations canonical and exploratory", async () =>
 function createObservation(overrides = {}) {
   return createAgentAuthoredBuildExploratoryObservation({
     observationId: "guestbook.glm-5.2.1",
-    producerVersion: "0.0.59",
+    producerVersion: "0.1.0",
     baselineCommit: "a".repeat(40),
     identity: {
       runnerId: "codex-subagent",

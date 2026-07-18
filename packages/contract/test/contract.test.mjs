@@ -8,6 +8,8 @@ import {
   parseFeatureContract,
   parseJsonc,
   parseProjectContract,
+  parseRouteIndex,
+  serializeRouteIndex,
 } from "@mensor/contract";
 
 const fixtureRoot = new URL("../../../fixtures/", import.meta.url);
@@ -75,6 +77,106 @@ test("rejects unknown project keys and root-escaping paths", () => {
   if (!first.ok) {
     assert.ok(first.issues.every((issue) => issue.code === "schema.violation"));
     assert.ok(first.issues.length >= 2);
+  }
+});
+
+test("accepts one optional project RouteIndex path", async () => {
+  const text = await fixtureText("valid/tiny-tasks/mensor.project.jsonc");
+  const value = JSON.parse(text);
+  value.routeIndex = "mensor.route-index.json";
+
+  assert.equal(parseProjectContract(JSON.stringify(value)).ok, true);
+  value.routeIndex = "../route-index.json";
+  assert.equal(parseProjectContract(JSON.stringify(value)).ok, false);
+});
+
+test("canonicalizes strict source-bound RouteIndex JSON", () => {
+  const routeIndex = {
+    schemaVersion: 1,
+    producer: { name: "fixture-route-index", version: "1.0.0" },
+    routes: [
+      {
+        method: "POST",
+        path: "/tasks",
+        source: {
+          file: "src/routes/tasks.mjs",
+          contentDigest: `sha256:${"0".repeat(64)}`,
+          range: {
+            start: { line: 2, character: 11 },
+            end: { line: 2, character: 19 },
+          },
+        },
+      },
+      {
+        method: "GET",
+        path: "/tasks",
+        source: {
+          file: "src/routes/tasks.mjs",
+          contentDigest: `sha256:${"0".repeat(64)}`,
+          range: {
+            start: { line: 1, character: 10 },
+            end: { line: 1, character: 18 },
+          },
+        },
+      },
+    ],
+  };
+  const text = serializeRouteIndex(routeIndex);
+  const result = parseRouteIndex(text);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.value.routes.map((route) => route.method), [
+      "GET",
+      "POST",
+    ]);
+  }
+  assert.equal(parseRouteIndex(text.trim()).ok, false);
+  assert.equal(parseRouteIndex(`// generated\n${text}`).ok, false);
+  assert.throws(
+    () => serializeRouteIndex({ ...routeIndex, hostPath: "C:/private" }),
+    /cannot be serialized/u,
+  );
+  assert.throws(
+    () => serializeRouteIndex({
+      ...routeIndex,
+      routes: [{
+        ...routeIndex.routes[0],
+        source: { ...routeIndex.routes[0].source, file: "src//routes.mjs" },
+      }],
+    }),
+    /portable project-relative POSIX path/u,
+  );
+});
+
+test("rejects duplicate routes and invalid RouteIndex ranges", () => {
+  const route = {
+    method: "POST",
+    path: "/tasks",
+    source: {
+      file: "src/routes/tasks.mjs",
+      contentDigest: `sha256:${"0".repeat(64)}`,
+      range: {
+        start: { line: 2, character: 5 },
+        end: { line: 1, character: 1 },
+      },
+    },
+  };
+  const duplicate = {
+    schemaVersion: 1,
+    producer: { name: "fixture-route-index", version: "1.0.0" },
+    routes: [route, route],
+  };
+  const text = `${JSON.stringify(duplicate, null, 2)}\n`;
+  const result = parseRouteIndex(text);
+
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.deepEqual(result.issues.map((issue) => issue.instancePath), [
+      "/routes/0/source/range",
+      "/routes/1/source/range",
+      "/routes/1",
+    ]);
   }
 });
 

@@ -4,13 +4,19 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 
+import {
+  parseRouteIndex,
+  serializeRouteIndex,
+} from "../packages/contract/dist/src/index.js";
 import { checkProject } from "../packages/compiler/dist/src/index.js";
+import { contentDigest } from "../packages/compiler/dist/src/route-index.js";
 
 const repositoryRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const pilotDefinitions = [
   {
     target: "fixtures/valid/hono-static-tasks",
     featureContracts: ["src/features/tasks/feature.mensor.jsonc"],
+    routeIndex: "mensor.route-index.json",
     routeSource: "src/features/tasks/routes/tasks.mjs",
     routeLiteral: "/tasks",
     fieldDrift: {
@@ -22,12 +28,15 @@ const pilotDefinitions = [
     routeDrift: {
       before: 'app.post("/tasks"',
       after: 'app.post("/work-items"',
+      affectedMethods: ["POST"],
+      newPath: "/work-items",
       description: "change Hono POST route from /tasks to /work-items",
     },
   },
   {
     target: "fixtures/valid/node-static-rsvp",
     featureContracts: ["src/features/rsvp/feature.mensor.jsonc"],
+    routeIndex: "mensor.route-index.json",
     routeSource: "src/features/rsvp/routes/rsvp.mjs",
     routeLiteral: "/rsvp",
     fieldDrift: {
@@ -39,6 +48,8 @@ const pilotDefinitions = [
     routeDrift: {
       before: 'url.pathname !== "/rsvp"',
       after: 'url.pathname !== "/responses"',
+      affectedMethods: ["GET", "POST"],
+      newPath: "/responses",
       description: "change Node route match from /rsvp to /responses",
     },
   },
@@ -58,7 +69,7 @@ try {
     (pilot) => pilot.staticMetrics.featureContractNonEmptyLines,
   );
   const routeDriftTargets = pilots.filter(
-    (pilot) => !pilot.frameworkRouteDrift.compilerDetected,
+    (pilot) => pilot.applicationRouteDrift.compilerDetected,
   ).map((pilot) => pilot.target);
 
   process.stdout.write(`${JSON.stringify({
@@ -73,11 +84,11 @@ try {
       ),
       fixedProjectContractLines: summarize(fixedProjectContractLines),
       marginalFeatureContractLines: summarize(marginalFeatureContractLines),
-      undetectedRouteDriftTargets: routeDriftTargets,
+      detectedRouteDriftTargets: routeDriftTargets,
       routeIndexDecision:
-        routeDriftTargets.length >= 2
-          ? "design-serialized-route-index"
-          : "defer-route-index",
+        routeDriftTargets.length === pilots.length
+          ? "serialized-route-index-implemented"
+          : "route-index-coverage-incomplete",
     },
     pilots,
   }, null, 2)}\n`);
@@ -91,6 +102,10 @@ async function measurePilot(definition, temporaryRoot) {
   const featureContractPaths = definition.featureContracts.map((file) =>
     path.join(fixtureRoot, ...file.split("/"))
   );
+  const routeIndexPath = path.join(
+    fixtureRoot,
+    ...definition.routeIndex.split("/"),
+  );
   const contractFiles = [projectContractPath, ...featureContractPaths];
   const applicationFiles = await collectApplicationFiles(path.join(fixtureRoot, "src"));
   const projectContractNonEmptyLines = await sumNonEmptyLines([projectContractPath]);
@@ -101,6 +116,7 @@ async function measurePilot(definition, temporaryRoot) {
     projectContractNonEmptyLines
     + featureContractNonEmptyLines.reduce((sum, count) => sum + count, 0);
   const applicationNonEmptyLines = await sumNonEmptyLines(applicationFiles);
+  const routeIndexNonEmptyLines = await sumNonEmptyLines([routeIndexPath]);
   const valid = await measuredCheck(fixtureRoot);
   assertDiagnosticCodes(valid.result, []);
 
@@ -134,8 +150,11 @@ async function measurePilot(definition, temporaryRoot) {
     definition.routeDrift.before,
     definition.routeDrift.after,
   );
-  const routeDrift = await measuredCheck(routeDriftRoot);
-  assertDiagnosticCodes(routeDrift.result, []);
+  const staleRouteDrift = await measuredCheck(routeDriftRoot);
+  assertFailureCode(staleRouteDrift.result, "route_index.digest_mismatch");
+  await refreshRouteIndex(routeDriftRoot, definition);
+  const refreshedRouteDrift = await measuredCheck(routeDriftRoot);
+  assertDiagnosticCodes(refreshedRouteDrift.result, ["route.missing"]);
 
   const featureContractSources = await Promise.all(
     featureContractPaths.map((file) => readFile(file, "utf8")),
@@ -154,6 +173,7 @@ async function measurePilot(definition, temporaryRoot) {
       contractNonEmptyLines,
       applicationFileCount: applicationFiles.length,
       applicationNonEmptyLines,
+      routeIndexNonEmptyLines,
       contractToApplicationLineRatio: round(
         contractNonEmptyLines / applicationNonEmptyLines,
       ),
@@ -178,12 +198,63 @@ async function measurePilot(definition, temporaryRoot) {
       diagnosticCodes: diagnosticCodes(fieldDriftResult),
       durationMs: summarize(fieldDriftSamples),
     },
-    frameworkRouteDrift: {
+    applicationRouteDrift: {
       mutation: definition.routeDrift.description,
-      diagnosticCodes: diagnosticCodes(routeDrift.result),
-      durationMs: routeDrift.durationMs,
-      compilerDetected: diagnosticCodes(routeDrift.result).length > 0,
+      staleIndexFailureCode: failureCode(staleRouteDrift.result),
+      refreshedIndexDiagnosticCodes: diagnosticCodes(refreshedRouteDrift.result),
+      durationMs: {
+        staleIndex: staleRouteDrift.durationMs,
+        refreshedIndex: refreshedRouteDrift.durationMs,
+      },
+      compilerDetected: true,
     },
+  };
+}
+
+async function refreshRouteIndex(root, definition) {
+  const routeIndexFile = path.join(root, ...definition.routeIndex.split("/"));
+  const parsed = parseRouteIndex(await readFile(routeIndexFile, "utf8"));
+  if (!parsed.ok) {
+    throw new Error("Maintained RouteIndex must parse before regeneration.");
+  }
+  const sourceFile = path.join(root, ...definition.routeSource.split("/"));
+  const source = await readFile(sourceFile, "utf8");
+  const digest = contentDigest(source);
+  const affectedRange = lineRangeContaining(source, definition.routeDrift.after);
+  const affectedMethods = new Set(definition.routeDrift.affectedMethods);
+  const refreshed = {
+    ...parsed.value,
+    routes: parsed.value.routes.map((route) => ({
+      ...route,
+      path: affectedMethods.has(route.method)
+        ? definition.routeDrift.newPath
+        : route.path,
+      source: route.source.file === definition.routeSource
+        ? {
+            ...route.source,
+            contentDigest: digest,
+            range: affectedMethods.has(route.method)
+              ? affectedRange
+              : route.source.range,
+          }
+        : route.source,
+    })),
+  };
+  await writeFile(routeIndexFile, serializeRouteIndex(refreshed), "utf8");
+}
+
+function lineRangeContaining(source, needle) {
+  const lines = source.split(/\r\n|\n|\r/u);
+  const indexes = lines
+    .map((line, index) => line.includes(needle) ? index : -1)
+    .filter((index) => index >= 0);
+  if (indexes.length !== 1) {
+    throw new Error(`Expected one route declaration containing ${JSON.stringify(needle)}.`);
+  }
+  const line = lines[indexes[0]];
+  return {
+    start: { line: indexes[0], character: 0 },
+    end: { line: indexes[0], character: line.length },
   };
 }
 
@@ -206,6 +277,17 @@ function assertDiagnosticCodes(result, expected) {
     throw new Error(
       `Expected diagnostics ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}.`,
     );
+  }
+}
+
+function failureCode(result) {
+  return result.ok ? undefined : result.failure.code;
+}
+
+function assertFailureCode(result, expected) {
+  const actual = failureCode(result);
+  if (actual !== expected) {
+    throw new Error(`Expected failure ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}.`);
   }
 }
 

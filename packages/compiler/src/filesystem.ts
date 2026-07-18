@@ -46,7 +46,20 @@ export async function readProjectFile(
         safePath,
       );
     }
-    return await readFile(fromProjectPath(root, safePath), "utf8");
+    const bytes = await readFile(fromProjectPath(root, safePath));
+    try {
+      return new TextDecoder("utf-8", {
+        fatal: true,
+        ignoreBOM: true,
+      }).decode(bytes);
+    } catch {
+      throw new InputFailure(
+        "filesystem",
+        "file.encoding_invalid",
+        `Project file ${JSON.stringify(safePath)} must be valid UTF-8.`,
+        safePath,
+      );
+    }
   } catch (error) {
     if (error instanceof InputFailure) {
       throw error;

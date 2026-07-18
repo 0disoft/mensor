@@ -11,10 +11,12 @@ test("reads and parses one source file at most once per project check", async ()
   });
 
   const first = await index.get("src/create-task.ts");
+  const source = await index.source("src/create-task.ts");
   const second = await index.get("src/create-task.ts");
 
   assert.equal(reads, 1);
   assert.equal(first, second);
+  assert.match(source, /createTask/u);
   assert.deepEqual(first.exports.map((entry) => entry.name), ["createTask"]);
   assert.deepEqual(first.imports.map((entry) => entry.specifier), ["./shared.js"]);
 });

@@ -41,6 +41,9 @@
       "items": {
         "$ref": "#/$defs/ownershipRule"
       }
+    },
+    "routeIndex": {
+      "$ref": "#/$defs/relativePath"
     }
   },
   "$defs": {

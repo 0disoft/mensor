@@ -1,4 +1,5 @@
 export { isJsonValue, parseJsonc } from "./jsonc.js";
+export { parseRouteIndex, serializeRouteIndex } from "./route-index.js";
 export {
   parseDiagnosticReport,
   parseFeatureContract,
@@ -12,6 +13,7 @@ export type {
   ContractIssueCode,
   ContractResult,
   ContractSuccess,
+  ContentDigest,
   Diagnostic,
   DiagnosticReport,
   FeatureContract,
@@ -41,6 +43,7 @@ export type {
   ModuleDynamicImportUnsupportedDiagnostic,
   ModuleDynamicImportUnsupportedFacts,
   IgnoredFormField,
+  IndexedRoute,
   JsonObject,
   JsonPrimitive,
   JsonValue,
@@ -49,6 +52,9 @@ export type {
   ProjectContract,
   RelatedLocation,
   RepairInstruction,
+  RouteIndex,
+  RouteMissingDiagnostic,
+  RouteMissingFacts,
   SourcePosition,
   SourceRange,
   StringSchema,

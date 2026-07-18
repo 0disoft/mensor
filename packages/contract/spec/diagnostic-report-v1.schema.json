@@ -153,6 +153,9 @@
           "$ref": "#/$defs/handlerExportMissingDiagnostic"
         },
         {
+          "$ref": "#/$defs/routeMissingDiagnostic"
+        },
+        {
           "$ref": "#/$defs/moduleBoundaryViolationDiagnostic"
         },
         {
@@ -533,6 +536,40 @@
           "type": "string",
           "minLength": 1,
           "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        }
+      }
+    },
+    "routeMissingDiagnostic": {
+      "allOf": [
+        { "$ref": "#/$defs/diagnosticBase" },
+        {
+          "type": "object",
+          "properties": {
+            "code": { "const": "route.missing" },
+            "severity": { "const": "error" },
+            "category": { "const": "route-contract" },
+            "facts": { "$ref": "#/$defs/routeMissingFacts" }
+          }
+        }
+      ]
+    },
+    "routeMissingFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "expectedMethod", "expectedPath", "routeIndex", "sameMethodPaths"],
+      "properties": {
+        "actionId": { "type": "string", "minLength": 1 },
+        "expectedMethod": { "const": "POST" },
+        "expectedPath": { "type": "string", "pattern": "^/[^?#]*$" },
+        "routeIndex": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "sameMethodPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^/[^?#]*$" }
         }
       }
     },

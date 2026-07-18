@@ -26,13 +26,13 @@ coding agent.
 ## Compiler Flow
 
 ```text
-JSONC contract       TypeScript/JavaScript       static HTML
-      |                        |                      |
+JSONC contract       TypeScript/JavaScript       static HTML       RouteIndex
+      |                        |                      |                  |
       |                        |            built-in HTML provider
       |                        |                      |
       |                        |                 FormIndex
       |                        |                      |
-      +------------------------+----------------------+
+      +------------------------+----------------------+------------------+
                                |
                     deterministic discovery
                                |
@@ -87,6 +87,13 @@ This boundary does not authorize external execution. A future extractor may
 produce an index outside the compiler, but CLI ingestion, process launching,
 package loading, and freshness validation require separate decisions. Arbitrary
 lifecycle hooks remain prohibited.
+
+ADR-0033 adds `RouteIndex v1` as a public source-bound artifact. The compiler
+accepts only a project-selected canonical JSON file, verifies every indexed
+source digest and range through the shared source cache, and checks exact
+action-route presence. It does not launch the producer or infer trust from the
+producer name. Malformed or stale indexes are configuration failures;
+fresh-index contract disagreement is a deterministic diagnostic.
 
 ## Runtime Boundary
 

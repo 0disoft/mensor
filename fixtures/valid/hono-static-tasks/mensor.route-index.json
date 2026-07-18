@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "producer": {
+    "name": "mensor-fixture-route-index",
+    "version": "1.0.0"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/tasks",
+      "source": {
+        "file": "src/features/tasks/routes/tasks.mjs",
+        "contentDigest": "sha256:686ea07ef975e6faa065a540159b2bdc017651eb34975f8a75d06ab5707d0584",
+        "range": {
+          "start": {
+            "line": 4,
+            "character": 0
+          },
+          "end": {
+            "line": 4,
+            "character": 32
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/tasks",
+      "source": {
+        "file": "src/features/tasks/routes/tasks.mjs",
+        "contentDigest": "sha256:686ea07ef975e6faa065a540159b2bdc017651eb34975f8a75d06ab5707d0584",
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 0
+          },
+          "end": {
+            "line": 7,
+            "character": 41
+          }
+        }
+      }
+    }
+  ]
+}

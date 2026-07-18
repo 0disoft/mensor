@@ -4,42 +4,54 @@ import {
   parseDiagnosticReport,
   parseFeatureContract,
   parseProjectContract,
+  parseRouteIndex,
 } from "../packages/contract/dist/src/index.js";
 
 const fixtures = [
-  "valid/tiny-tasks",
-  "valid/layered-tasks",
-  "invalid/file-role-mismatch",
-  "invalid/form-field-missing",
-  "invalid/form-field-unexpected",
-  "invalid/form-method-mismatch",
-  "invalid/form-action-mismatch",
-  "invalid/form-control-codec-mismatch",
-  "invalid/form-control-unsupported",
-  "invalid/handler-export-missing",
-  "invalid/module-boundary-transitive",
-  "invalid/module-boundary-direct",
-  "invalid/module-dynamic-import-unsupported",
-  "invalid/ownership-test-slot",
-  "invalid/ownership-i18n-unowned",
+  fixture("valid/tiny-tasks"),
+  fixture("valid/layered-tasks"),
+  fixture("valid/hono-static-tasks", {
+    routeIndex: "mensor.route-index.json",
+  }),
+  fixture("valid/node-static-rsvp", {
+    feature: "src/features/rsvp/feature.mensor.jsonc",
+    routeIndex: "mensor.route-index.json",
+  }),
+  fixture("invalid/file-role-mismatch"),
+  fixture("invalid/form-field-missing"),
+  fixture("invalid/form-field-unexpected"),
+  fixture("invalid/form-method-mismatch"),
+  fixture("invalid/form-action-mismatch"),
+  fixture("invalid/form-control-codec-mismatch"),
+  fixture("invalid/form-control-unsupported"),
+  fixture("invalid/handler-export-missing"),
+  fixture("invalid/module-boundary-transitive"),
+  fixture("invalid/module-boundary-direct"),
+  fixture("invalid/module-dynamic-import-unsupported"),
+  fixture("invalid/ownership-test-slot"),
+  fixture("invalid/ownership-i18n-unowned"),
 ];
 const fixtureRoot = new URL("../fixtures/", import.meta.url);
 
-for (const fixture of fixtures) {
+for (const entry of fixtures) {
   assertSuccess(
-    parseProjectContract(await text(`${fixture}/mensor.project.jsonc`)),
-    `${fixture}/mensor.project.jsonc`,
+    parseProjectContract(await text(`${entry.root}/mensor.project.jsonc`)),
+    `${entry.root}/mensor.project.jsonc`,
   );
   assertSuccess(
-    parseFeatureContract(
-      await text(`${fixture}/src/features/tasks/feature.mensor.jsonc`),
-    ),
-    `${fixture}/src/features/tasks/feature.mensor.jsonc`,
+    parseFeatureContract(await text(`${entry.root}/${entry.feature}`)),
+    `${entry.root}/${entry.feature}`,
   );
   assertSuccess(
-    parseDiagnosticReport(await text(`${fixture}/expected-report.json`)),
-    `${fixture}/expected-report.json`,
+    parseDiagnosticReport(await text(`${entry.root}/expected-report.json`)),
+    `${entry.root}/expected-report.json`,
   );
+  if (entry.routeIndex !== undefined) {
+    assertSuccess(
+      parseRouteIndex(await text(`${entry.root}/${entry.routeIndex}`)),
+      `${entry.root}/${entry.routeIndex}`,
+    );
+  }
 }
 
 assertSuccess(
@@ -63,6 +75,16 @@ assertSuccess(
   ), "utf8")),
   "examples/dogfood-tasks/expected-report.json",
 );
+
+function fixture(root, options = {}) {
+  return {
+    root,
+    feature: options.feature ?? "src/features/tasks/feature.mensor.jsonc",
+    ...(options.routeIndex === undefined
+      ? {}
+      : { routeIndex: options.routeIndex }),
+  };
+}
 
 function assertSuccess(result, label) {
   if (!result.ok) {
