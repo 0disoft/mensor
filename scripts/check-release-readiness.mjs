@@ -63,6 +63,28 @@ for (const packageName of packages.map(([name]) => name)) {
   }
 }
 
+const runbook = await readText("docs/releasing/runbook.md");
+for (const packageName of releasePackageNames) {
+  const artifact = releaseArtifactFileName(packageName, workspace.version);
+  const bootstrapCommand =
+    `npm publish ./dist/release/${artifact} --access public --tag latest --provenance=false`;
+  if (!runbook.includes(bootstrapCommand)) {
+    failures.push(`runbook.md must contain the local bootstrap command ${JSON.stringify(bootstrapCommand)}.`);
+  }
+}
+for (const required of [
+  "npm stage list",
+  "npm stage view",
+  "npm stage download",
+  "npm stage approve",
+  "Node 22.14.0",
+  "npm 11.15.0",
+]) {
+  if (!runbook.includes(required)) {
+    failures.push(`runbook.md must contain ${JSON.stringify(required)}.`);
+  }
+}
+
 const workflow = await readText(".github/workflows/release.yml");
 for (const required of [
   "workflow_dispatch:",
@@ -86,6 +108,7 @@ for (const packageName of releasePackageNames) {
 for (const [description, pattern] of [
   ["a long-lived npm token", /NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./u],
   ["direct npm publish", /(^|\s)npm publish(\s|$)/mu],
+  ["a disabled provenance override", /--provenance=false/u],
   ["an automatic push trigger", /^\s*push\s*:/mu],
   ["an automatic pull-request trigger", /^\s*pull_request\s*:/mu],
 ]) {

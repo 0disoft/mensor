@@ -35,6 +35,8 @@ All notable changes to Mensor are documented in this file.
   an official Compiler API fallback for compatible TS6 runtime changes.
 - Release packing accepts the documented pnpm argument separator as forwarded
   by pnpm 11.
+- The one-time local npm bootstrap explicitly disables cloud-only provenance;
+  later trusted-publisher releases generate provenance through GitHub OIDC.
 
 ### Compatibility
 
