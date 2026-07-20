@@ -2,6 +2,7 @@
   "name": "mensor-workspace",
   "version": "0.1.0",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "packageManager": "pnpm@11.11.0",
   "engines": {
@@ -19,13 +20,15 @@
     "migration-check": "pnpm run build && node scripts/check-schema-revisions.mjs",
     "smoke": "pnpm run build && node scripts/smoke-contract.mjs",
     "package-smoke": "pnpm run build && node scripts/smoke-package-consumer.mjs",
+    "release-check": "node scripts/check-release-readiness.mjs",
+    "release:pack": "node scripts/pack-release-artifacts.mjs",
     "benchmark": "pnpm run build && node scripts/run-mutation-benchmark.mjs",
     "performance": "pnpm run build && node scripts/run-compiler-performance.mjs",
     "performance:smoke": "pnpm run build && node scripts/run-compiler-performance.mjs --sizes 1000",
     "adoption": "pnpm run build && node scripts/run-adoption-pilot.mjs",
     "docker-integration": "pnpm run build && node scripts/run-docker-integration.mjs",
     "docs": "node scripts/check-docs.mjs",
-    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run package-smoke && pnpm run performance:smoke && pnpm run adoption && pnpm run docs",
+    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run package-smoke && pnpm run release-check && pnpm run performance:smoke && pnpm run adoption && pnpm run docs",
     "mensor": "node packages/cli/dist/src/bin.js"
   },
   "devDependencies": {

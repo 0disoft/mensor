@@ -9,7 +9,7 @@ import type {
   FormFieldMissingDiagnostic,
   FormFieldUnexpectedDiagnostic,
   FormMethodMismatchDiagnostic,
-} from "@mensor/contract";
+} from "@0disoft/mensor-contract";
 
 import type { FormFact } from "./form-facts.js";
 import { formFactsForLinkedForm } from "./form-index-semantics.js";

@@ -11,7 +11,7 @@ import {
   type FeatureContract,
   type FileRoleContract,
   type RouteIndex,
-} from "@mensor/contract";
+} from "@0disoft/mensor-contract";
 
 import {
   assertProjectRoot,

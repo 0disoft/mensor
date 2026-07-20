@@ -14,7 +14,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@mensor/compiler": "workspace:*",
-    "@mensor/contract": "workspace:*"
+    "@0disoft/mensor-compiler": "workspace:*",
+    "@0disoft/mensor-contract": "workspace:*"
   }
 }

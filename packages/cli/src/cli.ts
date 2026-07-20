@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
 
-import { checkProject, type CompilerFailure } from "@mensor/compiler";
+import { checkProject, type CompilerFailure } from "@0disoft/mensor-compiler";
 
 import type {
   CliFailureEnvelope,

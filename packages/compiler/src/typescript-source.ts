@@ -1,6 +1,6 @@
 import ts from "@typescript/typescript6";
 
-import type { SourceRange } from "@mensor/contract";
+import type { SourceRange } from "@0disoft/mensor-contract";
 
 import { compareText } from "./paths.js";
 

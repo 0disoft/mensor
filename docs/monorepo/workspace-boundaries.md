@@ -31,13 +31,13 @@ against the same source and contributes a digest-pinned mutation baseline.
 
 ## Package Ownership
 
-### `@mensor/contract`
+### `@0disoft/mensor-contract`
 
 Owns serializable contract types, normalized IR, diagnostic types, schema
 versions, validators, and canonicalization rules. It must not depend on the
 filesystem, TypeScript compiler API, HTML parsers, or CLI concerns.
 
-### `@mensor/compiler`
+### `@0disoft/mensor-compiler`
 
 Owns deterministic discovery, JSONC loading, TypeScript and HTML fact
 extraction, semantic linking, rules, and report construction. It depends on the
@@ -51,7 +51,7 @@ are normalized for configured direct and transitive role boundaries.
 Suffix-based ownership rules keep test and i18n resources inside their declared
 feature slots.
 
-### `@mensor/cli`
+### `@0disoft/mensor-cli`
 
 Owns argument parsing, config selection, stdout and stderr behavior, exit
 status, and future atomic artifact writes. It delegates all checking behavior
@@ -108,9 +108,11 @@ repair-rate, sandbox, network-denial, or repository-invisibility gates.
 
 Every workspace build removes known output directories before invoking the
 TypeScript project graph. Published package allowlists include only generated
-source and schema directories. Package smoke compares those outputs with the
-current source graph before packing, so deleted or renamed source cannot survive
-as stale distributable code.
+source, owned schemas, and the package license. Package smoke compares build
+outputs with the current source graph, installs every tarball into an isolated
+consumer, and verifies package identity, public publication metadata, and
+license bytes. Deleted or renamed source cannot survive as stale distributable
+code.
 
 ## Dependency Rules
 

@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@mensor/fixture-kit": "workspace:*",
-    "@mensor/contract": "workspace:*"
+    "@0disoft/mensor-contract": "workspace:*"
   },
   "devDependencies": {
     "ajv": "8.20.0"

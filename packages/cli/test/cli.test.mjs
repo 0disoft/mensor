@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { cliVersion } from "@mensor/cli";
+import { cliVersion } from "@0disoft/mensor-cli";
 
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const fixtureRoot = path.join(repositoryRoot, "fixtures");

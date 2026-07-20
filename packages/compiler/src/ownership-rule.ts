@@ -2,7 +2,7 @@ import type {
   Diagnostic,
   FileOwnershipMismatchDiagnostic,
   OwnershipRuleContract,
-} from "@mensor/contract";
+} from "@0disoft/mensor-contract";
 
 import { projectOwnershipRuleRange } from "./locations.js";
 import { findFeatureOwner, sortFeatureRoots } from "./feature-roots.js";

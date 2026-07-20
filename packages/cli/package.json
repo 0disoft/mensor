@@ -1,13 +1,29 @@
 {
-  "name": "@mensor/cli",
+  "name": "@0disoft/mensor-cli",
   "version": "0.1.0",
-  "private": true,
+  "description": "CLI for checking Mensor project contracts.",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0disoft/mensor.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/0disoft/mensor#readme",
+  "bugs": {
+    "url": "https://github.com/0disoft/mensor/issues"
+  },
+  "keywords": ["mensor", "cli", "static-analysis", "contracts", "developer-tools"],
   "type": "module",
   "sideEffects": false,
   "engines": {
     "node": ">=22"
   },
-  "files": ["dist/src"],
+  "files": ["LICENSE", "dist/src"],
   "bin": {
     "mensor": "./dist/src/bin.js"
   },
@@ -18,6 +34,6 @@
     }
   },
   "dependencies": {
-    "@mensor/compiler": "workspace:*"
+    "@0disoft/mensor-compiler": "workspace:*"
   }
 }

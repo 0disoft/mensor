@@ -1,6 +1,6 @@
 import * as path from "node:path";
 
-import type { SourcePosition, SourceRange } from "@mensor/contract";
+import type { SourcePosition, SourceRange } from "@0disoft/mensor-contract";
 
 import { compareText } from "./paths.js";
 import {

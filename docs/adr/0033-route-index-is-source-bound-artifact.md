@@ -29,7 +29,7 @@ Mensor accepts an optional canonical serialized `RouteIndex v1` selected by
 - A fresh index missing an action contract's exact `POST` route emits the
   stable `route.missing` diagnostic.
 - Extra application routes are allowed.
-- `@mensor/contract` owns the parser, serializer, schema, and serializable
+- `@0disoft/mensor-contract` owns the parser, serializer, schema, and serializable
   types.
 - The compiler does not execute, discover, install, or load a producer.
 - No Hono extractor, Node extractor, arbitrary hook, or generic plugin API is

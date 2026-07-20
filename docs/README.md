@@ -16,6 +16,12 @@
 - Machine-readable contract schemas: `packages/contract/spec/README.md`
 - Executable behavior examples: `fixtures/README.md`
 - Validation names and reporting: `VALIDATION.md`
+- Contribution and DCO policy: `../CONTRIBUTING.md` and `../DCO.txt`
+- Vulnerability reporting policy: `../SECURITY.md`
+- Repository and package license: `../LICENSE`
+- Release history: `../CHANGELOG.md`
+- npm release procedure: `releasing/runbook.md`
+- First public preview migration note: `releasing/0.1.0.md`
 
 ## Research Notes
 

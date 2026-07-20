@@ -4,7 +4,7 @@ import type {
   Diagnostic,
   FeatureContract,
   HandlerExportMissingDiagnostic,
-} from "@mensor/contract";
+} from "@0disoft/mensor-contract";
 
 import { handlerExportRange } from "./locations.js";
 import {

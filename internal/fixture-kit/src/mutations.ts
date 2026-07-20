@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 
-import { checkProject } from "@mensor/compiler";
-import type { DiagnosticReport } from "@mensor/contract";
+import { checkProject } from "@0disoft/mensor-compiler";
+import type { DiagnosticReport } from "@0disoft/mensor-contract";
 import { withWorkspaceLease } from "./workspace-lease.js";
 
 export type MutationId =

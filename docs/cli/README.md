@@ -12,4 +12,4 @@ workflow that cannot be expressed through check output. See
 
 The implementation lives in `packages/cli`. Its process entrypoint owns only
 argument parsing, rendering, and exit-status mapping; all project inspection is
-delegated to `@mensor/compiler`.
+delegated to `@0disoft/mensor-compiler`.

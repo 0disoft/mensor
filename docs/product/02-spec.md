@@ -324,9 +324,13 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 
 The repeated evaluator-owned `rsvp-v2` response run and the `0.1.0`
 release-candidate audit are complete. Runtime application tests remain a
-separate required gate even when Mensor passes. Publication is blocked on
-maintainer-owned name, license, package-scope, security-contact, and publishing
-decisions recorded in
+separate required gate even when Mensor passes. The product name, Apache-2.0
+license, DCO policy, `@0disoft/mensor-*` package identities, repository security
+policy, public package metadata, release notes, migration note, and stage-only
+OIDC workflow are decided. Publication remains blocked on private vulnerability
+reporting enablement, remote CI, one-time registry bootstrap, trusted-publisher
+and environment configuration, staged approval, fresh registry-consumer smoke,
+and observed tag and GitHub release evidence recorded in
 `docs/product/0.1.0-release-candidate-audit.md`; more compiler behavior does not
 resolve those blockers. The narrow RouteIndex slice returns to product
 validation only when a real consumer needs an index producer. External

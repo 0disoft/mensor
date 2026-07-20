@@ -25,7 +25,7 @@ try {
       [
         ...(pnpmExecutable ? [] : [pnpmEntrypoint]),
         "--filter",
-        `@mensor/${packageName}`,
+        `@0disoft/mensor-${packageName}`,
         "pack",
         "--pack-destination",
         tarballRoot,
@@ -43,7 +43,7 @@ try {
             "utf8",
           ),
         );
-        const tarballName = `mensor-${packageName}-${packageJson.version}.tgz`;
+        const tarballName = `0disoft-mensor-${packageName}-${packageJson.version}.tgz`;
         return [packageName, path.join(tarballRoot, tarballName)];
       }),
     ),
@@ -57,9 +57,9 @@ try {
         private: true,
         type: "module",
         dependencies: {
-          "@mensor/contract": tarballDependency(tarballs.contract),
-          "@mensor/compiler": tarballDependency(tarballs.compiler),
-          "@mensor/cli": tarballDependency(tarballs.cli),
+          "@0disoft/mensor-contract": tarballDependency(tarballs.contract),
+          "@0disoft/mensor-compiler": tarballDependency(tarballs.compiler),
+          "@0disoft/mensor-cli": tarballDependency(tarballs.cli),
         },
       },
       null,
@@ -73,9 +73,9 @@ try {
       "packages:",
       '  - "."',
       "overrides:",
-      `  "@mensor/contract": "${tarballDependency(tarballs.contract)}"`,
-      `  "@mensor/compiler": "${tarballDependency(tarballs.compiler)}"`,
-      `  "@mensor/cli": "${tarballDependency(tarballs.cli)}"`,
+      `  "@0disoft/mensor-contract": "${tarballDependency(tarballs.contract)}"`,
+      `  "@0disoft/mensor-compiler": "${tarballDependency(tarballs.compiler)}"`,
+      `  "@0disoft/mensor-cli": "${tarballDependency(tarballs.cli)}"`,
       "",
     ].join("\n"),
     "utf8",
@@ -84,7 +84,7 @@ try {
     path.join(consumerRoot, "contract-smoke.mjs"),
     `import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { parseRouteIndex, serializeRouteIndex } from "@mensor/contract";
+import { parseRouteIndex, serializeRouteIndex } from "@0disoft/mensor-contract";
 
 const text = serializeRouteIndex({
   schemaVersion: 1,
@@ -104,7 +104,7 @@ const text = serializeRouteIndex({
 });
 assert.equal(parseRouteIndex(text).ok, true);
 const schemaUrl = import.meta.resolve(
-  "@mensor/contract/schemas/route-index-v1.schema.json"
+  "@0disoft/mensor-contract/schemas/route-index-v1.schema.json"
 );
 const schema = JSON.parse(await readFile(new URL(schemaUrl), "utf8"));
 assert.equal(schema.$id, "route-index-v1.schema.json");
@@ -122,6 +122,26 @@ assert.equal(schema.$id, "route-index-v1.schema.json");
   );
 
   await runPnpm(["install", "--prefer-offline", "--ignore-scripts"], consumerRoot);
+  const rootLicense = await readFile(path.join(repositoryRoot, "LICENSE"), "utf8");
+  for (const packageName of packageNames) {
+    const installedPackageRoot = path.join(
+      consumerRoot,
+      "node_modules",
+      "@0disoft",
+      `mensor-${packageName}`,
+    );
+    const packageLicense = await readFile(path.join(installedPackageRoot, "LICENSE"), "utf8");
+    assert.equal(packageLicense, rootLicense);
+    const packageMetadata = JSON.parse(
+      await readFile(path.join(installedPackageRoot, "package.json"), "utf8"),
+    );
+    assert.notEqual(packageMetadata.private, true);
+    assert.deepEqual(packageMetadata.publishConfig, {
+      access: "public",
+      registry: "https://registry.npmjs.org",
+      provenance: true,
+    });
+  }
   await run(process.execPath, ["contract-smoke.mjs"], consumerRoot);
 
   const valid = await runMensor(consumerRoot, "valid");

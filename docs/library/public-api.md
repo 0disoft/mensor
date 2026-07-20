@@ -5,8 +5,8 @@
 
 ## Current Package Surface
 
-`@mensor/contract` is the serializable contract package. It is private until
-the first preview release and exports:
+`@0disoft/mensor-contract` is the publishable serializable contract package and
+exports:
 
 - `parseJsonc(text)` for strict JSONC parsing with duplicate-key detection;
 - `parseProjectContract(text)`;
@@ -23,7 +23,7 @@ schema defaults, or access the network.
 
 ## Current Compiler Surface
 
-`@mensor/compiler` exports:
+`@0disoft/mensor-compiler` exports:
 
 ```ts
 export interface CheckProjectOptions {
@@ -90,7 +90,7 @@ compatibility promise.
 
 ## Current CLI Surface
 
-`@mensor/cli` exports `runCli(options)` for process-isolated testing and host
+`@0disoft/mensor-cli` exports `runCli(options)` for process-isolated testing and host
 embedding, plus the `mensor` executable. The library function receives argv,
 cwd, stdout, and stderr ports explicitly and returns an exit status without
 mutating global process state. The executable is the only module that writes to
@@ -106,9 +106,10 @@ second hand-maintained schema copy is forbidden.
 
 ## Compatibility
 
-All packages use a shared `0.x` version initially. Breaking changes are allowed
-during private pre-release development. Once packages are published, every
-breaking public change requires release notes and migration guidance.
+All packages use a shared `0.x` version initially. The unpublished source
+history has no compatibility promise. Beginning with the first public package
+release, every breaking public change requires release notes and migration
+guidance.
 
 Serialized contracts carry their own schema version. Package version and
 schema version do not advance together unless both implementation and wire
@@ -124,7 +125,10 @@ the authoring schema with the static-HTML-only compiler boundary.
 
 Version `0.1.0` adds the optional project `routeIndex`, the public RouteIndex v1
 schema/parser/serializer, source freshness verification, and the
-`route.missing` diagnostic.
+`route.missing` diagnostic. It also finalizes the first publication identities
+as `@0disoft/mensor-contract`, `@0disoft/mensor-compiler`, and
+`@0disoft/mensor-cli`; the provisional private `@mensor/*` identities were
+never published and have no compatibility promise.
 
 ## Deprecation
 

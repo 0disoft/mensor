@@ -5,12 +5,12 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { checkProject } from "@mensor/compiler";
+import { checkProject } from "@0disoft/mensor-compiler";
 import {
   parseDiagnosticReport,
   parseRouteIndex,
   serializeRouteIndex,
-} from "@mensor/contract";
+} from "@0disoft/mensor-contract";
 import { contentDigest } from "../dist/src/route-index.js";
 
 const fixtureRoot = fileURLToPath(new URL("../../../fixtures/", import.meta.url));

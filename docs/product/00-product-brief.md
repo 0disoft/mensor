@@ -2,7 +2,7 @@
 
 - Status: Proposed
 - Owner: Maintainer
-- Working name: Mensor
+- Product name: Mensor
 
 ## Product
 
@@ -73,5 +73,23 @@ different absolute checkout paths.
 
 ## Naming
 
-`Mensor` is a codename, not a cleared release name. Repository, package,
-domain, and trademark availability must be checked before a public release.
+`Mensor` is the adopted product name. The project does not claim that the word
+is globally exclusive or that it is a registered trademark. Unrelated uses of
+the same name, or a hypothetical later registration, are not by themselves a
+reason to rename the project.
+
+Before package publication, release preparation should still search for a
+concrete likelihood of confusion with existing marks used for related
+developer tools in the intended markets. A rename becomes a decision only when
+that search or a real dispute identifies material confusion or legal risk.
+Package, repository, release, and dated project records should be retained as
+ordinary evidence of Mensor's use.
+
+This is a project naming policy, not a legal clearance opinion. The policy is
+consistent with USPTO guidance that trademark rights attach to use with
+specific goods or services, that use can establish limited rights before
+federal registration, and that registration provides broader protection:
+
+- <https://www.uspto.gov/trademarks/basics/what-trademark>
+- <https://www.uspto.gov/trademarks/basics/why-register-your-trademark>
+- <https://www.uspto.gov/trademarks/search/likelihood-confusion>

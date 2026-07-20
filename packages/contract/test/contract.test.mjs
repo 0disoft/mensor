@@ -10,7 +10,7 @@ import {
   parseProjectContract,
   parseRouteIndex,
   serializeRouteIndex,
-} from "@mensor/contract";
+} from "@0disoft/mensor-contract";
 
 const fixtureRoot = new URL("../../../fixtures/", import.meta.url);
 

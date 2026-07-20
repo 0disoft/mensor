@@ -1,4 +1,4 @@
-import type { SourceRange } from "@mensor/contract";
+import type { SourceRange } from "@0disoft/mensor-contract";
 
 import type {
   FormControlFact,

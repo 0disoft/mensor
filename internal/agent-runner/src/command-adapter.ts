@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import * as path from "node:path";
 import { TextDecoder, TextEncoder } from "node:util";
 
-import { parseDiagnosticReport, type DiagnosticReport } from "@mensor/contract";
+import { parseDiagnosticReport, type DiagnosticReport } from "@0disoft/mensor-contract";
 
 import type {
   AgentTrialAdapter,

@@ -1,4 +1,4 @@
-import type { DiagnosticReport } from "@mensor/contract";
+import type { DiagnosticReport } from "@0disoft/mensor-contract";
 
 import {
   captureRepairBaseline,

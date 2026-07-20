@@ -1,7 +1,7 @@
 # Mensor
 
-Mensor is a working name for a deterministic contract checker for
-agent-edited, server-rendered HTML applications.
+Mensor is a deterministic contract checker for agent-edited, server-rendered
+HTML applications.
 
 The runnable [`examples/dogfood-tasks`](examples/dogfood-tasks/) application
 keeps compiler checks tied to real GET/POST behavior instead of fixtures alone.
@@ -16,6 +16,21 @@ JSON that a person, CI job, or coding agent can act on.
 
 The diagnostic-first MVP is implemented and exercised by canonical fixtures.
 No package has been published and no compatibility promise exists yet.
+
+## Registry Installation
+
+The canonical package names and release controls are ready, but the first npm
+publication has not happened. After `0.1.0` is visible in the public registry,
+the supported CLI installation path will be:
+
+```text
+pnpm add --save-dev @0disoft/mensor-cli@0.1.0
+pnpm exec mensor check . --json
+```
+
+Do not treat that command as currently available until the package registry
+shows the release. See the [release runbook](docs/releasing/runbook.md) and
+[`0.1.0` migration note](docs/releasing/0.1.0.md) for the publication boundary.
 
 ## Local Source Preview
 
@@ -38,7 +53,7 @@ pnpm mensor check fixtures/invalid/form-field-missing --json
 That command exits `1` and reports `form.field_missing`. The complete project
 and feature contract authoring example lives in
 [`packages/contract/spec/README.md`](packages/contract/spec/README.md). This is
-a repository preview, not a published-package installation guide.
+a repository preview and remains the executable path before registry publication.
 
 ## First Proof
 
@@ -77,3 +92,15 @@ See [the product specification](docs/product/02-spec.md),
 [system boundary](docs/architecture/00-system-boundary.md), and
 [workspace boundaries](docs/monorepo/workspace-boundaries.md) before adding
 or changing implementation boundaries.
+
+## Contributing And Security
+
+Contributions are accepted under the Apache License 2.0 and require a DCO 1.1
+sign-off. See [CONTRIBUTING.md](CONTRIBUTING.md) and [DCO.txt](DCO.txt).
+Report suspected vulnerabilities through the private process in
+[SECURITY.md](SECURITY.md).
+
+## License
+
+Mensor is licensed under the Apache License, Version 2.0. See
+[LICENSE](LICENSE).

@@ -55,7 +55,7 @@ same file cannot acquire different owners in separate rules.
 ## Dependency Direction
 
 ```text
-@mensor/contract <- @mensor/compiler <- @mensor/cli
+@0disoft/mensor-contract <- @0disoft/mensor-compiler <- @0disoft/mensor-cli
                            ^
                            +-- internal/fixture-kit <- internal/agent-runner
 ```

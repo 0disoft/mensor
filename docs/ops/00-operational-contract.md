@@ -35,6 +35,15 @@ release is recovered by publishing a corrected version and documenting any
 diagnostic or schema impact; mutable replacement of an existing package version
 is forbidden.
 
+The first registry publication uses reviewed local tarballs and interactive
+2FA because npm staged publishing cannot create a package identity. Later
+releases use the manually dispatched `release.yml` workflow, a protected
+`npm-release` environment, GitHub OIDC, and one stage-only trusted publisher per
+package. Long-lived npm automation tokens and automatic push or tag publication
+are forbidden. npm approval remains a distinct maintainer action after staging.
+The complete procedure and rollback boundary are owned by
+`docs/releasing/runbook.md`.
+
 ## Observability and Privacy
 
 The CLI may emit explicit debug information to stderr when requested, but

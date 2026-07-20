@@ -7,6 +7,6 @@ CI wrappers, and future adapters can use the same engine as the CLI. The CLI is
 the first supported user journey; library exports stay deliberately narrow
 until real consumers exist.
 
-Package names use the provisional `@mensor` scope until release-name and
-registry availability checks are complete. See `public-api.md` for the export
-boundary and compatibility policy.
+Public package names use the account-controlled `@0disoft` scope and the
+`mensor-` prefix. See `public-api.md` for the export boundary and compatibility
+policy. Internal test packages retain private workspace-only names.

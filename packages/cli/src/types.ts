@@ -1,4 +1,4 @@
-import type { CompilerFailure } from "@mensor/compiler";
+import type { CompilerFailure } from "@0disoft/mensor-compiler";
 
 export interface CliIo {
   readonly stdout: (text: string) => void;

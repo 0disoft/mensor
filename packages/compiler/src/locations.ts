@@ -4,7 +4,7 @@ import {
   type Node,
 } from "jsonc-parser";
 
-import type { SourcePosition, SourceRange } from "@mensor/contract";
+import type { SourcePosition, SourceRange } from "@0disoft/mensor-contract";
 
 const zeroRange: SourceRange = {
   start: { line: 0, character: 0 },

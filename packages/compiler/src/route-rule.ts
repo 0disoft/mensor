@@ -3,7 +3,7 @@ import type {
   FeatureContract,
   RouteIndex,
   RouteMissingDiagnostic,
-} from "@mensor/contract";
+} from "@0disoft/mensor-contract";
 
 import {
   actionRoutePropertyRange,

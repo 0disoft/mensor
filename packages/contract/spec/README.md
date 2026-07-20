@@ -195,7 +195,7 @@ files in the wrong slot and for matching files with no declared feature owner.
 `ProjectContract.routeIndex` optionally selects a project-root-relative strict
 JSON RouteIndex. The artifact records static `GET` and `POST` method/path pairs
 with their source file, SHA-256 digest, and UTF-16 range. It is parsed and
-canonicalized by `@mensor/contract`; the compiler verifies freshness against
+canonicalized by `@0disoft/mensor-contract`; the compiler verifies freshness against
 discovered source before using it.
 
 A stale digest, missing source, or out-of-bounds range is a configuration

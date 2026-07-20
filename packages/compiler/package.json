@@ -1,13 +1,29 @@
 {
-  "name": "@mensor/compiler",
+  "name": "@0disoft/mensor-compiler",
   "version": "0.1.0",
-  "private": true,
+  "description": "Deterministic source contract checker for Mensor projects.",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0disoft/mensor.git",
+    "directory": "packages/compiler"
+  },
+  "homepage": "https://github.com/0disoft/mensor#readme",
+  "bugs": {
+    "url": "https://github.com/0disoft/mensor/issues"
+  },
+  "keywords": ["mensor", "static-analysis", "contracts", "html", "typescript"],
   "type": "module",
   "sideEffects": false,
   "engines": {
     "node": ">=22"
   },
-  "files": ["dist/src"],
+  "files": ["LICENSE", "dist/src"],
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -15,7 +31,7 @@
     }
   },
   "dependencies": {
-    "@mensor/contract": "workspace:*",
+    "@0disoft/mensor-contract": "workspace:*",
     "@typescript/typescript6": "6.0.2",
     "jsonc-parser": "3.3.1",
     "parse5": "8.0.1"

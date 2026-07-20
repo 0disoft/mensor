@@ -5,7 +5,7 @@ import type {
   RouteIndex,
   SourcePosition,
   SourceRange,
-} from "@mensor/contract";
+} from "@0disoft/mensor-contract";
 
 import { InputFailure } from "./paths.js";
 import type { SourceFactIndex } from "./source-fact-index.js";

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import * as path from "node:path";
 
-import { checkProject } from "@mensor/compiler";
+import { checkProject } from "@0disoft/mensor-compiler";
 import {
   captureWorkspaceSnapshot,
   compareWorkspaceSnapshots,

@@ -1,4 +1,4 @@
-import type { ContractIssue, DiagnosticReport } from "@mensor/contract";
+import type { ContractIssue, DiagnosticReport } from "@0disoft/mensor-contract";
 
 export interface CheckProjectOptions {
   readonly root: string;

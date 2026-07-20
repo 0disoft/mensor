@@ -7,7 +7,7 @@ import type {
   ModuleBoundaryViolationDiagnostic,
   ModuleDynamicImportUnsupportedDiagnostic,
   SourceRange,
-} from "@mensor/contract";
+} from "@0disoft/mensor-contract";
 
 import { findFeatureOwner, sortFeatureRoots } from "./feature-roots.js";
 import { projectBoundaryRange } from "./locations.js";
