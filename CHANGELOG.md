@@ -25,6 +25,9 @@ All notable changes to Mensor are documented in this file.
   environment values, and random identifiers.
 - Post-bootstrap releases use an npm stage-only trusted publisher without a
   long-lived npm token.
+- The private Docker evaluation runner rejects workspace paths containing the
+  `--mount` option delimiter, classifies lifecycle failures by typed stage, and
+  invalidates trial evidence when container cleanup fails.
 
 ### Compatibility
 

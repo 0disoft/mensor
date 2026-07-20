@@ -109,7 +109,10 @@ remove exactly once, and cleanup failure prevents a success result. Execution
 and cleanup use separate bounded abort signals.
 
 The port receives no ambient credentials from the runner and raw port errors
-are replaced with fixed lifecycle errors. The repository ships a private Docker
+are replaced with fixed lifecycle errors carrying an internal typed stage, so
+failure classification does not depend on the human-readable message. Cleanup
+failure remains authoritative because an unremoved container invalidates the
+trial evidence even when execution also failed. The repository ships a private Docker
 CLI execution-port adapter and a dedicated real-daemon integration gate. A port
 must honor abort signals and preserve the lifecycle contract before its output
 can be treated as executed sandbox evidence.
@@ -122,7 +125,9 @@ creation uses `--pull=never`, an unpredictable per-container name, and owner,
 nonce, and plan-digest labels. The adapter tracks returned handles in memory and
 rechecks all three labels before start or removal. A failed or ambiguous create
 triggers bounded best-effort inspection and removes only a matching owned
-container.
+container. Workspace roots must be absolute and cannot contain NUL or comma;
+comma is rejected because Docker's `--mount` grammar uses it as an option
+delimiter. Spaces and platform-native path separators remain valid argv data.
 
 The subprocess boundary closes stdin, bounds combined stdout and stderr, retains
 stdout only, honors abort signals, and attempts process-tree termination. Raw

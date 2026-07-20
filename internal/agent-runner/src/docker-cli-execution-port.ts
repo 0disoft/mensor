@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import * as path from "node:path";
 
 import {
   createDockerCliProcessRunner,
@@ -16,6 +15,7 @@ import type {
   DockerSandboxExecutionResult,
   DockerSandboxInspection,
 } from "./docker-sandbox-runner.js";
+import { validateDockerSandboxWorkspaceRoot } from "./docker-sandbox-workspace.js";
 
 const controlOutputLimitBytes = 262_144;
 const cleanupTimeoutMs = 5_000;
@@ -71,7 +71,7 @@ export function createDockerCliExecutionPort(
   return {
     async create(plan, workspaceRoot, signal) {
       const planDigest = dockerSandboxPlanDigest(plan);
-      const root = validateWorkspaceRoot(workspaceRoot);
+      const root = validateDockerSandboxWorkspaceRoot(workspaceRoot);
       const nonce = validateNonce(nonceFactory());
       const name = `mensor-${nonce}`;
       const command = createCommand(plan, root, name, nonce, planDigest);
@@ -607,13 +607,6 @@ function validateEnvironment(
     canonical[name] = value;
   }
   return canonical;
-}
-
-function validateWorkspaceRoot(value: string): string {
-  if (!path.isAbsolute(value) || value.includes("\0")) {
-    throw new Error("Docker CLI workspace root must be an absolute path without NUL.");
-  }
-  return path.resolve(value);
 }
 
 function validateNonce(value: string): string {

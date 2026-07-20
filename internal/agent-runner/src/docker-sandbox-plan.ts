@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import * as path from "node:path";
 
 import type { CommandAgentAdapterOptions } from "./command-adapter.js";
+import { validateDockerSandboxWorkspaceRoot } from "./docker-sandbox-workspace.js";
 
 export interface DockerSandboxPlanOptions {
   readonly dockerExecutable: string;
@@ -254,10 +255,7 @@ export function materializeDockerSandboxCommand(
   workspaceRoot: string,
 ): CommandAgentAdapterOptions {
   dockerSandboxPlanDigest(plan);
-  const root = path.resolve(workspaceRoot);
-  if (!path.isAbsolute(workspaceRoot) || workspaceRoot.includes("\0")) {
-    throw new Error("Docker workspace root must be an absolute path without NUL.");
-  }
+  const root = validateDockerSandboxWorkspaceRoot(workspaceRoot);
   return {
     executable: plan.dockerExecutable,
     args: [

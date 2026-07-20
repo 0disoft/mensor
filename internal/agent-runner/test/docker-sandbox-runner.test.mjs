@@ -145,6 +145,13 @@ test("rejects invalid configuration before creating a container", async () => {
     /absolute path/,
   );
   await assert.rejects(
+    runDockerSandbox({
+      ...runOptions(port),
+      workspaceRoot: path.resolve("workspace,with-extra-mount-syntax"),
+    }),
+    /without NUL or comma/,
+  );
+  await assert.rejects(
     runDockerSandbox({ ...runOptions(port), collector: { ...collector(), sha256: "bad" } }),
     /SHA-256/,
   );

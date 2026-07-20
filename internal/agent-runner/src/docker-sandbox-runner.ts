@@ -1,5 +1,3 @@
-import * as path from "node:path";
-
 import {
   createDockerSandboxRuntimeAttestation,
   validateDockerSandboxCollectorRef,
@@ -11,6 +9,9 @@ import {
   dockerSandboxPlanDigest,
   type DockerSandboxPlan,
 } from "./docker-sandbox-plan.js";
+import { validateDockerSandboxWorkspaceRoot } from "./docker-sandbox-workspace.js";
+
+export { validateDockerSandboxWorkspaceRoot } from "./docker-sandbox-workspace.js";
 
 export type DockerSandboxInspection = Omit<
   DockerSandboxRuntimeObservation,
@@ -56,6 +57,24 @@ export interface DockerSandboxRunResult {
   readonly stdout: Uint8Array;
 }
 
+export type DockerSandboxFailureStage = "create" | "inspect" | "execute" | "cleanup";
+
+class DockerSandboxStageError extends Error {
+  readonly stage: DockerSandboxFailureStage;
+
+  constructor(stage: DockerSandboxFailureStage, message: string) {
+    super(message);
+    this.name = "DockerSandboxStageError";
+    this.stage = stage;
+  }
+}
+
+export function dockerSandboxFailureStage(
+  error: unknown,
+): DockerSandboxFailureStage | null {
+  return error instanceof DockerSandboxStageError ? error.stage : null;
+}
+
 export async function runDockerSandbox(
   options: RunDockerSandboxOptions,
 ): Promise<DockerSandboxRunResult> {
@@ -83,10 +102,14 @@ export async function runDockerSandbox(
       executionController.signal,
     );
     if (typeof createdHandle !== "string") {
-      throw new Error("Docker sandbox create returned an invalid handle.");
+      throw stageError("create", "Docker sandbox create returned an invalid handle.");
     }
     handle = createdHandle;
-    validateHandle(handle);
+    try {
+      validateHandle(handle);
+    } catch {
+      throw stageError("create", "Docker sandbox handle must be a bounded opaque identifier.");
+    }
     const inspection = await runExecutionStage(
       "inspect",
       options.port.inspect(handle, executionController.signal),
@@ -99,7 +122,7 @@ export async function runDockerSandbox(
         collector,
       });
     } catch {
-      throw new Error("Docker sandbox inspection did not match its plan.");
+      throw stageError("inspect", "Docker sandbox inspection did not match its plan.");
     }
     const execution = validateExecutionResult(await runExecutionStage(
       "start",
@@ -119,7 +142,7 @@ export async function runDockerSandbox(
       try {
         await removeWithTimeout(options.port, handle, cleanupTimeoutMs);
       } catch {
-        throw new Error(executionFailed
+        throw stageError("cleanup", executionFailed
           ? "Docker sandbox cleanup failed after an execution failure."
           : "Docker sandbox cleanup failed.");
       }
@@ -139,9 +162,15 @@ async function runExecutionStage<T>(
     ]);
   } catch {
     if (signal.aborted) {
-      throw new Error("Docker sandbox execution exceeded its timeout.");
+      throw stageError(
+        stage === "start" ? "execute" : stage,
+        "Docker sandbox execution exceeded its timeout.",
+      );
     }
-    throw new Error(`Docker sandbox ${stage} failed.`);
+    throw stageError(
+      stage === "start" ? "execute" : stage,
+      `Docker sandbox ${stage} failed.`,
+    );
   }
 }
 
@@ -177,34 +206,37 @@ function validateExecutionResult(
   maxOutputBytes: number,
 ): DockerSandboxExecutionResult {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error("Docker sandbox execution result must be an object.");
+    throw stageError("execute", "Docker sandbox execution result must be an object.");
   }
   const keys = Object.keys(value).sort(compareText);
   if (JSON.stringify(keys) !== JSON.stringify([
     "combinedOutputBytes", "exitCode", "stdout", "termination",
   ])) {
-    throw new Error("Docker sandbox execution result contains unsupported fields.");
+    throw stageError(
+      "execute",
+      "Docker sandbox execution result contains unsupported fields.",
+    );
   }
   if (!(value.stdout instanceof Uint8Array)) {
-    throw new Error("Docker sandbox stdout must be bytes.");
+    throw stageError("execute", "Docker sandbox stdout must be bytes.");
   }
   if (
     !Number.isSafeInteger(value.combinedOutputBytes) ||
     value.combinedOutputBytes < value.stdout.byteLength
   ) {
-    throw new Error("Docker sandbox combined output size is invalid.");
+    throw stageError("execute", "Docker sandbox combined output size is invalid.");
   }
   if (value.termination === "timeout") {
-    throw new Error("Docker sandbox execution exceeded its timeout.");
+    throw stageError("execute", "Docker sandbox execution exceeded its timeout.");
   }
   if (value.termination === "output-limit" || value.combinedOutputBytes > maxOutputBytes) {
-    throw new Error("Docker sandbox execution exceeded its output limit.");
+    throw stageError("execute", "Docker sandbox execution exceeded its output limit.");
   }
   if (value.termination !== "exited" || !Number.isSafeInteger(value.exitCode)) {
-    throw new Error("Docker sandbox execution result is invalid.");
+    throw stageError("execute", "Docker sandbox execution result is invalid.");
   }
   if (value.exitCode !== 0) {
-    throw new Error("Docker sandbox execution exited unsuccessfully.");
+    throw stageError("execute", "Docker sandbox execution exited unsuccessfully.");
   }
   return value;
 }
@@ -219,17 +251,17 @@ function validateInput(value: Uint8Array, maxInputBytes: number): Uint8Array {
   return new Uint8Array(value);
 }
 
-export function validateDockerSandboxWorkspaceRoot(value: string): string {
-  if (!path.isAbsolute(value) || value.includes("\0")) {
-    throw new Error("Docker sandbox workspace root must be an absolute path without NUL.");
-  }
-  return path.resolve(value);
-}
-
 function validateHandle(value: string): void {
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(value)) {
     throw new Error("Docker sandbox handle must be a bounded opaque identifier.");
   }
+}
+
+function stageError(
+  stage: DockerSandboxFailureStage,
+  message: string,
+): DockerSandboxStageError {
+  return new DockerSandboxStageError(stage, message);
 }
 
 export function validateDockerSandboxCleanupTimeout(value: number): number {

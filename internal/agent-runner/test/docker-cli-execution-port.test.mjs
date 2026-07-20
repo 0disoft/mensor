@@ -17,6 +17,7 @@ const planLabel = "io.mensor.sandbox.plan-sha256";
 test("maps one owned Docker container through create, inspect, start, and remove", async () => {
   const plan = sandboxPlan();
   const fake = fakeDocker(plan);
+  const workspaceRoot = path.resolve("workspace with spaces");
   const port = createDockerCliExecutionPort({
     environment: { DOCKER_HOST: "unix:///controlled.sock" },
     processRunner: fake.runner,
@@ -24,7 +25,7 @@ test("maps one owned Docker container through create, inspect, start, and remove
   });
   const signal = new AbortController().signal;
 
-  assert.equal(await port.create(plan, path.resolve("workspace"), signal), handle);
+  assert.equal(await port.create(plan, workspaceRoot, signal), handle);
   const inspection = await port.inspect(handle, signal);
   const result = await port.start(
     handle,
@@ -63,6 +64,29 @@ test("maps one owned Docker container through create, inspect, start, and remove
     create.args.includes(`${planLabel}=${dockerSandboxPlanDigest(plan)}`),
     true,
   );
+  assert.equal(
+    create.args.includes(`type=bind,src=${workspaceRoot},dst=/workspace`),
+    true,
+  );
+});
+
+test("rejects Docker mount delimiter syntax in the workspace path", async () => {
+  const plan = sandboxPlan();
+  const fake = fakeDocker(plan);
+  const port = createDockerCliExecutionPort({
+    processRunner: fake.runner,
+    nonceFactory: () => nonce,
+  });
+
+  await assert.rejects(
+    port.create(
+      plan,
+      path.resolve("workspace,with-extra-mount-syntax"),
+      new AbortController().signal,
+    ),
+    /without NUL or comma/,
+  );
+  assert.deepEqual(fake.calls, []);
 });
 
 test("refuses foreign ownership before starting or deleting a container", async () => {

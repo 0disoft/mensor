@@ -25,6 +25,7 @@ import {
   type DockerSandboxPlanCommitment,
 } from "./docker-sandbox-plan.js";
 import {
+  dockerSandboxFailureStage,
   runDockerSandbox,
   validateDockerSandboxCleanupTimeout,
   validateDockerSandboxExecutionPort,
@@ -281,19 +282,20 @@ function validatePreflight(
 }
 
 function classifyExecutionFailure(error: unknown): SandboxAgentTrialFailure {
+  const stage = dockerSandboxFailureStage(error);
+  if (stage === "create") {
+    return createFailure(stage, "sandbox-create-failed", null);
+  }
+  if (stage === "inspect") {
+    return createFailure(stage, "sandbox-inspection-failed", null);
+  }
+  if (stage === "cleanup") {
+    return createFailure(stage, "sandbox-cleanup-failed", null);
+  }
+  if (stage === "execute") {
+    return createFailure(stage, "sandbox-execution-failed", null);
+  }
   const message = error instanceof Error ? error.message : "";
-  if (message === "Docker sandbox create failed.") {
-    return createFailure("create", "sandbox-create-failed", null);
-  }
-  if (
-    message === "Docker sandbox inspect failed." ||
-    message === "Docker sandbox inspection did not match its plan."
-  ) {
-    return createFailure("inspect", "sandbox-inspection-failed", null);
-  }
-  if (message.startsWith("Docker sandbox cleanup failed")) {
-    return createFailure("cleanup", "sandbox-cleanup-failed", null);
-  }
   if (message.startsWith("Agent command output")) {
     return createFailure("verify", "verification-failed", null);
   }

@@ -89,6 +89,20 @@ test("returns a redacted cleanup failure instead of evidence", async () => {
   });
 });
 
+test("keeps cleanup failure authoritative after execution also fails", async () => {
+  await withFixture(async (root) => {
+    const events = [];
+    const outcome = await runSandboxAgentTrial(
+      options(root, repairPort(events, "cleanup-after-start-failure")),
+    );
+
+    assert.equal(outcome.ok, false);
+    assert.equal(outcome.stage, "cleanup");
+    assert.equal(outcome.category, "sandbox-cleanup-failed");
+    assert.deepEqual(events, ["create", "inspect", "start", "remove"]);
+  });
+});
+
 test("classifies lifecycle failures without exposing port errors", async () => {
   for (const [mode, stage, category, expectedEvents] of [
     ["create-failure", "create", "sandbox-create-failed", ["create"]],
@@ -217,7 +231,7 @@ function repairPort(events, mode = "success") {
     },
     async start(handle, input) {
       events.push("start");
-      if (mode === "start-failure") {
+      if (mode === "start-failure" || mode === "cleanup-after-start-failure") {
         throw new Error("private port failure");
       }
       const root = roots.get(handle);
@@ -243,7 +257,7 @@ function repairPort(events, mode = "success") {
     async remove(handle) {
       events.push("remove");
       roots.delete(handle);
-      if (mode === "cleanup-failure") {
+      if (mode === "cleanup-failure" || mode === "cleanup-after-start-failure") {
         throw new Error("daemon cleanup secret");
       }
     },

@@ -17,7 +17,8 @@ import {
 
 test("materializes a networkless least-privilege Docker command", () => {
   const plan = createDockerSandboxPlan(options());
-  const command = materializeDockerSandboxCommand(plan, path.resolve("isolated-workspace"));
+  const workspaceRoot = path.resolve("isolated workspace");
+  const command = materializeDockerSandboxCommand(plan, workspaceRoot);
   assert.match(dockerSandboxPlanDigest(plan), /^[a-f0-9]{64}$/);
   assert.deepEqual(plan.security, {
     network: "none",
@@ -43,7 +44,7 @@ test("materializes a networkless least-privilege Docker command", () => {
   ]) {
     assert.ok(command.args.includes(required), required);
   }
-  assert.ok(command.args.some((argument) => argument.endsWith("dst=/workspace")));
+  assert.ok(command.args.includes(`type=bind,src=${workspaceRoot},dst=/workspace`));
 });
 
 test("rejects mutable images and unsafe executable paths", () => {
@@ -61,6 +62,13 @@ test("rejects mutable images and unsafe executable paths", () => {
       "relative-workspace",
     ),
     /absolute path/,
+  );
+  assert.throws(
+    () => materializeDockerSandboxCommand(
+      createDockerSandboxPlan(options()),
+      path.resolve("workspace,with-extra-mount-syntax"),
+    ),
+    /without NUL or comma/,
   );
 });
 

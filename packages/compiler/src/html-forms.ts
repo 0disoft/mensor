@@ -21,6 +21,11 @@ import {
 import { compareText } from "./paths.js";
 
 const staticHtmlSourceKind = "mensor/static-html";
+const formControlTagNames = ["button", "input", "select", "textarea"] as const;
+type FormControlTagName = (typeof formControlTagNames)[number];
+type FormControlElement = DefaultTreeAdapterTypes.Element & {
+  readonly tagName: FormControlTagName;
+};
 
 export interface StaticHtmlFormIndexProvider {
   readonly getIndex: (
@@ -111,7 +116,7 @@ export function extractStaticHtmlFormDocument(
 function indexedFormFact(
   form: DefaultTreeAdapterTypes.Element,
   forms: readonly DefaultTreeAdapterTypes.Element[],
-  controls: readonly DefaultTreeAdapterTypes.Element[],
+  controls: readonly FormControlElement[],
 ): IndexedFormFact {
   const ownedControls = controls.filter(
     (control) => associatedForm(control, forms) === form,
@@ -128,15 +133,14 @@ function indexedFormFact(
 }
 
 function indexedControlFact(
-  control: DefaultTreeAdapterTypes.Element,
-  ownedControls: readonly DefaultTreeAdapterTypes.Element[],
+  control: FormControlElement,
+  ownedControls: readonly FormControlElement[],
 ): IndexedControlFact {
   const range = elementStartTagRange(control);
-  const kind = control.tagName as "button" | "input" | "select" | "textarea";
   const inputType = controlInputType(control);
   return {
     name: stringAttributeEvidence(control, "name"),
-    controlKind: known(kind, range),
+    controlKind: known(control.tagName, range),
     inputType: known(inputType, range),
     multiple: known(attribute(control, "multiple") !== null, range),
     multiplicity: known(controlMultiplicity(control, ownedControls), range),
@@ -220,8 +224,8 @@ function unsupportedControlReason(
 }
 
 function controlMultiplicity(
-  control: DefaultTreeAdapterTypes.Element,
-  ownedControls: readonly DefaultTreeAdapterTypes.Element[],
+  control: FormControlElement,
+  ownedControls: readonly FormControlElement[],
 ): "mutually-exclusive" | "repeated" | "scalar" {
   const name = attribute(control, "name");
   if (name === null || name.length === 0 || !isSuccessfulFieldCandidate(control)) {
@@ -283,8 +287,10 @@ function collectElements(
   }
 }
 
-function isFormControl(element: DefaultTreeAdapterTypes.Element): boolean {
-  return ["button", "input", "select", "textarea"].includes(element.tagName);
+function isFormControl(
+  element: DefaultTreeAdapterTypes.Element,
+): element is FormControlElement {
+  return formControlTagNames.some((tagName) => tagName === element.tagName);
 }
 
 function isSuccessfulFieldCandidate(
