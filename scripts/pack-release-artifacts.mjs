@@ -95,7 +95,7 @@ if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === modulePat
   const workspace = JSON.parse(
     await readFile(path.join(repositoryRoot, "package.json"), "utf8"),
   );
-  const expectedVersion = parseVersion(process.argv.slice(2)) ?? workspace.version;
+  const expectedVersion = parseReleaseVersion(process.argv.slice(2)) ?? workspace.version;
   await packReleaseArtifacts({
     repositoryRoot,
     outputRoot: path.join(repositoryRoot, "dist", "release"),
@@ -104,14 +104,19 @@ if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === modulePat
   });
 }
 
-function parseVersion(args) {
-  if (args.length === 0) {
+export function parseReleaseVersion(args) {
+  const normalizedArgs = args[0] === "--" && args.length > 1 ? args.slice(1) : args;
+  if (normalizedArgs.length === 0) {
     return undefined;
   }
-  if (args.length !== 2 || args[0] !== "--version" || args[1].startsWith("--")) {
+  if (
+    normalizedArgs.length !== 2 ||
+    normalizedArgs[0] !== "--version" ||
+    normalizedArgs[1].startsWith("--")
+  ) {
     throw new Error("Usage: pnpm run release:pack -- --version <workspace-version>");
   }
-  return args[1];
+  return normalizedArgs[1];
 }
 
 async function run(command, args, cwd, environment) {

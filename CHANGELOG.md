@@ -33,6 +33,8 @@ All notable changes to Mensor are documented in this file.
 
 - TypeScript syntax diagnostics now isolate the pinned parser fast path behind
   an official Compiler API fallback for compatible TS6 runtime changes.
+- Release packing accepts the documented pnpm argument separator as forwarded
+  by pnpm 11.
 
 ### Compatibility
 
