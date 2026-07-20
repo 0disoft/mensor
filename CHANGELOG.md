@@ -29,6 +29,11 @@ All notable changes to Mensor are documented in this file.
   `--mount` option delimiter, classifies lifecycle failures by typed stage, and
   invalidates trial evidence when container cleanup fails.
 
+### Changed
+
+- TypeScript syntax diagnostics now isolate the pinned parser fast path behind
+  an official Compiler API fallback for compatible TS6 runtime changes.
+
 ### Compatibility
 
 - This is the first public preview. Public diagnostic and schema compatibility

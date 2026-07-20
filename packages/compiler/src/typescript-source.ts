@@ -35,10 +35,7 @@ export function extractModuleFact(
     true,
     scriptKind(fileName),
   );
-  const parseDiagnostics = (sourceFile as ts.SourceFile & {
-    readonly parseDiagnostics: readonly ts.Diagnostic[];
-  }).parseDiagnostics;
-  const syntaxErrors = parseDiagnostics
+  const syntaxErrors = sourceFileSyntaxDiagnostics(sourceFile, sourceText, fileName)
     .filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error)
     .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))
     .sort(compareText);
@@ -69,6 +66,31 @@ export function extractModuleFact(
     unsupportedDynamicImports,
     syntaxErrors,
   };
+}
+
+export function sourceFileSyntaxDiagnostics(
+  sourceFile: ts.SourceFile,
+  sourceText: string,
+  fileName: string,
+): readonly ts.Diagnostic[] {
+  const diagnostics = (sourceFile as ts.SourceFile & {
+    readonly parseDiagnostics?: readonly ts.Diagnostic[];
+  }).parseDiagnostics;
+  if (diagnostics !== undefined) {
+    return diagnostics;
+  }
+
+  return ts.transpileModule(sourceText, {
+    compilerOptions: {
+      allowJs: true,
+      checkJs: false,
+      jsx: ts.JsxEmit.Preserve,
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+    },
+    fileName,
+    reportDiagnostics: true,
+  }).diagnostics ?? [];
 }
 
 function collectStaticImport(

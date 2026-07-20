@@ -5,7 +5,7 @@
 
 ## Context
 
-Mensor needs a Node ESM build, a future TypeScript Compiler API consumer, strict
+Mensor needs a Node ESM build, a TypeScript Compiler API consumer, strict
 JSONC parsing, JSON Schema Draft 2020-12 validation, and publishable schema
 artifacts. Choosing the normal TypeScript 7 compiler without checking its API
 surface would split the build tool from the compiler API needed by the product.
@@ -25,6 +25,11 @@ surface would split the build tool from the compiler API needed by the product.
   package build. Do not keep a second root schema copy.
 - Pin direct toolchain and runtime dependency versions and commit the pnpm
   lockfile.
+
+TypeScript 7.0 does not ship a programmatic API. The TypeScript team publishes
+`@typescript/typescript6` as the official compatibility package for tools that
+still need the JavaScript Compiler API alongside the native TypeScript 7
+compiler. It is the supported API track for this use case, not a preview build.
 
 The version choices were refreshed from the official Node.js release page and
 the npm package pages before adoption. They are repository pins, not claims that
@@ -53,5 +58,6 @@ the same versions will remain current.
 
 - [Node.js releases](https://nodejs.org/en/about/previous-releases)
 - [TypeScript 6 API package](https://www.npmjs.com/package/@typescript/typescript6)
+- [Announcing TypeScript 7.0](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)
 - [jsonc-parser](https://www.npmjs.com/package/jsonc-parser)
 - [Ajv](https://www.npmjs.com/package/ajv)

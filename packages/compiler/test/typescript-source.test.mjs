@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { extractModuleFact } from "../dist/src/typescript-source.js";
+import ts from "@typescript/typescript6";
+
+import {
+  extractModuleFact,
+  sourceFileSyntaxDiagnostics,
+} from "../dist/src/typescript-source.js";
 
 test("extracts direct, aliased, default, and destructured exports", () => {
   const fact = extractModuleFact(`const local = 1;
@@ -59,6 +64,35 @@ test("reports parser diagnostics without executing source", () => {
   const fact = extractModuleFact("export function broken( {", "broken.ts");
 
   assert.ok(fact.syntaxErrors.length > 0);
+});
+
+test("falls back to the public TS6 API when parser diagnostics are unavailable", () => {
+  const sourceText = "export function broken( {";
+  const sourceFile = ts.createSourceFile(
+    "broken.ts",
+    sourceText,
+    ts.ScriptTarget.ES2022,
+    true,
+    ts.ScriptKind.TS,
+  );
+  const withoutParserDiagnostics = new Proxy(sourceFile, {
+    get(target, property, receiver) {
+      return property === "parseDiagnostics"
+        ? undefined
+        : Reflect.get(target, property, receiver);
+    },
+  });
+
+  const diagnostics = sourceFileSyntaxDiagnostics(
+    withoutParserDiagnostics,
+    sourceText,
+    "broken.ts",
+  );
+  assert.ok(
+    diagnostics.some(
+      (diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error,
+    ),
+  );
 });
 
 test("extracts ESM and CommonJS runtime edges and rejects computed targets", () => {

@@ -25,6 +25,11 @@ its modules.
   lexical declaration shadows the CommonJS binding.
 - Keep shadowing analysis syntax-only; do not create a TypeScript Program or
   perform package resolution for this rule.
+- Isolate parser-only diagnostics behind one compatibility helper. Use the
+  pinned TS6 source file's parser diagnostics as the allocation-free fast path
+  and fall back to the public `transpileModule` diagnostic API if that runtime
+  field is absent. Do not create one Program per source file only to obtain
+  syntax diagnostics.
 - Never pass TypeScript nodes, symbols, programs, or source files across the
   extraction boundary.
 
@@ -34,6 +39,10 @@ its modules.
 - Explicit re-exports are deterministic without package resolution.
 - Wildcard re-export resolution is deferred to the import-graph slice.
 - Parser upgrades can change source ranges and therefore require fixture review.
+- The fast diagnostic path touches a TS6 runtime field omitted from its public
+  declarations. The official fallback keeps a compatible TS6 patch from
+  becoming an immediate crash, while the exact dependency and fixture gates
+  remain the primary compatibility controls.
 
 ## Reconsider When
 
