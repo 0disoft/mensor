@@ -58,6 +58,13 @@ npm view @0disoft/mensor-compiler@0.1.0 version --json
 npm view @0disoft/mensor-cli@0.1.0 version --json
 ```
 
+After all three packages are visible, run the configured
+`mensor_registry_smoke` intent. It installs the exact workspace version from
+the official registry in a temporary consumer with lifecycle scripts disabled,
+then verifies the contract API and valid/invalid CLI behavior. This networked
+check is deliberately separate from aggregate `check` and requires explicit
+network approval.
+
 Do not add an automation token as a bootstrap shortcut. If a later package
 fails, do not unpublish a package that consumers may already have fetched.
 Repair the cause and publish a new patch version; deprecate a bad version when
@@ -88,10 +95,11 @@ reviewer or enable a self-approval restriction that would deadlock releases.
 Keep workflow dispatch manual and protect environment configuration and the
 release workflow through repository administration.
 
-For every npm package, require 2FA for package administration and disallow
-ordinary automation tokens after trusted publishing is active. The workflow
-uses GitHub OIDC through `id-token: write`; it must not receive `NPM_TOKEN`,
-`NODE_AUTH_TOKEN`, or another registry secret.
+Package access may retain npm's 2FA-or-granular-token option. This does not
+change the release workflow: it uses GitHub OIDC through `id-token: write` and
+must not receive `NPM_TOKEN`, `NODE_AUTH_TOKEN`, or another registry secret.
+Any separately created token remains a maintainer-owned credential outside the
+release path and must be scoped, short-lived, and rotated independently.
 
 ## Later Releases
 

@@ -2,10 +2,13 @@
 
 ## Supported Versions
 
-Mensor has not published a package release yet, so no released version currently
-receives a compatibility or security-support promise. Reports should describe
-the affected commit or current `main` behavior. This section will be replaced
-with a release support table when packages are published.
+| Version | Supported |
+| --- | --- |
+| `0.1.x` | Yes |
+
+Mensor is a public preview. Security fixes are released on the latest supported
+`0.1.x` version; no response-time or repair-time service level is promised.
+Reports should identify the affected package version and commit when known.
 
 ## Reporting a Vulnerability
 
@@ -25,5 +28,4 @@ a private security contact without including vulnerability details. A
 maintainer can then move the discussion to a private channel.
 
 The maintainer will validate the report, coordinate a fix and disclosure when
-appropriate, and credit the reporter if requested. No fixed response or repair
-time is promised before the first public release.
+appropriate, and credit the reporter if requested.

@@ -327,12 +327,13 @@ release-candidate audit are complete. Runtime application tests remain a
 separate required gate even when Mensor passes. The product name, Apache-2.0
 license, DCO policy, `@0disoft/mensor-*` package identities, repository security
 policy, public package metadata, release notes, migration note, and stage-only
-OIDC workflow are decided. Publication remains blocked on private vulnerability
-reporting enablement, remote CI, one-time registry bootstrap, trusted-publisher
-and environment configuration, staged approval, fresh registry-consumer smoke,
-and observed tag and GitHub release evidence recorded in
-`docs/product/0.1.0-release-candidate-audit.md`; more compiler behavior does not
-resolve those blockers. The narrow RouteIndex slice returns to product
+OIDC workflow are decided. Version `0.1.0` and all three package identities are
+public, and their stage-only trusted-publisher bindings are configured. Release
+closure is complete: the fresh public registry-consumer smoke passed and the
+`v0.1.0` tag and GitHub release point to the remotely tested release commit, as
+recorded in `docs/product/0.1.0-release-candidate-audit.md`. Package settings
+may permit granular tokens, but the release workflow remains OIDC-only and
+receives no registry secret. The narrow RouteIndex slice returns to product
 validation only when a real consumer needs an index producer. External
 maintainer recruitment and another agent attestation layer remain out of scope.
 Future coding-agent trials must continue to use fresh briefs and evaluator-owned

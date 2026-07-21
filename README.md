@@ -14,25 +14,23 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-The diagnostic-first MVP is implemented and exercised by canonical fixtures.
-No package has been published and no compatibility promise exists yet.
+Version `0.1.0` is the first public preview. The diagnostic-first MVP is
+implemented, exercised by canonical fixtures, and published as the contract,
+compiler, and CLI packages under the `@0disoft` npm scope.
 
 ## Registry Installation
 
-The canonical package names and release controls are ready, but the first npm
-publication has not happened. After `0.1.0` is visible in the public registry,
-the supported CLI installation path will be:
+The supported CLI installation path is:
 
 ```text
 pnpm add --save-dev @0disoft/mensor-cli@0.1.0
 pnpm exec mensor check . --json
 ```
 
-Do not treat that command as currently available until the package registry
-shows the release. See the [release runbook](docs/releasing/runbook.md) and
-[`0.1.0` migration note](docs/releasing/0.1.0.md) for the publication boundary.
+See the [release runbook](docs/releasing/runbook.md) and [`0.1.0` migration
+note](docs/releasing/0.1.0.md) for the publication and compatibility boundary.
 
-## Local Source Preview
+## Source Checkout
 
 The current preview runs from a source checkout with Node.js 22 or newer and
 pnpm 11:
@@ -53,7 +51,8 @@ pnpm mensor check fixtures/invalid/form-field-missing --json
 That command exits `1` and reports `form.field_missing`. The complete project
 and feature contract authoring example lives in
 [`packages/contract/spec/README.md`](packages/contract/spec/README.md). This is
-a repository preview and remains the executable path before registry publication.
+the contributor path for exercising the current source tree; registry
+installation is the supported consumer path.
 
 ## First Proof
 
