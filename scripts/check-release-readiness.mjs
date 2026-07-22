@@ -125,13 +125,14 @@ if (failures.length > 0) {
 }
 
 function parseOptions(args) {
+  const normalizedArgs = args[0] === "--" && args.length > 1 ? args.slice(1) : args;
   const parsed = {};
-  for (let index = 0; index < args.length; index += 1) {
-    const option = args[index];
+  for (let index = 0; index < normalizedArgs.length; index += 1) {
+    const option = normalizedArgs[index];
     if (option !== "--version" && option !== "--tag") {
       throw new Error(`Unknown release-check option ${JSON.stringify(option)}.`);
     }
-    const value = args[index + 1];
+    const value = normalizedArgs[index + 1];
     if (value === undefined || value.startsWith("--")) {
       throw new Error(`${option} requires a value.`);
     }
