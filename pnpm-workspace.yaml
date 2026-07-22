@@ -1,3 +1,6 @@
 packages:
   - "packages/*"
   - "internal/*"
+
+overrides:
+  fast-uri: 3.1.4
