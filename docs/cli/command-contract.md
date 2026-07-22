@@ -14,12 +14,14 @@ evidence.
 ## MVP Command
 
 ```text
-mensor check [root] [--config <path>] [--json]
+mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
 ```
 
 - `root` defaults to the current working directory.
 - `--config` defaults to `mensor.project.jsonc` inside `root`.
 - `--json` selects the canonical machine-readable report.
+- `--report-version` selects JSON revision `1` or `2` and is invalid without
+  `--json`. The default is revision `1`.
 - Paths supplied through flags must resolve inside `root`.
 - Environment variables do not alter contract or rule behavior in the MVP.
 - The CLI applies compiler defaults of 10,000 discovered files, 1 MiB per
@@ -34,7 +36,7 @@ Human mode writes concise diagnostics for a terminal. JSON mode writes exactly
 one JSON document followed by one LF newline to stdout. JSON mode does not emit
 progress, color codes, banners, timing, or debug logs to stdout.
 
-The report envelope contains:
+The default revision-1 report envelope contains:
 
 ```text
 schemaVersion
@@ -51,8 +53,17 @@ verification and the `route.missing` rule. Mensor does not execute the
 application, so runtime behavior remains the application's semantic-test
 responsibility even when diagnostics are empty.
 
-The normative diagnostic fields and canonicalization rules live in
-`docs/product/02-spec.md` until a machine-readable schema is introduced.
+Revision 2 is opt-in and inserts a required `inspection` object between
+`status` and `diagnostics`. Its fixed domains report `checked`,
+`not-configured`, or `out-of-scope` with a closed machine-readable basis. A
+checked domain may still contain diagnostics; `status` and `summary` own the
+verdict. Invalid or stale configured evidence fails before an inspection object
+is emitted.
+
+The normative diagnostic fields are in
+`packages/contract/spec/diagnostic-report-v1.schema.json`; Check Output v2 is
+in `packages/contract/spec/check-output-v2.schema.json`. Product-level
+canonicalization and determinism rules remain in `docs/product/02-spec.md`.
 
 ## Exit Status
 
@@ -72,7 +83,7 @@ The failure envelope is:
   "schemaVersion": 1,
   "producer": {
     "name": "mensor",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "status": "error",
   "failure": {
@@ -84,9 +95,16 @@ The failure envelope is:
 }
 ```
 
+When revision 2 was selected successfully, pre-report failures use the same
+failure shape with `schemaVersion: 2`. Error envelopes never contain
+`inspection`. An unsupported revision cannot select its own envelope and is
+reported as a revision-1 usage failure.
+
 `file` and `issues` are present only when the compiler failure owns those
-facts. JSON failures go to stdout with one LF and no stderr output. Human-mode
-setup failures go to stderr.
+facts. Revision 2 omits `file` when the rejected value is absolute,
+backslash-delimited, or root-escaping rather than copying a non-canonical path
+into the envelope. JSON failures go to stdout with one LF and no stderr output.
+Human-mode setup failures go to stderr.
 
 ## Failure Separation
 

@@ -58,7 +58,9 @@ status, and future atomic artifact writes. It delegates all checking behavior
 to the compiler and does not parse source directly.
 
 The current executable exposes only `mensor check [root] [--config <path>]
-[--json]` and maps compiler results to the documented `0/1/2/3` exit statuses.
+[--json] [--report-version <1|2>]` and maps compiler results to the documented
+`0/1/2/3` exit statuses. Report revision selection stays in the CLI shell;
+inspection derivation remains compiler-owned.
 
 ### `internal/fixture-kit`
 

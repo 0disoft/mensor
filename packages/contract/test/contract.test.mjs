@@ -4,7 +4,9 @@ import test from "node:test";
 
 import {
   isJsonValue,
+  parseCheckOutputV2,
   parseDiagnosticReport,
+  parseDiagnosticReportV2,
   parseFeatureContract,
   parseJsonc,
   parseProjectContract,
@@ -13,6 +15,7 @@ import {
 } from "@0disoft/mensor-contract";
 
 const fixtureRoot = new URL("../../../fixtures/", import.meta.url);
+const contractFixtureRoot = new URL("./fixtures/", import.meta.url);
 
 test("parses the valid project, feature, and report fixtures", async () => {
   const project = parseProjectContract(
@@ -268,6 +271,61 @@ test("rejects diagnostic reports with contradictory derived state", async () => 
       "/status",
       "/diagnostics/0/range",
     ]);
+  }
+});
+
+test("parses canonical revision-2 report and failure fixtures", async () => {
+  const reportText = await readFile(
+    new URL("check-output-v2-passed.json", contractFixtureRoot),
+    "utf8",
+  );
+  const failureText = await readFile(
+    new URL("check-output-v2-error.json", contractFixtureRoot),
+    "utf8",
+  );
+
+  const report = parseDiagnosticReportV2(reportText);
+  const reportOutput = parseCheckOutputV2(reportText);
+  const failureOutput = parseCheckOutputV2(failureText);
+
+  assert.equal(report.ok, true);
+  assert.equal(reportOutput.ok, true);
+  assert.equal(failureOutput.ok, true);
+  if (failureOutput.ok) {
+    assert.equal(failureOutput.value.status, "error");
+    assert.equal(failureOutput.value.failure.code, "contract.invalid");
+  }
+  assert.equal(parseDiagnosticReport(reportText).ok, false);
+  assert.equal(parseDiagnosticReportV2(failureText).ok, false);
+});
+
+test("rejects forged revision-2 inspection and derived state", async () => {
+  const value = JSON.parse(await readFile(
+    new URL("check-output-v2-passed.json", contractFixtureRoot),
+    "utf8",
+  ));
+  value.inspection.routes.state = "out-of-scope";
+  assert.equal(parseDiagnosticReportV2(JSON.stringify(value)).ok, false);
+
+  value.inspection.routes.state = "not-configured";
+  value.summary.errorCount = 1;
+  const inconsistent = parseDiagnosticReportV2(JSON.stringify(value));
+  assert.equal(inconsistent.ok, false);
+  if (!inconsistent.ok) {
+    assert.deepEqual(inconsistent.issues.map((issue) => issue.instancePath), [
+      "/summary/errorCount",
+    ]);
+  }
+});
+
+test("rejects non-canonical revision-2 failure paths", async () => {
+  const value = JSON.parse(await readFile(
+    new URL("check-output-v2-error.json", contractFixtureRoot),
+    "utf8",
+  ));
+  for (const file of ["../outside.jsonc", "C:/outside.jsonc", "C:\\outside.jsonc"]) {
+    value.failure.file = file;
+    assert.equal(parseCheckOutputV2(JSON.stringify(value)).ok, false, file);
   }
 });
 

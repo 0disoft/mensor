@@ -320,6 +320,21 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     missing an action's exact route emits `route.missing`. The compiler never
     executes or discovers an index producer.
 
+## Accepted Report Evolution
+
+ADR-0034 accepts an opt-in Check Output v2 design that declares Mensor's static
+inspection domains without changing DiagnosticReport v1. Revision 2 uses a
+required `inspection` object with closed `checked`, `not-configured`, and
+`out-of-scope` states. It distinguishes missing optional RouteIndex, boundary,
+and ownership evidence from runtime semantics that Mensor never executes.
+
+Version `0.2.0` implements the accepted design. The CLI still emits revision 1
+by default and selects revision 2 only with
+`--json --report-version 2`. The contract schema, types, parsers, compiler
+derivation, exact v1 compatibility fixtures, v2 success and error fixtures,
+package exports, migration note, and consumer smokes are synchronized through
+`docs/architecture/check-output-v2.md`.
+
 ## Next Product Validation Gate
 
 The repeated evaluator-owned `rsvp-v2` response run and the `0.1.0`

@@ -450,3 +450,75 @@ export interface DiagnosticReport {
     readonly warningCount: number;
   };
 }
+
+export type DiagnosticReportV1 = DiagnosticReport;
+
+export type InspectionState = "checked" | "not-configured" | "out-of-scope";
+
+export type InspectionBasis =
+  | "file-roles"
+  | "static-html-form-index"
+  | "static-module-facts"
+  | "module-graph"
+  | "ownership-rules"
+  | "route-index"
+  | "none";
+
+export interface InspectionDomain<
+  State extends InspectionState,
+  Basis extends InspectionBasis,
+> {
+  readonly state: State;
+  readonly basis: Basis;
+}
+
+export interface InspectionReport {
+  readonly filePlacement: InspectionDomain<"checked", "file-roles">;
+  readonly forms: InspectionDomain<"checked", "static-html-form-index">;
+  readonly handlers: InspectionDomain<"checked", "static-module-facts">;
+  readonly moduleBoundaries: InspectionDomain<
+    "checked" | "not-configured",
+    "module-graph"
+  >;
+  readonly ownership: InspectionDomain<
+    "checked" | "not-configured",
+    "ownership-rules"
+  >;
+  readonly routes: InspectionDomain<"checked" | "not-configured", "route-index">;
+  readonly runtimeSemantics: InspectionDomain<"out-of-scope", "none">;
+}
+
+export interface DiagnosticReportV2 {
+  readonly schemaVersion: 2;
+  readonly producer: {
+    readonly name: "mensor";
+    readonly version: string;
+  };
+  readonly status: "passed" | "failed";
+  readonly inspection: InspectionReport;
+  readonly diagnostics: readonly Diagnostic[];
+  readonly summary: {
+    readonly errorCount: number;
+    readonly warningCount: number;
+  };
+}
+
+export interface CheckFailure {
+  readonly kind: "configuration" | "filesystem" | "internal";
+  readonly code: string;
+  readonly message: string;
+  readonly file?: string;
+  readonly issues?: readonly ContractIssue[];
+}
+
+export interface CheckFailureEnvelopeV2 {
+  readonly schemaVersion: 2;
+  readonly producer: {
+    readonly name: "mensor";
+    readonly version: string;
+  };
+  readonly status: "error";
+  readonly failure: CheckFailure;
+}
+
+export type CheckOutputV2 = DiagnosticReportV2 | CheckFailureEnvelopeV2;

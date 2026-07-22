@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "producer": {
+    "name": "mensor",
+    "version": "0.2.0"
+  },
+  "status": "error",
+  "failure": {
+    "kind": "configuration",
+    "code": "contract.invalid",
+    "message": "Contract file \"mensor.project.jsonc\" is invalid.",
+    "file": "mensor.project.jsonc",
+    "issues": [
+      {
+        "code": "schema.violation",
+        "message": "/version must be equal to constant.",
+        "instancePath": "/version",
+        "schemaPath": "#/properties/version/const",
+        "keyword": "const"
+      }
+    ]
+  }
+}

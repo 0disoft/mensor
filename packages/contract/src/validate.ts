@@ -2,6 +2,7 @@ import { parseJsonc } from "./jsonc.js";
 import type { ValidateFunction } from "ajv";
 import {
   schemaIssues,
+  validateCheckOutputV2,
   validateDiagnosticReport,
   validateFeatureContract,
   validateProjectContract,
@@ -9,7 +10,9 @@ import {
 import type {
   ContractIssue,
   ContractResult,
+  CheckOutputV2,
   DiagnosticReport,
+  DiagnosticReportV2,
   FeatureContract,
   ProjectContract,
 } from "./types.js";
@@ -32,6 +35,38 @@ export function parseDiagnosticReport(
 ): ContractResult<DiagnosticReport> {
   const result = parseAndValidate(text, validateDiagnosticReport);
   return result.ok ? applySemanticIssues(result.value, reportSemanticIssues(result.value)) : result;
+}
+
+export function parseCheckOutputV2(
+  text: string,
+): ContractResult<CheckOutputV2> {
+  const result = parseAndValidate(text, validateCheckOutputV2);
+  if (!result.ok || result.value.status === "error") {
+    return result;
+  }
+  return applySemanticIssues(
+    result.value,
+    reportSemanticIssues(result.value),
+  );
+}
+
+export function parseDiagnosticReportV2(
+  text: string,
+): ContractResult<DiagnosticReportV2> {
+  const result = parseCheckOutputV2(text);
+  if (!result.ok) {
+    return result;
+  }
+  if (result.value.status === "error") {
+    return {
+      ok: false,
+      issues: [semanticIssue(
+        "/status",
+        "Diagnostic report v2 must have status passed or failed.",
+      )],
+    };
+  }
+  return { ok: true, value: result.value };
 }
 
 function parseAndValidate<T>(
@@ -101,7 +136,9 @@ function featureSemanticIssues(feature: FeatureContract): readonly ContractIssue
   return issues;
 }
 
-function reportSemanticIssues(report: DiagnosticReport): readonly ContractIssue[] {
+function reportSemanticIssues(
+  report: DiagnosticReport | DiagnosticReportV2,
+): readonly ContractIssue[] {
   const issues: ContractIssue[] = [];
   const severities = report.diagnostics.map((item): string => item.severity);
   const errorCount = severities.filter((severity) => severity === "error").length;
@@ -141,7 +178,9 @@ function reportSemanticIssues(report: DiagnosticReport): readonly ContractIssue[
   return issues;
 }
 
-function rangeIsOrdered(range: DiagnosticReport["diagnostics"][number]["range"]): boolean {
+function rangeIsOrdered(
+  range: DiagnosticReport["diagnostics"][number]["range"],
+): boolean {
   return range.start.line < range.end.line || (
     range.start.line === range.end.line &&
     range.start.character <= range.end.character

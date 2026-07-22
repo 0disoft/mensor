@@ -2,6 +2,27 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.2.0] - 2026-07-22
+
+### Added
+
+- Opt-in Check Output v2 with a required machine-readable `inspection` object
+  for file placement, forms, handlers, module boundaries, ownership, routes,
+  and deliberately excluded runtime semantics.
+- Public `DiagnosticReportV1`, `DiagnosticReportV2`, `CheckOutputV2`,
+  `parseDiagnosticReportV2`, and `parseCheckOutputV2` contract surfaces.
+- Typed compiler `reportVersion: 2` overloads and CLI
+  `--report-version <1|2>` selection for JSON output.
+
+### Compatibility
+
+- `mensor check --json` and compiler calls that omit `reportVersion` retain
+  revision-1 output and return types.
+- Revision 2 is additive and opt-in. It uses revision-2 success, diagnostic,
+  and pre-report error envelopes without changing exit statuses.
+- Invalid, stale, or incomplete evidence still fails before an `inspection`
+  object can be emitted.
+
 ## [0.1.0] - 2026-07-19
 
 ### Added

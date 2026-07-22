@@ -9,6 +9,18 @@ import type {
   RunCliOptions,
 } from "./types.js";
 
+type CliReportVersion = 1 | 2;
+
+interface CliFailureEnvelopeV2 {
+  readonly schemaVersion: 2;
+  readonly producer: {
+    readonly name: "mensor";
+    readonly version: string;
+  };
+  readonly status: "error";
+  readonly failure: CompilerFailure;
+}
+
 export const cliVersion = readPackageVersion();
 
 function readPackageVersion(): string {
@@ -33,7 +45,7 @@ function readPackageVersion(): string {
   return value.version;
 }
 
-const helpText = `Usage: mensor check [root] [--config <path>] [--json]
+const helpText = `Usage: mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
 
 Commands:
   check    Check project contracts against static source facts.
@@ -41,6 +53,7 @@ Commands:
 Options:
   --config <path>  Root-relative project contract path.
   --json           Write one canonical JSON document to stdout.
+  --report-version Select JSON output revision 1 or 2. Requires --json.
   --help           Show this help.
 `;
 
@@ -55,6 +68,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         config: { type: "string" },
         help: { type: "boolean", short: "h" },
         json: { type: "boolean" },
+        "report-version": { type: "string" },
       },
     });
   } catch (error) {
@@ -62,10 +76,40 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       options,
       errorMessage(error),
       options.argv.includes("--json"),
+      requestedReportVersion(options.argv),
     );
   }
 
   const json = parsed.values["json"] === true;
+  const rawReportVersion = parsed.values["report-version"];
+  const reportVersionValue = typeof rawReportVersion === "string"
+    ? rawReportVersion
+    : undefined;
+  if (rawReportVersion !== undefined && reportVersionValue === undefined) {
+    return writeUsageFailure(
+      options,
+      "--report-version requires one value.",
+      json,
+      1,
+    );
+  }
+  const reportVersion = parseReportVersion(reportVersionValue);
+  if (reportVersion === undefined) {
+    return writeUsageFailure(
+      options,
+      "--report-version must be 1 or 2.",
+      json,
+      1,
+    );
+  }
+  if (reportVersionValue !== undefined && !json) {
+    return writeUsageFailure(
+      options,
+      "--report-version requires --json.",
+      false,
+      reportVersion,
+    );
+  }
   if (parsed.values["help"] === true) {
     options.stdout(helpText);
     return 0;
@@ -75,6 +119,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       options,
       "Expected command check and at most one project root.",
       json,
+      reportVersion,
     );
   }
 
@@ -93,6 +138,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         file: configValue,
       },
       json,
+      reportVersion,
     );
     return 2;
   }
@@ -100,15 +146,18 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     typeof configValue === "string"
       ? configValue.replaceAll("\\", "/")
       : undefined;
-  const result = await checkProject({
+  const checkOptions = {
     root,
     producerVersion: cliVersion,
     ...(config === undefined ? {} : { configFile: config }),
-  });
+  };
+  const result = reportVersion === 2
+    ? await checkProject({ ...checkOptions, reportVersion: 2 })
+    : await checkProject(checkOptions);
 
   if (!result.ok) {
     const exitCode = result.failure.kind === "configuration" ? 2 : 3;
-    writeFailure(options, result.failure, json);
+    writeFailure(options, result.failure, json, reportVersion);
     return exitCode;
   }
 
@@ -132,6 +181,7 @@ function writeUsageFailure(
   options: RunCliOptions,
   message: string,
   json: boolean,
+  reportVersion: CliReportVersion,
 ): number {
   writeFailure(
     options,
@@ -141,6 +191,7 @@ function writeUsageFailure(
       message,
     },
     json,
+    reportVersion,
   );
   return 2;
 }
@@ -149,18 +200,66 @@ function writeFailure(
   options: RunCliOptions,
   failure: CompilerFailure,
   json: boolean,
+  reportVersion: CliReportVersion,
 ): void {
   if (json) {
-    const envelope: CliFailureEnvelope = {
-      schemaVersion: 1,
-      producer: { name: "mensor", version: cliVersion },
-      status: "error",
-      failure,
-    };
+    const envelope: CliFailureEnvelope | CliFailureEnvelopeV2 =
+      reportVersion === 2
+        ? {
+            schemaVersion: 2,
+            producer: { name: "mensor", version: cliVersion },
+            status: "error",
+            failure: canonicalV2Failure(failure),
+          }
+        : {
+            schemaVersion: 1,
+            producer: { name: "mensor", version: cliVersion },
+            status: "error",
+            failure,
+          };
     options.stdout(`${JSON.stringify(envelope, null, 2)}\n`);
     return;
   }
   options.stderr(`mensor: ${failure.code}: ${failure.message}\n`);
+}
+
+function canonicalV2Failure(failure: CompilerFailure): CompilerFailure {
+  if (
+    failure.file === undefined ||
+    (
+      !path.isAbsolute(failure.file) &&
+      !path.win32.isAbsolute(failure.file) &&
+      /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\).+$/u.test(failure.file)
+    )
+  ) {
+    return failure;
+  }
+  return {
+    kind: failure.kind,
+    code: failure.code,
+    message: failure.message,
+    ...(failure.issues === undefined ? {} : { issues: failure.issues }),
+  };
+}
+
+function parseReportVersion(value: string | undefined): CliReportVersion | undefined {
+  if (value === undefined || value === "1") {
+    return 1;
+  }
+  return value === "2" ? 2 : undefined;
+}
+
+function requestedReportVersion(argv: readonly string[]): CliReportVersion {
+  for (let index = 0; index < argv.length; index += 1) {
+    const value = argv[index];
+    if (value === "--report-version" && argv[index + 1] === "2") {
+      return 2;
+    }
+    if (value === "--report-version=2") {
+      return 2;
+    }
+  }
+  return 1;
 }
 
 function errorMessage(error: unknown): string {

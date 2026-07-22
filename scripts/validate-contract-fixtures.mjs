@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import {
+  parseCheckOutputV2,
   parseDiagnosticReport,
   parseFeatureContract,
   parseProjectContract,
@@ -75,6 +76,15 @@ assertSuccess(
   ), "utf8")),
   "examples/dogfood-tasks/expected-report.json",
 );
+for (const fixture of [
+  "../packages/contract/test/fixtures/check-output-v2-passed.json",
+  "../packages/contract/test/fixtures/check-output-v2-error.json",
+]) {
+  assertSuccess(
+    parseCheckOutputV2(await readFile(new URL(fixture, import.meta.url), "utf8")),
+    fixture,
+  );
+}
 
 function fixture(root, options = {}) {
   return {

@@ -1,6 +1,10 @@
-import type { ContractIssue, DiagnosticReport } from "@0disoft/mensor-contract";
+import type {
+  CheckFailure,
+  DiagnosticReport,
+  DiagnosticReportV2,
+} from "@0disoft/mensor-contract";
 
-export interface CheckProjectOptions {
+export interface CheckProjectBaseOptions {
   readonly root: string;
   readonly configFile?: string;
   readonly producerVersion?: string;
@@ -12,18 +16,25 @@ export interface CheckProjectOptions {
   };
 }
 
+export interface CheckProjectOptions extends CheckProjectBaseOptions {
+  readonly reportVersion?: 1;
+}
+
+export interface CheckProjectV2Options extends CheckProjectBaseOptions {
+  readonly reportVersion: 2;
+}
+
 export interface CheckProjectSuccess {
   readonly ok: true;
   readonly report: DiagnosticReport;
 }
 
-export interface CompilerFailure {
-  readonly kind: "configuration" | "filesystem" | "internal";
-  readonly code: string;
-  readonly message: string;
-  readonly file?: string;
-  readonly issues?: readonly ContractIssue[];
+export interface CheckProjectV2Success {
+  readonly ok: true;
+  readonly report: DiagnosticReportV2;
 }
+
+export interface CompilerFailure extends CheckFailure {}
 
 export interface CheckProjectFailure {
   readonly ok: false;
@@ -31,3 +42,5 @@ export interface CheckProjectFailure {
 }
 
 export type CheckProjectResult = CheckProjectSuccess | CheckProjectFailure;
+
+export type CheckProjectV2Result = CheckProjectV2Success | CheckProjectFailure;

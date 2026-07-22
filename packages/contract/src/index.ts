@@ -1,13 +1,18 @@
 export { isJsonValue, parseJsonc } from "./jsonc.js";
 export { parseRouteIndex, serializeRouteIndex } from "./route-index.js";
 export {
+  parseCheckOutputV2,
   parseDiagnosticReport,
+  parseDiagnosticReportV2,
   parseFeatureContract,
   parseProjectContract,
 } from "./validate.js";
 export type {
   ActionContract,
   BoundaryContract,
+  CheckFailure,
+  CheckFailureEnvelopeV2,
+  CheckOutputV2,
   ContractFailure,
   ContractIssue,
   ContractIssueCode,
@@ -16,6 +21,8 @@ export type {
   ContentDigest,
   Diagnostic,
   DiagnosticReport,
+  DiagnosticReportV1,
+  DiagnosticReportV2,
   FeatureContract,
   FileOwnershipMismatchDiagnostic,
   FileOwnershipMismatchFacts,
@@ -44,6 +51,10 @@ export type {
   ModuleDynamicImportUnsupportedFacts,
   IgnoredFormField,
   IndexedRoute,
+  InspectionBasis,
+  InspectionDomain,
+  InspectionReport,
+  InspectionState,
   JsonObject,
   JsonPrimitive,
   JsonValue,

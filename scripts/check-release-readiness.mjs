@@ -64,12 +64,14 @@ for (const packageName of packages.map(([name]) => name)) {
 }
 
 const runbook = await readText("docs/releasing/runbook.md");
-for (const packageName of releasePackageNames) {
-  const artifact = releaseArtifactFileName(packageName, workspace.version);
-  const bootstrapCommand =
-    `npm publish ./dist/release/${artifact} --access public --tag latest --provenance=false`;
-  if (!runbook.includes(bootstrapCommand)) {
-    failures.push(`runbook.md must contain the local bootstrap command ${JSON.stringify(bootstrapCommand)}.`);
+if (workspace.version === "0.1.0") {
+  for (const packageName of releasePackageNames) {
+    const artifact = releaseArtifactFileName(packageName, workspace.version);
+    const bootstrapCommand =
+      `npm publish ./dist/release/${artifact} --access public --tag latest --provenance=false`;
+    if (!runbook.includes(bootstrapCommand)) {
+      failures.push(`runbook.md must contain the local bootstrap command ${JSON.stringify(bootstrapCommand)}.`);
+    }
   }
 }
 for (const required of [

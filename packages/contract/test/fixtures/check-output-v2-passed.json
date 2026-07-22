@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 2,
+  "producer": {
+    "name": "mensor",
+    "version": "0.2.0"
+  },
+  "status": "passed",
+  "inspection": {
+    "filePlacement": {
+      "state": "checked",
+      "basis": "file-roles"
+    },
+    "forms": {
+      "state": "checked",
+      "basis": "static-html-form-index"
+    },
+    "handlers": {
+      "state": "checked",
+      "basis": "static-module-facts"
+    },
+    "moduleBoundaries": {
+      "state": "not-configured",
+      "basis": "module-graph"
+    },
+    "ownership": {
+      "state": "not-configured",
+      "basis": "ownership-rules"
+    },
+    "routes": {
+      "state": "not-configured",
+      "basis": "route-index"
+    },
+    "runtimeSemantics": {
+      "state": "out-of-scope",
+      "basis": "none"
+    }
+  },
+  "diagnostics": [],
+  "summary": {
+    "errorCount": 0,
+    "warningCount": 0
+  }
+}

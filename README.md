@@ -14,9 +14,9 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.1.0` is the first public preview. The diagnostic-first MVP is
-implemented, exercised by canonical fixtures, and published as the contract,
-compiler, and CLI packages under the `@0disoft` npm scope.
+Version `0.1.0` is the current public preview. The source tree is preparing
+`0.2.0`, which adds opt-in Check Output v2 while preserving revision 1 as the
+default contract.
 
 ## Registry Installation
 
@@ -27,8 +27,9 @@ pnpm add --save-dev @0disoft/mensor-cli@0.1.0
 pnpm exec mensor check . --json
 ```
 
-See the [release runbook](docs/releasing/runbook.md) and [`0.1.0` migration
-note](docs/releasing/0.1.0.md) for the publication and compatibility boundary.
+See the [release runbook](docs/releasing/runbook.md), the published [`0.1.0`
+migration note](docs/releasing/0.1.0.md), and the pending [`0.2.0` migration
+note](docs/releasing/0.2.0.md) for the publication and compatibility boundary.
 
 ## Contract Path Bases
 
@@ -58,10 +59,12 @@ pnpm 11:
 pnpm install --frozen-lockfile
 pnpm build
 pnpm mensor check fixtures/valid/tiny-tasks --json
+pnpm mensor check fixtures/valid/tiny-tasks --json --report-version 2
 ```
 
-The last command exits `0` and prints one canonical JSON report with
-`"status": "passed"`. To inspect a deterministic contract failure, run:
+Both check commands exit `0`. The first preserves DiagnosticReport v1; the
+second adds compiler-derived inspection states through Check Output v2. To
+inspect a deterministic contract failure, run:
 
 ```text
 pnpm mensor check fixtures/invalid/form-field-missing --json

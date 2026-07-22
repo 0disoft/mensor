@@ -80,7 +80,7 @@ try {
     path.join(consumerRoot, "contract-smoke.mjs"),
     `import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { parseRouteIndex, serializeRouteIndex } from "@0disoft/mensor-contract";
+import { parseCheckOutputV2, parseRouteIndex, serializeRouteIndex } from "@0disoft/mensor-contract";
 
 const text = serializeRouteIndex({
   schemaVersion: 1,
@@ -99,11 +99,34 @@ const text = serializeRouteIndex({
   }]
 });
 assert.equal(parseRouteIndex(text).ok, true);
+assert.equal(parseCheckOutputV2(JSON.stringify({
+  schemaVersion: 2,
+  producer: { name: "mensor", version: "${version}" },
+  status: "passed",
+  inspection: {
+    filePlacement: { state: "checked", basis: "file-roles" },
+    forms: { state: "checked", basis: "static-html-form-index" },
+    handlers: { state: "checked", basis: "static-module-facts" },
+    moduleBoundaries: { state: "not-configured", basis: "module-graph" },
+    ownership: { state: "not-configured", basis: "ownership-rules" },
+    routes: { state: "not-configured", basis: "route-index" },
+    runtimeSemantics: { state: "out-of-scope", basis: "none" }
+  },
+  diagnostics: [],
+  summary: { errorCount: 0, warningCount: 0 }
+})).ok, true);
 const schemaUrl = import.meta.resolve(
   "@0disoft/mensor-contract/schemas/route-index-v1.schema.json"
 );
 const schema = JSON.parse(await readFile(new URL(schemaUrl), "utf8"));
 assert.equal(schema.$id, "route-index-v1.schema.json");
+const checkOutputSchemaUrl = import.meta.resolve(
+  "@0disoft/mensor-contract/schemas/check-output-v2.schema.json"
+);
+const checkOutputSchema = JSON.parse(
+  await readFile(new URL(checkOutputSchemaUrl), "utf8")
+);
+assert.equal(checkOutputSchema.$id, "check-output-v2.schema.json");
 `,
     "utf8",
   );
@@ -182,6 +205,16 @@ assert.equal(schema.$id, "route-index-v1.schema.json");
   assert.equal(valid.code, 0, valid.stderr);
   assert.equal(JSON.parse(valid.stdout).status, "passed");
 
+  const validV2 = await capture(
+    process.execPath,
+    [cliEntrypoint, "check", "valid", "--json", "--report-version", "2"],
+    consumerRoot,
+  );
+  assert.equal(validV2.code, 0, validV2.stderr);
+  const validV2Report = JSON.parse(validV2.stdout);
+  assert.equal(validV2Report.schemaVersion, 2);
+  assert.equal(validV2Report.inspection.routes.state, "not-configured");
+
   const invalid = await capture(
     process.execPath,
     [cliEntrypoint, "check", "invalid", "--json"],
@@ -194,6 +227,16 @@ assert.equal(schema.$id, "route-index-v1.schema.json");
     invalidReport.diagnostics.map((diagnostic) => diagnostic.code),
     ["form.field_missing"],
   );
+
+  const invalidV2 = await capture(
+    process.execPath,
+    [cliEntrypoint, "check", "invalid", "--json", "--report-version=2"],
+    consumerRoot,
+  );
+  assert.equal(invalidV2.code, 1, invalidV2.stderr);
+  const invalidV2Report = JSON.parse(invalidV2.stdout);
+  assert.equal(invalidV2Report.schemaVersion, 2);
+  assert.equal(invalidV2Report.inspection.forms.state, "checked");
 
   process.stdout.write(
     `${JSON.stringify(

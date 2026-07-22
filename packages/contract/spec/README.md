@@ -26,6 +26,8 @@ value is explicit in the authoring contract.
 - `feature-contract-v1.schema.json`: one feature and its form-backed actions
 - `diagnostic-report-v1.schema.json`: canonical check output
 - `route-index-v1.schema.json`: canonical source-bound application route facts
+- `check-output-v2.schema.json`: opt-in reports and pre-report error envelopes
+  with compiler-derived inspection states
 
 ## Complete Authoring Example
 
@@ -196,6 +198,11 @@ a fieldset are excluded, except for descendants of its first legend.
 
 Diagnostic reports are semantically validated after schema validation. Status,
 summary counts, and ordered source ranges must agree with their diagnostics.
+`DiagnosticReport` and `parseDiagnosticReport` remain revision-1 compatibility
+names. Revision-2 consumers use `DiagnosticReportV2`, `CheckOutputV2`,
+`parseDiagnosticReportV2`, or `parseCheckOutputV2`. Check Output v2 adds a
+closed `inspection` declaration but reuses the revision-1 diagnostic
+definitions rather than maintaining a second diagnostic catalog.
 
 `ProjectContract.ownershipRules` maps explicit filename suffixes to a test or
 i18n slot inside each feature. The compiler emits `file.ownership_mismatch` for
@@ -221,5 +228,6 @@ coverage in that configuration.
 HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.
 
-Version `1` is an internal design revision until the first preview release. It
-may change while fixtures are still being reviewed.
+Version `1` project, feature, diagnostic, and RouteIndex contracts became
+public preview surfaces in `0.1.0`. Check Output v2 is additive and does not
+change those revision-1 schemas.

@@ -5,12 +5,14 @@ import {
 } from "ajv/dist/2020.js";
 
 import diagnosticReportSchema from "../spec/diagnostic-report-v1.schema.json" with { type: "json" };
+import checkOutputV2Schema from "../spec/check-output-v2.schema.json" with { type: "json" };
 import featureContractSchema from "../spec/feature-contract-v1.schema.json" with { type: "json" };
 import projectContractSchema from "../spec/project-contract-v1.schema.json" with { type: "json" };
 import routeIndexSchema from "../spec/route-index-v1.schema.json" with { type: "json" };
 
 import type {
   ContractIssue,
+  CheckOutputV2,
   DiagnosticReport,
   FeatureContract,
   ProjectContract,
@@ -37,6 +39,10 @@ export const validateFeatureContract = ajv.compile<FeatureContract>(
 
 export const validateDiagnosticReport = ajv.compile<DiagnosticReport>(
   diagnosticReportSchema,
+);
+
+export const validateCheckOutputV2 = ajv.compile<CheckOutputV2>(
+  checkOutputV2Schema,
 );
 
 export const validateRouteIndex = ajv.compile<RouteIndex>(routeIndexSchema);

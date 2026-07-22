@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "check-output-v2.schema.json",
+  "title": "Mensor Check Output v2",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/diagnosticReport"
+    },
+    {
+      "$ref": "#/$defs/failureEnvelope"
+    }
+  ],
+  "$defs": {
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "const": "mensor"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["errorCount", "warningCount"],
+      "properties": {
+        "errorCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warningCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "inspectionDomain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "basis"],
+      "properties": {
+        "state": {},
+        "basis": {}
+      }
+    },
+    "inspection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filePlacement",
+        "forms",
+        "handlers",
+        "moduleBoundaries",
+        "ownership",
+        "routes",
+        "runtimeSemantics"
+      ],
+      "properties": {
+        "filePlacement": {
+          "allOf": [
+            { "$ref": "#/$defs/inspectionDomain" },
+            {
+              "type": "object",
+              "properties": {
+                "state": { "const": "checked" },
+                "basis": { "const": "file-roles" }
+              }
+            }
+          ]
+        },
+        "forms": {
+          "allOf": [
+            { "$ref": "#/$defs/inspectionDomain" },
+            {
+              "type": "object",
+              "properties": {
+                "state": { "const": "checked" },
+                "basis": { "const": "static-html-form-index" }
+              }
+            }
+          ]
+        },
+        "handlers": {
+          "allOf": [
+            { "$ref": "#/$defs/inspectionDomain" },
+            {
+              "type": "object",
+              "properties": {
+                "state": { "const": "checked" },
+                "basis": { "const": "static-module-facts" }
+              }
+            }
+          ]
+        },
+        "moduleBoundaries": {
+          "allOf": [
+            { "$ref": "#/$defs/inspectionDomain" },
+            {
+              "type": "object",
+              "properties": {
+                "state": { "enum": ["checked", "not-configured"] },
+                "basis": { "const": "module-graph" }
+              }
+            }
+          ]
+        },
+        "ownership": {
+          "allOf": [
+            { "$ref": "#/$defs/inspectionDomain" },
+            {
+              "type": "object",
+              "properties": {
+                "state": { "enum": ["checked", "not-configured"] },
+                "basis": { "const": "ownership-rules" }
+              }
+            }
+          ]
+        },
+        "routes": {
+          "allOf": [
+            { "$ref": "#/$defs/inspectionDomain" },
+            {
+              "type": "object",
+              "properties": {
+                "state": { "enum": ["checked", "not-configured"] },
+                "basis": { "const": "route-index" }
+              }
+            }
+          ]
+        },
+        "runtimeSemantics": {
+          "allOf": [
+            { "$ref": "#/$defs/inspectionDomain" },
+            {
+              "type": "object",
+              "properties": {
+                "state": { "const": "out-of-scope" },
+                "basis": { "const": "none" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "diagnosticReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "producer",
+        "status",
+        "inspection",
+        "diagnostics",
+        "summary"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 2
+        },
+        "producer": {
+          "$ref": "#/$defs/producer"
+        },
+        "status": {
+          "enum": ["passed", "failed"]
+        },
+        "inspection": {
+          "$ref": "#/$defs/inspection"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "diagnostic-report-v1.schema.json#/$defs/diagnostic"
+          }
+        },
+        "summary": {
+          "$ref": "#/$defs/summary"
+        }
+      }
+    },
+    "contractIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "enum": [
+            "jsonc.empty",
+            "jsonc.syntax",
+            "jsonc.duplicate_key",
+            "schema.violation"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "instancePath": {
+          "type": "string"
+        },
+        "schemaPath": {
+          "type": "string"
+        },
+        "keyword": {
+          "type": "string"
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "code", "message"],
+      "properties": {
+        "kind": {
+          "enum": ["configuration", "filesystem", "internal"]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/contractIssue"
+          }
+        }
+      }
+    },
+    "failureEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "producer", "status", "failure"],
+      "properties": {
+        "schemaVersion": {
+          "const": 2
+        },
+        "producer": {
+          "$ref": "#/$defs/producer"
+        },
+        "status": {
+          "const": "error"
+        },
+        "failure": {
+          "$ref": "#/$defs/failure"
+        }
+      }
+    }
+  }
+}

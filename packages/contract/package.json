@@ -1,6 +1,6 @@
 {
   "name": "@0disoft/mensor-contract",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Serializable contracts, schemas, and deterministic diagnostics for Mensor.",
   "license": "Apache-2.0",
   "publishConfig": {
@@ -36,6 +36,7 @@
     "./schemas/project-contract-v1.schema.json": "./dist/spec/project-contract-v1.schema.json",
     "./schemas/feature-contract-v1.schema.json": "./dist/spec/feature-contract-v1.schema.json",
     "./schemas/diagnostic-report-v1.schema.json": "./dist/spec/diagnostic-report-v1.schema.json",
+    "./schemas/check-output-v2.schema.json": "./dist/spec/check-output-v2.schema.json",
     "./schemas/route-index-v1.schema.json": "./dist/spec/route-index-v1.schema.json"
   },
   "dependencies": {

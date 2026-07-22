@@ -8,8 +8,11 @@ import {
   type ContractIssue,
   type Diagnostic,
   type DiagnosticReport,
+  type DiagnosticReportV2,
   type FeatureContract,
   type FileRoleContract,
+  type InspectionReport,
+  type ProjectContract,
   type RouteIndex,
 } from "@0disoft/mensor-contract";
 
@@ -40,8 +43,11 @@ import {
 } from "./paths.js";
 import { createSourceFactIndex } from "./source-fact-index.js";
 import type {
+  CheckProjectFailure,
   CheckProjectOptions,
   CheckProjectResult,
+  CheckProjectV2Options,
+  CheckProjectV2Result,
   CompilerFailure,
 } from "./types.js";
 
@@ -52,10 +58,26 @@ const defaultMaxTotalBytes = 67_108_864;
 const defaultMaxDepth = 64;
 const defaultProducerVersion = "0.0.0";
 
+interface CheckProjectAnySuccess {
+  readonly ok: true;
+  readonly report: DiagnosticReport | DiagnosticReportV2;
+}
+
+type CheckProjectAnyResult = CheckProjectAnySuccess | CheckProjectFailure;
+
+export async function checkProject(
+  options: CheckProjectV2Options,
+): Promise<CheckProjectV2Result>;
 export async function checkProject(
   options: CheckProjectOptions,
-): Promise<CheckProjectResult> {
-  return checkProjectInternal(options);
+): Promise<CheckProjectResult>;
+export async function checkProject(
+  options: CheckProjectOptions | CheckProjectV2Options,
+): Promise<CheckProjectResult | CheckProjectV2Result> {
+  const result = await checkProjectInternal(options);
+  return options.reportVersion === 2
+    ? result as CheckProjectV2Result
+    : result as CheckProjectResult;
 }
 
 export interface MeasuredCheckProjectResult {
@@ -63,23 +85,42 @@ export interface MeasuredCheckProjectResult {
   readonly metrics: CompilerPerformanceMetrics;
 }
 
+export interface MeasuredCheckProjectV2Result {
+  readonly result: CheckProjectV2Result;
+  readonly metrics: CompilerPerformanceMetrics;
+}
+
+export async function checkProjectWithMetrics(
+  options: CheckProjectV2Options,
+): Promise<MeasuredCheckProjectV2Result>;
 export async function checkProjectWithMetrics(
   options: CheckProjectOptions,
-): Promise<MeasuredCheckProjectResult> {
+): Promise<MeasuredCheckProjectResult>;
+export async function checkProjectWithMetrics(
+  options: CheckProjectOptions | CheckProjectV2Options,
+): Promise<MeasuredCheckProjectResult | MeasuredCheckProjectV2Result> {
   const timing = new CompilerTiming();
   const startedAt = performance.now();
   const result = await checkProjectInternal(options, timing);
-  return {
-    result,
-    metrics: timing.snapshot(performance.now() - startedAt),
-  };
+  const metrics = timing.snapshot(performance.now() - startedAt);
+  return options.reportVersion === 2
+    ? { result: result as CheckProjectV2Result, metrics }
+    : { result: result as CheckProjectResult, metrics };
 }
 
 async function checkProjectInternal(
-  options: CheckProjectOptions,
+  options: CheckProjectOptions | CheckProjectV2Options,
   timing?: CompilerTiming,
-): Promise<CheckProjectResult> {
+): Promise<CheckProjectAnyResult> {
   try {
+    const reportVersion = options.reportVersion ?? 1;
+    if (reportVersion !== 1 && reportVersion !== 2) {
+      return failure({
+        kind: "configuration",
+        code: "report.version_unsupported",
+        message: "reportVersion must be 1 or 2.",
+      });
+    }
     const producerVersion = options.producerVersion ?? defaultProducerVersion;
     if (producerVersion.length === 0) {
       return failure({
@@ -303,6 +344,8 @@ async function checkProjectInternal(
       report: createReport(
         producerVersion,
         diagnostics,
+        reportVersion,
+        project,
       ),
     };
   } catch (error) {
@@ -497,15 +540,66 @@ function classifyRole(
 function createReport(
   producerVersion: string,
   diagnostics: readonly Diagnostic[],
-): DiagnosticReport {
+  reportVersion: 1 | 2,
+  project: ProjectContract,
+): DiagnosticReport | DiagnosticReportV2 {
+  const status = diagnostics.length === 0 ? "passed" : "failed";
+  const summary = {
+    errorCount: diagnostics.length,
+    warningCount: 0,
+  };
+  if (reportVersion === 2) {
+    return {
+      schemaVersion: 2,
+      producer: { name: "mensor", version: producerVersion },
+      status,
+      inspection: createInspection(project),
+      diagnostics,
+      summary,
+    };
+  }
   return {
     schemaVersion: 1,
     producer: { name: "mensor", version: producerVersion },
-    status: diagnostics.length === 0 ? "passed" : "failed",
+    status,
     diagnostics,
-    summary: {
-      errorCount: diagnostics.length,
-      warningCount: 0,
+    summary,
+  };
+}
+
+function createInspection(project: ProjectContract): InspectionReport {
+  return {
+    filePlacement: {
+      state: "checked",
+      basis: "file-roles",
+    },
+    forms: {
+      state: "checked",
+      basis: "static-html-form-index",
+    },
+    handlers: {
+      state: "checked",
+      basis: "static-module-facts",
+    },
+    moduleBoundaries: {
+      state: (project.boundaries?.length ?? 0) > 0
+        ? "checked"
+        : "not-configured",
+      basis: "module-graph",
+    },
+    ownership: {
+      state: (project.ownershipRules?.length ?? 0) > 0
+        ? "checked"
+        : "not-configured",
+      basis: "ownership-rules",
+    },
+    routes: {
+      state: project.routeIndex === undefined ? "not-configured" : "checked",
+      basis: "route-index",
+    },
+    runtimeSemantics: {
+      state: "out-of-scope",
+      basis: "none",
     },
   };
 }
@@ -532,6 +626,6 @@ function contractFailure(
   });
 }
 
-function failure(failureValue: CompilerFailure): CheckProjectResult {
+function failure(failureValue: CompilerFailure): CheckProjectFailure {
   return { ok: false, failure: failureValue };
 }

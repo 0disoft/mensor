@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { checkProject } from "@0disoft/mensor-compiler";
 import {
   parseDiagnosticReport,
+  parseDiagnosticReportV2,
   parseRouteIndex,
   serializeRouteIndex,
 } from "@0disoft/mensor-contract";
@@ -28,6 +29,75 @@ test("returns the canonical passing report for the layered valid fixture", async
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.deepEqual(result.report, await expectedReport("valid/layered-tasks"));
+  }
+});
+
+test("returns explicit revision-2 inspection without changing revision 1", async () => {
+  const v1 = await checkFixture("valid/tiny-tasks");
+  const v2 = await checkFixture("valid/tiny-tasks", { reportVersion: 2 });
+
+  assert.equal(v1.ok, true);
+  assert.equal(v2.ok, true);
+  if (v1.ok && v2.ok) {
+    assert.equal(v1.report.schemaVersion, 1);
+    assert.equal(v2.report.schemaVersion, 2);
+    assert.deepEqual(v2.report.inspection, {
+      filePlacement: { state: "checked", basis: "file-roles" },
+      forms: { state: "checked", basis: "static-html-form-index" },
+      handlers: { state: "checked", basis: "static-module-facts" },
+      moduleBoundaries: { state: "not-configured", basis: "module-graph" },
+      ownership: { state: "not-configured", basis: "ownership-rules" },
+      routes: { state: "not-configured", basis: "route-index" },
+      runtimeSemantics: { state: "out-of-scope", basis: "none" },
+    });
+    assert.equal(parseDiagnosticReportV2(JSON.stringify(v2.report)).ok, true);
+    assert.deepEqual(v2.report.diagnostics, v1.report.diagnostics);
+    assert.deepEqual(v2.report.summary, v1.report.summary);
+  }
+});
+
+test("derives checked states from configured rules and validated route evidence", async () => {
+  const layered = await checkFixture("valid/layered-tasks", { reportVersion: 2 });
+  const routed = await checkFixture("valid/hono-static-tasks", { reportVersion: 2 });
+
+  assert.equal(layered.ok, true);
+  assert.equal(routed.ok, true);
+  if (layered.ok && routed.ok) {
+    assert.equal(layered.report.inspection.moduleBoundaries.state, "checked");
+    assert.equal(layered.report.inspection.ownership.state, "checked");
+    assert.equal(layered.report.inspection.routes.state, "not-configured");
+    assert.equal(routed.report.inspection.moduleBoundaries.state, "checked");
+    assert.equal(routed.report.inspection.ownership.state, "not-configured");
+    assert.equal(routed.report.inspection.routes.state, "checked");
+  }
+});
+
+test("keeps checked inspection independent from a failed diagnostic verdict", async () => {
+  const result = await checkFixture("invalid/form-field-missing", {
+    reportVersion: 2,
+  });
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal(result.report.status, "failed");
+    assert.equal(result.report.inspection.forms.state, "checked");
+    assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+      "form.field_missing",
+    ]);
+  }
+});
+
+test("rejects an unsupported library report revision", async () => {
+  const result = await checkProject({
+    root: path.join(fixtureRoot, "valid/tiny-tasks"),
+    producerVersion: "0.0.0-fixture",
+    reportVersion: 3,
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.failure.kind, "configuration");
+    assert.equal(result.failure.code, "report.version_unsupported");
   }
 });
 
@@ -697,10 +767,11 @@ test("fails closed before reading a source file above the byte limit", async () 
   }
 });
 
-async function checkFixture(relativePath) {
+async function checkFixture(relativePath, options = {}) {
   return checkProject({
     root: path.join(fixtureRoot, relativePath),
     producerVersion: "0.0.0-fixture",
+    ...options,
   });
 }
 

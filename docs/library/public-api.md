@@ -12,9 +12,14 @@ exports:
 - `parseProjectContract(text)`;
 - `parseFeatureContract(text)`;
 - `parseDiagnosticReport(text)`;
+- `parseDiagnosticReportV2(text)` and `parseCheckOutputV2(text)`;
 - `parseRouteIndex(text)` and `serializeRouteIndex(value)`;
 - `isJsonValue(value)`; and
 - serializable contract, diagnostic, issue, and result types.
+
+`DiagnosticReport` remains the revision-1 compatibility name.
+`DiagnosticReportV1`, `DiagnosticReportV2`, `CheckFailureEnvelopeV2`, and
+`CheckOutputV2` make revision selection explicit for new consumers.
 
 Each parser returns `ContractResult<T>`. Syntax, duplicate-key, and schema
 failures are values with deterministic issues; they are not thrown exceptions.
@@ -26,7 +31,7 @@ schema defaults, or access the network.
 `@0disoft/mensor-compiler` exports:
 
 ```ts
-export interface CheckProjectOptions {
+export interface CheckProjectBaseOptions {
   readonly root: string;
   readonly configFile?: string;
   readonly producerVersion?: string;
@@ -38,15 +43,32 @@ export interface CheckProjectOptions {
   };
 }
 
+export interface CheckProjectOptions extends CheckProjectBaseOptions {
+  readonly reportVersion?: 1;
+}
+
+export interface CheckProjectV2Options extends CheckProjectBaseOptions {
+  readonly reportVersion: 2;
+}
+
+export function checkProject(
+  options: CheckProjectV2Options,
+): Promise<CheckProjectV2Result>;
+
 export function checkProject(
   options: CheckProjectOptions,
-): Promise<CheckResult>;
+): Promise<CheckProjectResult>;
 ```
 
 `CheckProjectResult` separates a completed check and its `DiagnosticReport` from
 configuration, filesystem, and unexpected compiler failures. Project placement
 violations are diagnostics in a successful compiler result; malformed contracts
 and unreadable inputs are typed failures.
+
+Omitting `reportVersion` retains the revision-1 return type. The literal value
+`2` selects `DiagnosticReportV2`; other values fail closed at runtime for
+JavaScript callers. Inspection is derived from validated contracts and
+completed rule paths, not from an empty diagnostic list.
 
 The compiler walks the configured source root in code-unit sorted order, skips
 symlinks, enforces file-count and file-byte limits, and never imports inspected
@@ -129,6 +151,10 @@ schema/parser/serializer, source freshness verification, and the
 as `@0disoft/mensor-contract`, `@0disoft/mensor-compiler`, and
 `@0disoft/mensor-cli`; the provisional private `@mensor/*` identities were
 never published and have no compatibility promise.
+
+Version `0.2.0` adds opt-in Check Output v2, its public schema and parsers,
+typed compiler overloads, and CLI report revision selection. Revision 1 remains
+the default wire and library contract.
 
 ## Deprecation
 

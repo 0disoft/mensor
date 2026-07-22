@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import {
+  parseCheckOutputV2,
   parseDiagnosticReport,
   parseFeatureContract,
   parseProjectContract,
@@ -65,6 +66,8 @@ const fixtures = [
   "../fixtures/invalid/file-role-mismatch/expected-report.json",
   "../fixtures/valid/hono-static-tasks/mensor.route-index.json",
   "../fixtures/valid/node-static-rsvp/mensor.route-index.json",
+  "../packages/contract/test/fixtures/check-output-v2-passed.json",
+  "../packages/contract/test/fixtures/check-output-v2-error.json",
 ];
 
 for (const file of [
@@ -72,6 +75,7 @@ for (const file of [
   "feature-contract-v1.schema.json",
   "diagnostic-report-v1.schema.json",
   "route-index-v1.schema.json",
+  "check-output-v2.schema.json",
 ]) {
   const schema = JSON.parse(await readFile(new URL(file, schemaRoot), "utf8"));
   if (schema.$id !== file) {
@@ -81,7 +85,9 @@ for (const file of [
 
 for (const fixture of fixtures) {
   const text = await readFile(new URL(fixture, import.meta.url), "utf8");
-  const parsed = fixture.endsWith("expected-report.json")
+  const parsed = fixture.includes("check-output-v2-")
+    ? parseCheckOutputV2(text)
+    : fixture.endsWith("expected-report.json")
     ? parseDiagnosticReport(text)
     : fixture.endsWith("mensor.route-index.json")
       ? parseRouteIndex(text)
@@ -89,6 +95,6 @@ for (const fixture of fixtures) {
       ? parseFeatureContract(text)
       : parseProjectContract(text);
   if (!parsed.ok) {
-    throw new Error(`${fixture} must satisfy its revision-1 parser contract.`);
+    throw new Error(`${fixture} must satisfy its declared parser contract.`);
   }
 }
