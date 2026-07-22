@@ -44,6 +44,13 @@ diagnostics
 summary
 ```
 
+`status: "passed"` means every check enabled by the supplied project contract
+completed without an error diagnostic. It is not a coverage declaration. In
+particular, omitting `ProjectContract.routeIndex` disables application-route
+verification and the `route.missing` rule. Mensor does not execute the
+application, so runtime behavior remains the application's semantic-test
+responsibility even when diagnostics are empty.
+
 The normative diagnostic fields and canonicalization rules live in
 `docs/product/02-spec.md` until a machine-readable schema is introduced.
 

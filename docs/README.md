@@ -50,6 +50,10 @@
   `../internal/agent-runner/cohorts/codex-subagents-rsvp-response-v1.json`
 - Repeated RSVP response run:
   `product/agent-authored-rsvp-response-run-2026-07-18.md`
+- Published-package onboarding run:
+  `product/agent-authored-published-onboarding-run-2026-07-21.md`
+- Hermes desktop onboarding run:
+  `product/agent-authored-hermes-onboarding-run-2026-07-22.md`
 - 0.1.0 release-candidate audit:
   `product/0.1.0-release-candidate-audit.md`
 - Response artifact transport: `../internal/agent-runner/briefs/response-artifact-v1.md`

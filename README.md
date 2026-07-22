@@ -30,6 +30,25 @@ pnpm exec mensor check . --json
 See the [release runbook](docs/releasing/runbook.md) and [`0.1.0` migration
 note](docs/releasing/0.1.0.md) for the publication and compatibility boundary.
 
+## Contract Path Bases
+
+Mensor uses two path bases. Project-level discovery paths do not become
+`sourceRoot`-relative merely because discovered source lives below that root.
+
+| Contract field | Path base |
+| --- | --- |
+| `sourceRoot` | project root |
+| `featureContracts[]` | project root; include the `sourceRoot` prefix when applicable |
+| `routeIndex` | project root |
+| `fileRoles[].withinFeature` | directory containing the feature contract |
+| action `form.template` | directory containing the feature contract |
+| action `handler.file` | directory containing the feature contract |
+
+For example, a feature contract stored at
+`src/features/guestbook/feature.mensor.jsonc` is listed by that complete path
+in `featureContracts`, while its handler may be declared as
+`server/create-entry.ts` inside the feature contract.
+
 ## Source Checkout
 
 The current preview runs from a source checkout with Node.js 22 or newer and
@@ -76,6 +95,10 @@ with those kinds of tools.
 The MVP supports TypeScript or JavaScript projects with static `.html` files.
 An optional canonical RouteIndex lets an external producer supply static route
 facts without granting the compiler code-execution authority.
+When `routeIndex` is omitted, Mensor does not inspect application route
+declarations and does not run the `route.missing` rule. A passing check means
+only that every configured static contract check passed; it never proves
+runtime application semantics.
 Dynamic template languages, runtime manifests, production HTTP handling,
 autofix, arbitrary plugins, cloud processing, and telemetry are deferred.
 

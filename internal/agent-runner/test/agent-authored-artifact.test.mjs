@@ -34,6 +34,14 @@ const rsvpResponseCohortFile = fileURLToPath(new URL(
   "../cohorts/codex-subagents-rsvp-response-v1.json",
   import.meta.url,
 ));
+const publishedOnboardingBriefFile = fileURLToPath(new URL(
+  "../briefs/published-rsvp-onboarding-v1.md",
+  import.meta.url,
+));
+const publishedOnboardingCohortFile = fileURLToPath(new URL(
+  "../cohorts/codex-subagents-published-onboarding-v1.json",
+  import.meta.url,
+));
 
 test("canonicalizes and materializes one bounded response artifact", async () => {
   const artifact = validateAgentAuthoredProjectArtifact({
@@ -188,5 +196,40 @@ test("pins three fresh RSVP response trials per requested model", async () => {
       "opencode-go/minimax-m3",
       "opencode-go/deepseek-v4-flash",
     ],
+  );
+});
+
+test("pins the published onboarding cohort to the requested models and package", async () => {
+  const brief = await readFile(publishedOnboardingBriefFile, "utf8");
+  assert.match(brief, /"@0disoft\/mensor-cli": "0\.1\.0"/);
+  assert.match(brief, /official npm registry|https:\/\/registry\.npmjs\.org\//);
+  assert.match(brief, /Do not access the filesystem/);
+
+  const cohort = JSON.parse(
+    await readFile(publishedOnboardingCohortFile, "utf8"),
+  );
+  assert.equal(cohort.cohortId, "codex-subagents-published-onboarding-v1");
+  assert.equal(cohort.evaluationMode, "fresh-response-artifact-public-registry");
+  assert.equal(cohort.trialsPerModel, 1);
+  assert.deepEqual(cohort.publishedPackage, {
+    name: "@0disoft/mensor-cli",
+    version: "0.1.0",
+    registry: "https://registry.npmjs.org/",
+  });
+  assert.deepEqual(
+    cohort.models.map(({ modelId }) => modelId),
+    [
+      "umans/umans-glm-5.2",
+      "umans/umans-kimi-k2.7",
+      "opencode-go/deepseek-v4-flash",
+    ],
+  );
+  assert.deepEqual(
+    cohort.models.map(({ responseFile }) => responseFile),
+    ["glm-5.2.txt", "kimi-k2.7.txt", "deepseek-v4-flash.txt"],
+  );
+  assert.equal(
+    cohort.models.some(({ modelId }) => modelId.includes("minimax")),
+    false,
   );
 });

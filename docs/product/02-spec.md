@@ -339,6 +339,22 @@ maintainer recruitment and another agent attestation layer remain out of scope.
 Future coding-agent trials must continue to use fresh briefs and evaluator-owned
 semantic oracles without access to existing fixtures.
 
+The first post-publication onboarding cohort used one fresh response-only slot
+for GLM 5.2, Kimi K2.7, and DeepSeek V4 Flash. One Kimi artifact declared and
+installed the exact public CLI package and passed Mensor with zero diagnostics,
+but it failed the protected application semantic oracle. GLM and DeepSeek
+produced no final artifact under the bounded run. This supports the existing
+separation between application tests and Mensor; it does not authorize broader
+compatibility or model-quality claims.
+
+A later uncontrolled Hermes desktop run produced three writable repositories.
+One was checker-clean with 17 self-authored tests, one failed both its real test
+entrypoint and RouteIndex configuration, and one was checker-clean while its
+self-authored test accepted a content type forbidden by the brief. Two projects
+omitted RouteIndex and therefore received no application-route verification.
+The run supports clearer path, coverage, and canonicalization documentation; it
+does not support a model ranking, success rate, or sandbox claim.
+
 `docs/product/agent-authored-dogfood-protocol.md` owns the input, output,
 evaluation, privacy, security, and stop rules. These trials measure whether an
 agent can learn and apply Mensor from its documented contract. They do not

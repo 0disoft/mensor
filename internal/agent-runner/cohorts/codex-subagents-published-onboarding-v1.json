@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "cohortId": "codex-subagents-published-onboarding-v1",
+  "runnerId": "codex-subagent",
+  "baselineCommit": "12724813a9e0d63c9b65525df50ff9e02cc66f16",
+  "evaluationMode": "fresh-response-artifact-public-registry",
+  "applicationBrief": {
+    "id": "published-rsvp-onboarding",
+    "revision": "v1"
+  },
+  "outputTransport": {
+    "id": "response-artifact",
+    "revision": "v1"
+  },
+  "semanticOracle": {
+    "id": "published-rsvp-onboarding-oracle",
+    "revision": "v1"
+  },
+  "publishedPackage": {
+    "name": "@0disoft/mensor-cli",
+    "version": "0.1.0",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "contextPolicy": "fresh-agent-no-inherited-conversation",
+  "toolPolicy": "instruct-no-tools-not-host-enforced",
+  "availabilityPolicy": "record-unavailable-without-substitution",
+  "aggregationPolicy": "report-each-model-separately",
+  "trialsPerModel": 1,
+  "models": [
+    {
+      "providerId": "umans",
+      "modelId": "umans/umans-glm-5.2",
+      "reasoningEffort": "high",
+      "responseFile": "glm-5.2.txt"
+    },
+    {
+      "providerId": "umans",
+      "modelId": "umans/umans-kimi-k2.7",
+      "reasoningEffort": "high",
+      "responseFile": "kimi-k2.7.txt"
+    },
+    {
+      "providerId": "opencode-go",
+      "modelId": "opencode-go/deepseek-v4-flash",
+      "reasoningEffort": "high",
+      "responseFile": "deepseek-v4-flash.txt"
+    }
+  ]
+}

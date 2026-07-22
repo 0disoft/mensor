@@ -60,6 +60,32 @@ project-contract `routeIndex` path.
 the canonical representation. Package versions and `schemaVersion` advance
 independently.
 
+RouteIndex producers should depend directly on `@0disoft/mensor-contract` and
+write only serializer output:
+
+```js
+import { writeFile } from "node:fs/promises";
+import { serializeRouteIndex } from "@0disoft/mensor-contract";
+
+const routeIndex = {
+  schemaVersion: 1,
+  producer: { name: "example-route-indexer", version: "1.0.0" },
+  routes: extractedRoutes,
+};
+
+await writeFile(
+  "mensor.route-index.json",
+  serializeRouteIndex(routeIndex),
+  "utf8",
+);
+```
+
+`extractedRoutes` must contain the SHA-256 of the current source bytes and a
+valid source range. Placeholder digests, hand-sorted keys, or JSON formatter
+output are not freshness evidence. When Mensor reports that the artifact is not
+canonical, regenerate it through `serializeRouteIndex`; do not edit whitespace
+until the parser happens to accept it.
+
 ## Freshness
 
 Before semantic rules run, the compiler:
@@ -91,6 +117,11 @@ own GET pages, health routes, or unrelated application endpoints.
 The rule does not infer that a similar route is the intended action. Repair may
 change application source or the action contract, but it must regenerate the
 source-bound index and preserve the form contract.
+
+The rule runs only when `ProjectContract.routeIndex` selects an artifact. An
+omitted RouteIndex means route coverage is absent, not successful. Form,
+handler, placement, import-boundary, and ownership checks continue
+independently.
 
 ## Trust Boundary
 

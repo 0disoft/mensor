@@ -48,6 +48,18 @@ const rsvpOracleFile = fileURLToPath(new URL(
   "../oracles/rsvp-v2.test.mjs",
   import.meta.url,
 ));
+const publishedOnboardingObservationRoot = fileURLToPath(new URL(
+  "../observations/codex-subagents-published-onboarding-v1/",
+  import.meta.url,
+));
+const publishedOnboardingBriefFile = fileURLToPath(new URL(
+  "../briefs/published-rsvp-onboarding-v1.md",
+  import.meta.url,
+));
+const publishedOnboardingOracleFile = fileURLToPath(new URL(
+  "../oracles/published-rsvp-onboarding-v1.test.mjs",
+  import.meta.url,
+));
 
 test("creates a bounded exploratory-only observation", async () => {
   const observation = createObservation();
@@ -247,6 +259,61 @@ test("keeps every repeated RSVP response trial separate and canonical", async ()
       && observation.finalState.generatedFiles.length === 0
       && !observation.success
     ));
+});
+
+test("records the published package onboarding cohort without substituting models", async () => {
+  const files = (await readdir(publishedOnboardingObservationRoot)).sort();
+  assert.deepEqual(files, [
+    "deepseek-v4-flash.json",
+    "umans-glm-5.2.json",
+    "umans-kimi-k2.7.json",
+  ]);
+  const observations = await Promise.all(files.map(async (file) =>
+    parseAgentAuthoredBuildExploratoryObservation(
+      await readFile(
+        path.join(publishedOnboardingObservationRoot, file),
+        "utf8",
+      ),
+    )
+  ));
+  const [briefSha256, transportSha256, oracleSha256] = await Promise.all([
+    digestFile(publishedOnboardingBriefFile),
+    digestFile(responseTransportFile),
+    digestFile(publishedOnboardingOracleFile),
+  ]);
+  assert.ok(observations.every((observation) =>
+    observation.baselineCommit === "12724813a9e0d63c9b65525df50ff9e02cc66f16"
+    && observation.identity.cohortId
+      === "codex-subagents-published-onboarding-v1"
+    && observation.brief.sha256 === briefSha256
+    && observation.outputTransport.sha256 === transportSha256
+    && observation.semanticOracle.sha256 === oracleSha256
+    && observation.claimLevel === "exploratory-only"
+  ));
+  const byModel = new Map(
+    observations.map((observation) => [observation.identity.modelId, observation]),
+  );
+  assert.deepEqual([...byModel.keys()].sort(), [
+    "opencode-go/deepseek-v4-flash",
+    "umans/umans-glm-5.2",
+    "umans/umans-kimi-k2.7",
+  ]);
+  for (const modelId of [
+    "opencode-go/deepseek-v4-flash",
+    "umans/umans-glm-5.2",
+  ]) {
+    const observation = byModel.get(modelId);
+    assert.equal(observation.finalState.artifactCompleted, false);
+    assert.equal(observation.finalState.artifactAccepted, false);
+    assert.equal(observation.success, false);
+  }
+  const kimi = byModel.get("umans/umans-kimi-k2.7");
+  assert.equal(kimi.finalState.artifactCompleted, true);
+  assert.equal(kimi.finalState.artifactAccepted, true);
+  assert.equal(kimi.finalState.semanticTestsPassed, false);
+  assert.equal(kimi.finalState.mensorCheckPassed, true);
+  assert.deepEqual(kimi.finalState.diagnosticCodes, []);
+  assert.equal(kimi.success, false);
 });
 
 function createObservation(overrides = {}) {

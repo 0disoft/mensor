@@ -21,6 +21,7 @@
     "smoke": "pnpm run build && node scripts/smoke-contract.mjs",
     "package-smoke": "pnpm run build && node scripts/smoke-package-consumer.mjs",
     "registry-smoke": "node scripts/smoke-registry-consumer.mjs",
+    "published-onboarding:evaluate": "pnpm run build && node scripts/evaluate-published-onboarding.mjs",
     "release-check": "node scripts/check-release-readiness.mjs",
     "release:pack": "node scripts/pack-release-artifacts.mjs",
     "benchmark": "pnpm run build && node scripts/run-mutation-benchmark.mjs",

@@ -117,11 +117,22 @@ Feature contract at `src/features/guestbook/feature.mensor.jsonc`:
 }
 ```
 
-`sourceRoot` and each `featureContracts` entry are project-root-relative.
-`fileRoles[].withinFeature`, action template paths, and handler files are
-relative to the directory containing that feature contract. The optional
-`$schema` property is only an editor hint; its path depends on the consumer's
-installation layout and is not required by Mensor.
+Path bases are explicit and do not inherit from `sourceRoot`:
+
+| Field | Path base |
+| --- | --- |
+| `sourceRoot` | project root |
+| `featureContracts[]` | project root |
+| `routeIndex` | project root |
+| `fileRoles[].withinFeature` | directory containing the feature contract |
+| action `form.template` | directory containing the feature contract |
+| action `handler.file` | directory containing the feature contract |
+
+Therefore, `featureContracts` must contain
+`src/features/guestbook/feature.mensor.jsonc`, not
+`features/guestbook/feature.mensor.jsonc`, when `sourceRoot` is `src`. The
+optional `$schema` property is only an editor hint; its path depends on the
+consumer's installation layout and is not required by Mensor.
 
 The feature contract declares only the POST action. The application may serve
 the GET page through its own framework or server; revision 1 has no GET page
@@ -202,6 +213,10 @@ A stale digest, missing source, or out-of-bounds range is a configuration
 failure. A fresh index that lacks an action's exact `POST` route emits
 `route.missing`. Extra routes are allowed. The compiler never executes or
 loads an index producer, and producer identity is not a trust grant.
+
+When `routeIndex` is omitted, route facts are unavailable and Mensor does not
+run `route.missing`. A zero-diagnostic report must not be interpreted as route
+coverage in that configuration.
 
 HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.

@@ -1,6 +1,6 @@
 # Agent-Authored Dogfood Protocol
 
-- Status: Guestbook and RSVP exploratory response runs complete
+- Status: Guestbook, RSVP, and published-package onboarding exploratory runs complete
 - Owner: Maintainer
 - External maintainer participation: Not planned
 - Current brief: `internal/agent-runner/briefs/rsvp-v2.md`
@@ -17,6 +17,16 @@
   `internal/agent-runner/cohorts/codex-subagents-rsvp-response-v1.json`
 - Current RSVP response run:
   `docs/product/agent-authored-rsvp-response-run-2026-07-18.md`
+- Current published onboarding brief:
+  `internal/agent-runner/briefs/published-rsvp-onboarding-v1.md`
+- Current published onboarding cohort:
+  `internal/agent-runner/cohorts/codex-subagents-published-onboarding-v1.json`
+- Current published onboarding run:
+  `docs/product/agent-authored-published-onboarding-run-2026-07-21.md`
+- Hermes desktop onboarding brief:
+  `internal/agent-runner/briefs/hermes-maintenance-board-v1.md`
+- Hermes desktop onboarding run:
+  `docs/product/agent-authored-hermes-onboarding-run-2026-07-22.md`
 
 ## Purpose
 
@@ -182,6 +192,22 @@ Versions 2 and 3 remain immutable historical schemas. Version 2 does not bind
 an output transport or artifact-acceptance gate. Version 3 adds those facts but
 does not bind the exact model response bytes, so it cannot support artifact
 replay. Neither should be used for current response-only observations.
+
+The published onboarding cohort uses one fresh response-only slot for GLM 5.2,
+Kimi K2.7, and DeepSeek V4 Flash. MiniMax is intentionally absent from that
+cohort. The accepted artifact must declare `@0disoft/mensor-cli@0.1.0`; the
+evaluator installs it from the public registry before running the protected
+semantic oracle and installed CLI. One Kimi artifact passed package and Mensor
+gates but failed application semantics. GLM returned no final artifact and the
+bounded DeepSeek session was stopped without one. These remain separate
+exploratory observations, not a model ranking or success rate.
+
+The later Hermes desktop run used writable independent repositories and the
+published CLI, but it was not a controlled cohort. One session self-reported
+fixture access, another inspected package implementation, and each agent owned
+its own tests. Its results are retained only as onboarding and documentation
+evidence. They do not upgrade the response-only cohort, support model ranking,
+or replace evaluator-owned semantic oracles.
 
 ## Privacy and Security
 
