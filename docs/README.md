@@ -22,6 +22,7 @@
 - Release history: `../CHANGELOG.md`
 - npm release procedure: `releasing/runbook.md`
 - First public preview migration note: `releasing/0.1.0.md`
+- Check Output v2 migration note: `releasing/0.2.0.md`
 
 ## Research Notes
 
@@ -56,6 +57,7 @@
   `product/agent-authored-hermes-onboarding-run-2026-07-22.md`
 - 0.1.0 release-candidate audit:
   `product/0.1.0-release-candidate-audit.md`
+- 0.2.0 release audit: `product/0.2.0-release-audit.md`
 - Response artifact transport: `../internal/agent-runner/briefs/response-artifact-v1.md`
 - Response artifact schema: `../internal/agent-runner/spec/agent-authored-project-artifact-v1.schema.json`
 - Exploratory subagent observation schema: `../internal/agent-runner/spec/agent-authored-build-exploratory-observation-v4.schema.json`
