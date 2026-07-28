@@ -5,6 +5,7 @@ import {
   releaseArtifactFileName,
   releasePackageNames,
 } from "./pack-release-artifacts.mjs";
+import { validateReleaseReadme } from "./lib/release-readme-contract.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const options = parseOptions(process.argv.slice(2));
@@ -62,6 +63,9 @@ for (const packageName of packages.map(([name]) => name)) {
     failures.push(`${migrationPath} must name ${packageName}.`);
   }
 }
+
+const readme = await readText("README.md");
+failures.push(...validateReleaseReadme({ readme, version: workspace.version }));
 
 const runbook = await readText("docs/releasing/runbook.md");
 if (workspace.version === "0.1.0") {

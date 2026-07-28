@@ -14,22 +14,22 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.1.0` is the current public preview. The source tree is preparing
-`0.2.0`, which adds opt-in Check Output v2 while preserving revision 1 as the
-default contract.
+Version `0.2.0` is the current public preview. It adds opt-in Check Output v2
+while preserving revision 1 as the default contract.
 
 ## Registry Installation
 
 The supported CLI installation path is:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.1.0
+pnpm add --save-dev @0disoft/mensor-cli@0.2.0
 pnpm exec mensor check . --json
 ```
 
-See the [release runbook](docs/releasing/runbook.md), the published [`0.1.0`
-migration note](docs/releasing/0.1.0.md), and the pending [`0.2.0` migration
-note](docs/releasing/0.2.0.md) for the publication and compatibility boundary.
+See the [release runbook](docs/releasing/runbook.md), the published [`0.2.0`
+migration note](docs/releasing/0.2.0.md), and the
+[release audit](docs/product/0.2.0-release-audit.md) for the publication and
+compatibility boundary.
 
 ## Contract Path Bases
 
