@@ -146,6 +146,23 @@ assert.equal(checkOutputSchema.$id, "check-output-v2.schema.json");
 
   await runPnpm(["install", "--prefer-offline", "--ignore-scripts"], consumerRoot);
   const rootLicense = await readFile(path.join(repositoryRoot, "LICENSE"), "utf8");
+  const readmeMarkers = {
+    contract: [
+      "# @0disoft/mensor-contract",
+      "parseProjectContract",
+      "schemas/check-output-v2.schema.json",
+    ],
+    compiler: [
+      "# @0disoft/mensor-compiler",
+      "checkProject",
+      "does not\nexecute project source or configuration",
+    ],
+    cli: [
+      "# @0disoft/mensor-cli",
+      "pnpm exec mensor check . --json",
+      "--report-version 2",
+    ],
+  };
   for (const packageName of packageNames) {
     const installedPackageRoot = path.join(
       consumerRoot,
@@ -164,6 +181,16 @@ assert.equal(checkOutputSchema.$id, "check-output-v2.schema.json");
       registry: "https://registry.npmjs.org",
       provenance: true,
     });
+    const packageReadme = await readFile(
+      path.join(installedPackageRoot, "README.md"),
+      "utf8",
+    );
+    for (const marker of readmeMarkers[packageName]) {
+      assert.ok(
+        packageReadme.includes(marker),
+        `${packageName} package README must contain ${JSON.stringify(marker)}`,
+      );
+    }
   }
   await run(process.execPath, ["contract-smoke.mjs"], consumerRoot);
 
