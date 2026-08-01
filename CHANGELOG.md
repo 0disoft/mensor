@@ -2,6 +2,26 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.2.1] - 2026-08-01
+
+### Added
+
+- Package-specific npm README guides for the contract, compiler, and CLI
+  packages.
+
+### Changed
+
+- Package smoke verification now checks that each installed tarball contains
+  the expected package-specific README.
+- Release readiness now rejects stale public README status, installation, and
+  migration-note versions.
+
+### Compatibility
+
+- No public API, schema, diagnostic, manifest, or CLI behavior changes.
+- Upgrade the contract, compiler, and CLI packages together as a fixed version
+  set.
+
 ## [0.2.0] - 2026-07-22
 
 ### Added

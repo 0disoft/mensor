@@ -23,6 +23,7 @@
 - npm release procedure: `releasing/runbook.md`
 - First public preview migration note: `releasing/0.1.0.md`
 - Check Output v2 migration note: `releasing/0.2.0.md`
+- Package guide patch migration note: `releasing/0.2.1.md`
 
 ## Research Notes
 
