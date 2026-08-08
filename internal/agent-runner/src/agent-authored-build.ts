@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   lstat,
@@ -16,6 +16,8 @@ import {
   captureWorkspaceSnapshot,
   type WorkspaceSnapshotLimits,
 } from "@mensor/fixture-kit";
+
+import { createBoundedChildSettlement } from "./process-termination.js";
 
 export type AgentAuthoredBuildIsolation =
   | "injected-test"
@@ -418,28 +420,25 @@ async function runNodeSemanticTest(options: {
   });
   let outputBytes = 0;
   let terminated = false;
-  const completion = new Promise<number>((resolve, reject) => {
-    child.once("error", reject);
-    child.once("exit", (code) => resolve(code ?? 1));
-    const capture = (chunk: Buffer): void => {
-      outputBytes += chunk.length;
-      if (outputBytes > options.maxOutputBytes && !terminated) {
-        terminated = true;
-        terminateProcessTree(child);
-      }
-    };
-    child.stdout?.on("data", capture);
-    child.stderr?.on("data", capture);
-  });
+  const settlement = createBoundedChildSettlement(child);
+  const capture = (chunk: Buffer): void => {
+    outputBytes += chunk.length;
+    if (outputBytes > options.maxOutputBytes && !terminated) {
+      terminated = true;
+      settlement.requestTermination();
+    }
+  };
+  child.stdout?.on("data", capture);
+  child.stderr?.on("data", capture);
   const timeout = setTimeout(() => {
     if (!terminated) {
       terminated = true;
-      terminateProcessTree(child);
+      settlement.requestTermination();
     }
   }, options.timeoutMs);
   timeout.unref();
-  const exitCode = await completion.finally(() => clearTimeout(timeout));
-  return !terminated && exitCode === 0;
+  const outcome = await settlement.promise.finally(() => clearTimeout(timeout));
+  return !terminated && outcome.kind === "closed" && outcome.exitCode === 0;
 }
 
 async function validateOptions(
@@ -737,35 +736,6 @@ function sameRecord(
 
 function safePrefix(trialId: string): string {
   return trialId.replaceAll(/[^A-Za-z0-9_-]/gu, "-").slice(0, 48);
-}
-
-function terminateProcessTree(child: ChildProcess): void {
-  child.stdout?.destroy();
-  child.stderr?.destroy();
-  if (child.pid === undefined) {
-    return;
-  }
-  if (process.platform === "win32") {
-    child.kill("SIGKILL");
-    const systemRoot = process.env["SystemRoot"] ?? "C:\\Windows";
-    const killer = spawn(
-      path.join(systemRoot, "System32", "taskkill.exe"),
-      ["/PID", String(child.pid), "/T", "/F"],
-      {
-        env: { SystemRoot: systemRoot },
-        shell: false,
-        windowsHide: true,
-        stdio: "ignore",
-      },
-    );
-    killer.unref();
-    return;
-  }
-  try {
-    process.kill(-child.pid, "SIGKILL");
-  } catch {
-    child.kill("SIGKILL");
-  }
 }
 
 function compareText(left: string, right: string): number {

@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import * as path from "node:path";
 import type { Writable } from "node:stream";
@@ -11,6 +11,8 @@ import type {
   AgentTrialAdapterResult,
   AgentTrialContext,
 } from "@mensor/fixture-kit";
+
+import { createBoundedChildSettlement } from "./process-termination.js";
 
 export interface CommandAgentAdapterOptions {
   readonly executable: string;
@@ -113,46 +115,49 @@ async function runCommand(
   let outputBytes = 0;
   let terminationReason: "output-limit" | "timeout" | null = null;
 
-  const completion = new Promise<number>((resolve, reject) => {
-    child.once("error", reject);
-    child.once("close", (code) => resolve(code ?? 1));
-    const capture = (chunk: Buffer): void => {
-      outputBytes += chunk.length;
-      if (outputBytes > options.maxOutputBytes && terminationReason === null) {
-        terminationReason = "output-limit";
-        terminateProcessTree(child);
-      }
-    };
-    child.stdout.on("data", (chunk: Buffer) => {
-      capture(chunk);
-      if (terminationReason === null) {
-        stdout.push(chunk);
-      }
-    });
-    child.stderr.on("data", capture);
+  const settlement = createBoundedChildSettlement(child);
+  const capture = (chunk: Buffer): void => {
+    outputBytes += chunk.length;
+    if (outputBytes > options.maxOutputBytes && terminationReason === null) {
+      terminationReason = "output-limit";
+      settlement.requestTermination();
+    }
+  };
+  child.stdout.on("data", (chunk: Buffer) => {
+    capture(chunk);
+    if (terminationReason === null) {
+      stdout.push(chunk);
+    }
   });
+  child.stderr.on("data", capture);
 
   const inputCompletion = writeCommandInput(child.stdin, input);
 
   const timeout = setTimeout(() => {
     if (terminationReason === null) {
       terminationReason = "timeout";
-      terminateProcessTree(child);
+      settlement.requestTermination();
     }
   }, options.timeoutMs);
   timeout.unref();
 
-  const [exitCode, inputWrite] = await Promise.all([
-    completion,
+  const [outcome, inputWrite] = await Promise.all([
+    settlement.promise,
     inputCompletion,
   ]).finally(() => clearTimeout(timeout));
+  if (outcome.kind === "termination-failed") {
+    throw new Error("Agent command termination could not be confirmed within its grace period.");
+  }
+  if (outcome.kind === "spawn-error") {
+    throw new Error("Agent command process could not be started.");
+  }
   if (terminationReason === "timeout") {
     throw new Error("Agent command exceeded its timeout.");
   }
   if (terminationReason === "output-limit") {
     throw new Error("Agent command exceeded its output limit.");
   }
-  if (exitCode !== 0) {
+  if (outcome.exitCode !== 0) {
     throw new Error("Agent command exited unsuccessfully.");
   }
   if (!inputWrite.ok) {
@@ -277,33 +282,6 @@ export function parseAgentCommandOutput(bytes: Uint8Array): AgentTrialAdapterRes
     throw new Error("Agent command output has an invalid schema version or round count.");
   }
   return { rounds };
-}
-
-function terminateProcessTree(child: ChildProcessWithoutNullStreams): void {
-  child.stdin.destroy();
-  child.stdout.destroy();
-  child.stderr.destroy();
-  if (child.pid === undefined) {
-    return;
-  }
-  if (process.platform === "win32") {
-    child.kill("SIGKILL");
-    const systemRoot = process.env["SystemRoot"] ?? "C:\\Windows";
-    const taskkill = path.join(systemRoot, "System32", "taskkill.exe");
-    const killer = spawn(taskkill, ["/PID", String(child.pid), "/T", "/F"], {
-      env: { SystemRoot: systemRoot },
-      shell: false,
-      windowsHide: true,
-      stdio: "ignore",
-    });
-    killer.unref();
-    return;
-  }
-  try {
-    process.kill(-child.pid, "SIGKILL");
-  } catch {
-    child.kill("SIGKILL");
-  }
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
