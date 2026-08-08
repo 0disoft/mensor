@@ -22,6 +22,8 @@ All notable changes to Mensor are documented in this file.
   without crashing the parent process or leaving the adapter pending.
 - Contract and schema issue ordering now uses locale-independent binary string
   comparison, preserving canonical output across host locales.
+- TypeScript handler export extraction now resolves local re-exports against
+  runtime bindings and distinguishes runtime namespaces from type-only forms.
 
 ### Compatibility
 

@@ -52,12 +52,38 @@ export { type Shape, runtimeValue } from "./mixed.js";
 
 test("separates explicit namespace exports from unresolved export stars", () => {
   const fact = extractModuleFact(
-    'export * from "./all.js";\nexport * as named from "./named.js";\n',
+    'export * from "./all.js";\nexport * as named from "./named.js";\nexport type * as Types from "./types.js";\n',
     "handler.ts",
   );
 
   assert.equal(fact.hasExportStar, true);
-  assert.deepEqual(fact.exports.map((entry) => [entry.name, entry.kind]), [["named", "value"]]);
+  assert.deepEqual(fact.exports.map((entry) => [entry.name, entry.kind]), [
+    ["Types", "type"],
+    ["named", "value"],
+  ]);
+});
+
+test("links local exports to their runtime value bindings", () => {
+  const fact = extractModuleFact(`interface typeHandler {}
+type aliasHandler = () => void;
+const runtimeHandler = () => undefined;
+interface mergedHandler {}
+const mergedHandler = () => undefined;
+declare const ambientHandler: () => void;
+export { typeHandler, aliasHandler, runtimeHandler, mergedHandler, ambientHandler, missingHandler };
+export namespace namespaceHandler { export const run = 1; }
+export declare namespace ambientNamespace { const run: 1; }
+`, "handler.ts");
+
+  assert.deepEqual(fact.exports.map((entry) => [entry.name, entry.kind]), [
+    ["aliasHandler", "type"],
+    ["ambientHandler", "type"],
+    ["ambientNamespace", "type"],
+    ["mergedHandler", "value"],
+    ["namespaceHandler", "value"],
+    ["runtimeHandler", "value"],
+    ["typeHandler", "type"],
+  ]);
 });
 
 test("reports parser diagnostics without executing source", () => {

@@ -24,6 +24,8 @@ export interface ModuleImportFact {
   readonly range: SourceRange;
 }
 
+type BindingKind = "type" | "value";
+
 export function extractModuleFact(
   sourceText: string,
   fileName: string,
@@ -43,12 +45,13 @@ export function extractModuleFact(
   const imports: ModuleImportFact[] = [];
   const unsupportedDynamicImports: SourceRange[] = [];
   const scopeBindings = collectRequireBindings(sourceFile);
+  const topLevelBindings = collectTopLevelBindings(sourceFile);
   let hasExportStar = false;
   for (const statement of sourceFile.statements) {
     if (ts.isExportDeclaration(statement) && statement.exportClause === undefined) {
       hasExportStar = true;
     }
-    collectStatementExports(statement, sourceFile, exports);
+    collectStatementExports(statement, sourceFile, exports, topLevelBindings);
     collectStaticImport(statement, sourceFile, imports);
   }
   collectRuntimeCalls(
@@ -373,6 +376,7 @@ function collectStatementExports(
   statement: ts.Statement,
   sourceFile: ts.SourceFile,
   exports: ModuleExportFact[],
+  topLevelBindings: ReadonlyMap<string, BindingKind>,
 ): void {
   if (ts.isExportAssignment(statement) && !statement.isExportEquals) {
     exports.push({ kind: "value", name: "default", range: nodeRange(statement, sourceFile) });
@@ -381,8 +385,16 @@ function collectStatementExports(
   if (ts.isExportDeclaration(statement)) {
     if (statement.exportClause !== undefined && ts.isNamedExports(statement.exportClause)) {
       for (const element of statement.exportClause.elements) {
+        const kind = statement.isTypeOnly || element.isTypeOnly
+          ? "type"
+          : statement.moduleSpecifier !== undefined
+            ? "value"
+            : topLevelBindings.get(element.propertyName?.text ?? element.name.text);
+        if (kind === undefined) {
+          continue;
+        }
         exports.push({
-          kind: statement.isTypeOnly || element.isTypeOnly ? "type" : "value",
+          kind,
           name: element.name.text,
           range: nodeRange(element.name, sourceFile),
         });
@@ -392,7 +404,7 @@ function collectStatementExports(
       ts.isNamespaceExport(statement.exportClause)
     ) {
       exports.push({
-        kind: "value",
+        kind: statement.isTypeOnly ? "type" : "value",
         name: statement.exportClause.name.text,
         range: nodeRange(statement.exportClause.name, sourceFile),
       });
@@ -411,15 +423,16 @@ function collectStatementExports(
     return;
   }
   if (ts.isVariableStatement(statement)) {
+    const kind = declarationHasRuntimeValue(statement) ? "value" : "type";
     for (const declaration of statement.declarationList.declarations) {
-      collectBindingNames(declaration.name, sourceFile, exports);
+      collectExportBindingNames(declaration.name, kind, sourceFile, exports);
     }
     return;
   }
   if (
     (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement) ||
       ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) ||
-      ts.isEnumDeclaration(statement)) &&
+      ts.isEnumDeclaration(statement) || ts.isModuleDeclaration(statement)) &&
     statement.name !== undefined
   ) {
     exports.push({
@@ -430,18 +443,19 @@ function collectStatementExports(
   }
 }
 
-function collectBindingNames(
+function collectExportBindingNames(
   name: ts.BindingName,
+  kind: BindingKind,
   sourceFile: ts.SourceFile,
   exports: ModuleExportFact[],
 ): void {
   if (ts.isIdentifier(name)) {
-    exports.push({ kind: "value", name: name.text, range: nodeRange(name, sourceFile) });
+    exports.push({ kind, name: name.text, range: nodeRange(name, sourceFile) });
     return;
   }
   for (const element of name.elements) {
     if (!ts.isOmittedExpression(element)) {
-      collectBindingNames(element.name, sourceFile, exports);
+      collectExportBindingNames(element.name, kind, sourceFile, exports);
     }
   }
 }
@@ -450,7 +464,85 @@ function declarationHasRuntimeValue(statement: ts.Statement): boolean {
   if (hasModifier(statement, ts.SyntaxKind.DeclareKeyword)) {
     return false;
   }
+  if (ts.isFunctionDeclaration(statement)) {
+    return statement.body !== undefined;
+  }
   return !ts.isInterfaceDeclaration(statement) && !ts.isTypeAliasDeclaration(statement);
+}
+
+function collectTopLevelBindings(sourceFile: ts.SourceFile): ReadonlyMap<string, BindingKind> {
+  const bindings = new Map<string, BindingKind>();
+  for (const statement of sourceFile.statements) {
+    if (ts.isVariableStatement(statement)) {
+      const kind = declarationHasRuntimeValue(statement) ? "value" : "type";
+      for (const declaration of statement.declarationList.declarations) {
+        collectBindingKinds(declaration.name, kind, bindings);
+      }
+      continue;
+    }
+    if (
+      (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement) ||
+        ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) ||
+        ts.isEnumDeclaration(statement) || ts.isModuleDeclaration(statement)) &&
+      statement.name !== undefined
+    ) {
+      addBinding(bindings, statement.name.text, declarationHasRuntimeValue(statement) ? "value" : "type");
+      continue;
+    }
+    if (ts.isImportEqualsDeclaration(statement)) {
+      addBinding(bindings, statement.name.text, statement.isTypeOnly ? "type" : "value");
+      continue;
+    }
+    if (!ts.isImportDeclaration(statement) || statement.importClause === undefined) {
+      continue;
+    }
+    const clause = statement.importClause;
+    if (clause.name !== undefined) {
+      addBinding(bindings, clause.name.text, clause.isTypeOnly ? "type" : "value");
+    }
+    const namedBindings = clause.namedBindings;
+    if (namedBindings === undefined) {
+      continue;
+    }
+    if (ts.isNamespaceImport(namedBindings)) {
+      addBinding(bindings, namedBindings.name.text, clause.isTypeOnly ? "type" : "value");
+      continue;
+    }
+    for (const element of namedBindings.elements) {
+      addBinding(
+        bindings,
+        element.name.text,
+        clause.isTypeOnly || element.isTypeOnly ? "type" : "value",
+      );
+    }
+  }
+  return bindings;
+}
+
+function collectBindingKinds(
+  name: ts.BindingName,
+  kind: BindingKind,
+  bindings: Map<string, BindingKind>,
+): void {
+  if (ts.isIdentifier(name)) {
+    addBinding(bindings, name.text, kind);
+    return;
+  }
+  for (const element of name.elements) {
+    if (!ts.isOmittedExpression(element)) {
+      collectBindingKinds(element.name, kind, bindings);
+    }
+  }
+}
+
+function addBinding(
+  bindings: Map<string, BindingKind>,
+  name: string,
+  kind: BindingKind,
+): void {
+  if (bindings.get(name) !== "value") {
+    bindings.set(name, kind);
+  }
 }
 
 function hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
