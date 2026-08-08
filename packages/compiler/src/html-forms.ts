@@ -54,6 +54,7 @@ export function createStaticHtmlFormIndexProvider(options: {
   readonly timing?: CompilerTiming;
 }): StaticHtmlFormIndexProvider {
   const documents = new Map<string, Promise<FormDocumentFact>>();
+  const indexes = new Map<string, Promise<FormIndex>>();
   const sources = new Map<string, string>();
 
   async function getDocument(documentPath: string): Promise<FormDocumentFact> {
@@ -84,27 +85,35 @@ export function createStaticHtmlFormIndexProvider(options: {
   return {
     async getIndex(documentPaths) {
       const uniquePaths = [...new Set(documentPaths)].sort(compareText);
-      const indexedDocuments: FormDocumentFact[] = [];
-      for (const documentPath of uniquePaths) {
-        indexedDocuments.push(await getDocument(documentPath));
+      const key = JSON.stringify(uniquePaths);
+      let index = indexes.get(key);
+      if (index === undefined) {
+        index = (async (): Promise<FormIndex> => {
+          const indexedDocuments: FormDocumentFact[] = [];
+          for (const documentPath of uniquePaths) {
+            indexedDocuments.push(await getDocument(documentPath));
+          }
+          const validate = (): FormIndex => {
+            const serialized = serializeFormIndex({
+              schemaVersion: 1,
+              producer: {
+                name: staticHtmlSourceKind,
+                version: options.producerVersion,
+              },
+              documents: indexedDocuments,
+            });
+            const parsed = parseFormIndex(serialized);
+            return verifyFormIndexContent(parsed, (documentPath) =>
+              sources.get(documentPath),
+            );
+          };
+          return options.timing === undefined
+            ? validate()
+            : options.timing.measureSync("formIndexValidation", validate);
+        })();
+        indexes.set(key, index);
       }
-      const validate = (): FormIndex => {
-        const serialized = serializeFormIndex({
-          schemaVersion: 1,
-          producer: {
-            name: staticHtmlSourceKind,
-            version: options.producerVersion,
-          },
-          documents: indexedDocuments,
-        });
-        const parsed = parseFormIndex(serialized);
-        return verifyFormIndexContent(parsed, (documentPath) =>
-          sources.get(documentPath),
-        );
-      };
-      return options.timing === undefined
-        ? validate()
-        : options.timing.measureSync("formIndexValidation", validate);
+      return index;
     },
   };
 }

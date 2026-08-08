@@ -32,6 +32,8 @@ All notable changes to Mensor are documented in this file.
   identity checks, post-read path verification, and growth-safe byte limits.
 - Source discovery now pins file identities in a project snapshot so later
   reads avoid repeated parent-path scans and reject post-discovery replacement.
+- Feature contracts are now parsed before one project-wide FormIndex build,
+  and identical document sets reuse the same verified index promise.
 - Static HTML form extraction now follows tree-order form ownership, normalizes
   invalid control types, and indexes form controls and name groups linearly.
 - Contract source locations now reuse bounded parsed locators and binary-search

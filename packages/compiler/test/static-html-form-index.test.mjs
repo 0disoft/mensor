@@ -38,6 +38,7 @@ test("built-in provider emits a canonical source-bound FormIndex once per docume
   const serialized = serializeFormIndex(first);
 
   assert.equal(reads, 1);
+  assert.equal(second, first);
   assert.equal(serializeFormIndex(second), serialized);
   assert.deepEqual(parseFormIndex(serialized), first);
   assert.equal(first.documents.length, 1);

@@ -63,6 +63,13 @@ interface CheckProjectAnySuccess {
   readonly report: DiagnosticReport | DiagnosticReportV2;
 }
 
+interface ParsedFeature {
+  readonly feature: FeatureContract;
+  readonly path: string;
+  readonly templatePaths: readonly string[];
+  readonly text: string;
+}
+
 type CheckProjectAnyResult = CheckProjectAnySuccess | CheckProjectFailure;
 
 export async function checkProject(
@@ -221,6 +228,7 @@ async function checkProjectInternal(
       });
     }
 
+    const parsedFeatures: ParsedFeature[] = [];
     for (const featureContractPath of [...project.featureContracts].sort(compareText)) {
       const safeFeatureContractPath = assertRelativePosixPath(
         featureContractPath,
@@ -246,14 +254,31 @@ async function checkProjectInternal(
         id: featureResult.value.feature.id,
         root: path.posix.dirname(safeFeatureContractPath),
       });
+      parsedFeatures.push({
+        feature: featureResult.value,
+        path: safeFeatureContractPath,
+        templatePaths: featureTemplatePaths(
+          safeFeatureContractPath,
+          featureResult.value,
+          discovered,
+        ),
+        text: featureText,
+      });
+    }
+    const projectTemplatePaths = [...new Set(
+      parsedFeatures.flatMap((feature) => feature.templatePaths),
+    )].sort(compareText);
+    const formIndex = await formIndexProvider.getIndex(projectTemplatePaths);
+
+    for (const parsedFeature of parsedFeatures) {
       diagnostics.push(
         ...measureSync(
           timing,
           "ruleEvaluation",
           () => checkFeaturePlacement(
-            safeFeatureContractPath,
-            featureText,
-            featureResult.value,
+            parsedFeature.path,
+            parsedFeature.text,
+            parsedFeature.feature,
             project.fileRoles,
             discovered,
           ),
@@ -264,9 +289,9 @@ async function checkProjectInternal(
           timing,
           "ruleEvaluation",
           () => checkFeatureHandlers({
-            featureContractPath: safeFeatureContractPath,
-            featureText,
-            feature: featureResult.value,
+            featureContractPath: parsedFeature.path,
+            featureText: parsedFeature.text,
+            feature: parsedFeature.feature,
             discovered,
             sourceFacts,
           }),
@@ -278,9 +303,9 @@ async function checkProjectInternal(
             timing,
             "ruleEvaluation",
             () => checkFeatureRoutes({
-              featureContractPath: safeFeatureContractPath,
-              featureText,
-              feature: featureResult.value,
+              featureContractPath: parsedFeature.path,
+              featureText: parsedFeature.text,
+              feature: parsedFeature.feature,
               projectContractPath: configFile,
               projectText,
               routeIndexPath,
@@ -289,20 +314,14 @@ async function checkProjectInternal(
           ),
         );
       }
-      const templatePaths = featureTemplatePaths(
-        safeFeatureContractPath,
-        featureResult.value,
-        discovered,
-      );
-      const formIndex = await formIndexProvider.getIndex(templatePaths);
       diagnostics.push(
         ...measureSync(
           timing,
           "ruleEvaluation",
           () => checkFeatureForms({
-            featureContractPath: safeFeatureContractPath,
-            featureText,
-            feature: featureResult.value,
+            featureContractPath: parsedFeature.path,
+            featureText: parsedFeature.text,
+            feature: parsedFeature.feature,
             formIndex,
           }),
         ),
