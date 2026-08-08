@@ -1,7 +1,6 @@
 import type {
   Diagnostic,
   FeatureContract,
-  RouteIndex,
   RouteMissingDiagnostic,
 } from "@0disoft/mensor-contract";
 
@@ -9,7 +8,7 @@ import {
   actionRoutePropertyRange,
   projectRouteIndexRange,
 } from "./locations.js";
-import { compareText } from "./paths.js";
+import type { VerifiedRouteIndex } from "./route-index.js";
 
 export function checkFeatureRoutes(options: {
   readonly featureContractPath: string;
@@ -18,21 +17,13 @@ export function checkFeatureRoutes(options: {
   readonly projectContractPath: string;
   readonly projectText: string;
   readonly routeIndexPath: string;
-  readonly routeIndex: RouteIndex;
+  readonly routeIndex: VerifiedRouteIndex;
 }): readonly Diagnostic[] {
   const diagnostics: RouteMissingDiagnostic[] = [];
-  const indexed = new Set(
-    options.routeIndex.routes.map((route) => `${route.method}\u0000${route.path}`),
-  );
-  const postPaths = [...new Set(
-    options.routeIndex.routes
-      .filter((route) => route.method === "POST")
-      .map((route) => route.path),
-  )].sort(compareText);
 
   options.feature.actions.forEach((action, actionIndex) => {
     const key = `${action.route.method}\u0000${action.route.path}`;
-    if (indexed.has(key)) {
+    if (options.routeIndex.routeKeys.has(key)) {
       return;
     }
     diagnostics.push({
@@ -47,7 +38,7 @@ export function checkFeatureRoutes(options: {
         expectedMethod: action.route.method,
         expectedPath: action.route.path,
         routeIndex: options.routeIndexPath,
-        sameMethodPaths: postPaths,
+        sameMethodPaths: options.routeIndex.postPaths,
       },
       related: [
         {

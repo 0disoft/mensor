@@ -7,16 +7,30 @@ import type {
   SourceRange,
 } from "@0disoft/mensor-contract";
 
-import { InputFailure } from "./paths.js";
+import { compareText, InputFailure } from "./paths.js";
 import type { SourceFactIndex } from "./source-fact-index.js";
+
+export interface VerifiedRouteIndex {
+  readonly postPaths: readonly string[];
+  readonly routeKeys: ReadonlySet<string>;
+  readonly value: RouteIndex;
+}
 
 export async function verifyRouteIndex(options: {
   readonly routeIndex: RouteIndex;
   readonly discovered: ReadonlySet<string>;
   readonly sourceFacts: SourceFactIndex;
-}): Promise<RouteIndex> {
+}): Promise<VerifiedRouteIndex> {
+  const routesByFile = new Map<string, RouteIndex["routes"][number][]>();
   for (const route of options.routeIndex.routes) {
-    const file = route.source.file;
+    const routes = routesByFile.get(route.source.file);
+    if (routes === undefined) {
+      routesByFile.set(route.source.file, [route]);
+    } else {
+      routes.push(route);
+    }
+  }
+  for (const file of [...routesByFile.keys()].sort(compareText)) {
     if (!options.discovered.has(file)) {
       throw new InputFailure(
         "configuration",
@@ -26,29 +40,42 @@ export async function verifyRouteIndex(options: {
       );
     }
     const source = await options.sourceFacts.source(file);
-    if (contentDigest(source) !== route.source.contentDigest) {
-      throw new InputFailure(
-        "configuration",
-        "route_index.digest_mismatch",
-        `RouteIndex source digest does not match ${JSON.stringify(file)}.`,
-        file,
-      );
+    const digest = contentDigest(source);
+    const lines = source.split(/\r\n|\n|\r/u);
+    for (const route of routesByFile.get(file) ?? []) {
+      if (digest !== route.source.contentDigest) {
+        throw new InputFailure(
+          "configuration",
+          "route_index.digest_mismatch",
+          `RouteIndex source digest does not match ${JSON.stringify(file)}.`,
+          file,
+        );
+      }
+      assertRangeWithinLines(route.source.range, lines, file);
     }
-    assertRangeWithinSource(route.source.range, source, file);
   }
-  return options.routeIndex;
+  return {
+    postPaths: [...new Set(
+      options.routeIndex.routes
+        .filter((route) => route.method === "POST")
+        .map((route) => route.path),
+    )].sort(compareText),
+    routeKeys: new Set(
+      options.routeIndex.routes.map((route) => `${route.method}\u0000${route.path}`),
+    ),
+    value: options.routeIndex,
+  };
 }
 
 export function contentDigest(source: string | Uint8Array): ContentDigest {
   return `sha256:${createHash("sha256").update(source).digest("hex")}`;
 }
 
-function assertRangeWithinSource(
+function assertRangeWithinLines(
   range: SourceRange,
-  source: string,
+  lines: readonly string[],
   file: string,
 ): void {
-  const lines = source.split(/\r\n|\n|\r/u);
   assertPositionWithinSource(range.start, lines, file);
   assertPositionWithinSource(range.end, lines, file);
 }

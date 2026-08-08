@@ -13,7 +13,6 @@ import {
   type FileRoleContract,
   type InspectionReport,
   type ProjectContract,
-  type RouteIndex,
 } from "@0disoft/mensor-contract";
 
 import {
@@ -33,7 +32,7 @@ import { createStaticHtmlFormIndexProvider } from "./html-forms.js";
 import { handlerFileRange } from "./locations.js";
 import { checkImportBoundaries } from "./module-boundary-rule.js";
 import { checkOwnershipRules, type FeatureOwnerFact } from "./ownership-rule.js";
-import { verifyRouteIndex } from "./route-index.js";
+import { verifyRouteIndex, type VerifiedRouteIndex } from "./route-index.js";
 import { checkFeatureRoutes } from "./route-rule.js";
 import {
   assertRelativePosixPath,
@@ -206,7 +205,7 @@ async function checkProjectInternal(
       ...(timing === undefined ? {} : { timing }),
     });
     let routeIndexPath: string | undefined;
-    let routeIndex: RouteIndex | undefined;
+    let routeIndex: VerifiedRouteIndex | undefined;
     if (project.routeIndex !== undefined) {
       routeIndexPath = assertRelativePosixPath(
         project.routeIndex,

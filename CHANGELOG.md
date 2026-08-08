@@ -34,6 +34,8 @@ All notable changes to Mensor are documented in this file.
   reads avoid repeated parent-path scans and reject post-discovery replacement.
 - Feature contracts are now parsed before one project-wide FormIndex build,
   and identical document sets reuse the same verified index promise.
+- RouteIndex verification now reads, hashes, and line-indexes each source file
+  once and reuses verified route keys across feature checks.
 - Static HTML form extraction now follows tree-order form ownership, normalizes
   invalid control types, and indexes form controls and name groups linearly.
 - Contract source locations now reuse bounded parsed locators and binary-search
