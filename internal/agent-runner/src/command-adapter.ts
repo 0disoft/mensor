@@ -1,6 +1,7 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { createHash } from "node:crypto";
 import * as path from "node:path";
+import type { Writable } from "node:stream";
 import { TextDecoder, TextEncoder } from "node:util";
 
 import { parseDiagnosticReport, type DiagnosticReport } from "@0disoft/mensor-contract";
@@ -114,7 +115,7 @@ async function runCommand(
 
   const completion = new Promise<number>((resolve, reject) => {
     child.once("error", reject);
-    child.once("exit", (code) => resolve(code ?? 1));
+    child.once("close", (code) => resolve(code ?? 1));
     const capture = (chunk: Buffer): void => {
       outputBytes += chunk.length;
       if (outputBytes > options.maxOutputBytes && terminationReason === null) {
@@ -131,6 +132,8 @@ async function runCommand(
     child.stderr.on("data", capture);
   });
 
+  const inputCompletion = writeCommandInput(child.stdin, input);
+
   const timeout = setTimeout(() => {
     if (terminationReason === null) {
       terminationReason = "timeout";
@@ -139,8 +142,10 @@ async function runCommand(
   }, options.timeoutMs);
   timeout.unref();
 
-  child.stdin.end(input);
-  const exitCode = await completion.finally(() => clearTimeout(timeout));
+  const [exitCode, inputWrite] = await Promise.all([
+    completion,
+    inputCompletion,
+  ]).finally(() => clearTimeout(timeout));
   if (terminationReason === "timeout") {
     throw new Error("Agent command exceeded its timeout.");
   }
@@ -150,7 +155,57 @@ async function runCommand(
   if (exitCode !== 0) {
     throw new Error("Agent command exited unsuccessfully.");
   }
+  if (!inputWrite.ok) {
+    if (inputWrite.errorCode === "EPIPE" || inputWrite.errorCode === "ERR_STREAM_DESTROYED") {
+      throw new Error("Agent command closed its input before the request was written.");
+    }
+    throw new Error("Agent command input could not be written.");
+  }
   return parseAgentCommandOutput(Buffer.concat(stdout));
+}
+
+interface CommandInputWriteResult {
+  readonly ok: boolean;
+  readonly errorCode?: string;
+}
+
+export function writeCommandInput(
+  stream: Writable,
+  input: Uint8Array,
+): Promise<CommandInputWriteResult> {
+  return new Promise((resolve) => {
+    let settled = false;
+    let writeCompleted = false;
+    const settle = (result: CommandInputWriteResult): void => {
+      if (!settled) {
+        settled = true;
+        resolve(result);
+      }
+    };
+    stream.once("error", (error: NodeJS.ErrnoException) => {
+      settle({
+        ok: false,
+        ...(error.code === undefined ? {} : { errorCode: error.code }),
+      });
+    });
+    stream.once("close", () => {
+      settle(writeCompleted
+        ? { ok: true }
+        : { ok: false, errorCode: "ERR_STREAM_DESTROYED" });
+    });
+    stream.write(input, (error?: Error | null) => {
+      if (error !== undefined && error !== null) {
+        const code = (error as NodeJS.ErrnoException).code;
+        settle({
+          ok: false,
+          ...(code === undefined ? {} : { errorCode: code }),
+        });
+        return;
+      }
+      writeCompleted = true;
+      stream.end(() => settle({ ok: true }));
+    });
+  });
 }
 
 export function createAgentCommandInput(

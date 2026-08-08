@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { Writable } from "node:stream";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -25,6 +26,7 @@ import {
   serializeAgentExecutionDescriptor,
   serializeAgentTrialEvidence,
 } from "../dist/src/index.js";
+import { writeCommandInput } from "../dist/src/command-adapter.js";
 
 const fixture = fileURLToPath(
   new URL("../../../fixtures/valid/tiny-tasks/", import.meta.url),
@@ -237,6 +239,38 @@ test("passes only explicitly allowlisted environment values", async () => {
         process.env["FORBIDDEN"] = previous;
       }
     }
+  });
+});
+
+test("survives an agent that exits before reading command input", async () => {
+  await withFixture(async (root) => {
+    const earlySuccess = createCommandAgentAdapter({
+      ...commandOptions(),
+      args: [fakeAgent, "exit-before-input-success"],
+    });
+    const earlyFailure = createCommandAgentAdapter({
+      ...commandOptions(),
+      args: [fakeAgent, "exit-before-input-failure"],
+    });
+
+    assert.deepEqual(await earlySuccess(context(root)), { rounds: 1 });
+    await assert.rejects(
+      earlyFailure(context(root)),
+      /exited unsuccessfully/,
+    );
+  });
+});
+
+test("settles an EPIPE while writing agent command input", async () => {
+  const stream = new Writable({
+    write(_chunk, _encoding, callback) {
+      callback(Object.assign(new Error("closed input"), { code: "EPIPE" }));
+    },
+  });
+
+  assert.deepEqual(await writeCommandInput(stream, new Uint8Array([1])), {
+    ok: false,
+    errorCode: "EPIPE",
   });
 });
 

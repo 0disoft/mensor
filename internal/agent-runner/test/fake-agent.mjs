@@ -1,8 +1,20 @@
+import { closeSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import path from "node:path";
 
 const mode = process.argv[2];
+if (mode === "exit-before-input-success") {
+  closeSync(0);
+  process.stdout.write('{"schemaVersion":1,"rounds":1}\n');
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  process.exit(0);
+}
+if (mode === "exit-before-input-failure") {
+  closeSync(0);
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  process.exit(4);
+}
 const input = JSON.parse(await readStdin());
 const inputKeys = Object.keys(input).sort();
 if (

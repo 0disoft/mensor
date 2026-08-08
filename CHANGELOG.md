@@ -16,6 +16,11 @@ All notable changes to Mensor are documented in this file.
 - Release readiness now rejects stale public README status, installation, and
   migration-note versions.
 
+### Fixed
+
+- Agent command input now settles early child-process closure and `EPIPE`
+  without crashing the parent process or leaving the adapter pending.
+
 ### Compatibility
 
 - No public API, schema, diagnostic, manifest, or CLI behavior changes.
