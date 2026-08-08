@@ -10,6 +10,7 @@ import featureContractSchema from "../spec/feature-contract-v1.schema.json" with
 import projectContractSchema from "../spec/project-contract-v1.schema.json" with { type: "json" };
 import routeIndexSchema from "../spec/route-index-v1.schema.json" with { type: "json" };
 
+import { compareText } from "./compare.js";
 import type {
   ContractIssue,
   CheckOutputV2,
@@ -63,10 +64,10 @@ export function schemaIssues(
 
 function compareSchemaErrors(left: ErrorObject, right: ErrorObject): number {
   return (
-    left.instancePath.localeCompare(right.instancePath) ||
-    left.schemaPath.localeCompare(right.schemaPath) ||
-    left.keyword.localeCompare(right.keyword) ||
-    (left.message ?? "").localeCompare(right.message ?? "")
+    compareText(left.instancePath, right.instancePath) ||
+    compareText(left.schemaPath, right.schemaPath) ||
+    compareText(left.keyword, right.keyword) ||
+    compareText(left.message ?? "", right.message ?? "")
   );
 }
 

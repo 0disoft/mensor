@@ -6,6 +6,7 @@ import {
   type ParseError,
 } from "jsonc-parser";
 
+import { compareText } from "./compare.js";
 import type { ContractIssue, ContractResult, JsonValue } from "./types.js";
 
 const parseOptions = {
@@ -145,8 +146,8 @@ function sortIssues(issues: readonly ContractIssue[]): ContractIssue[] {
     return (
       offsetOrder ||
       (left.length ?? 0) - (right.length ?? 0) ||
-      left.code.localeCompare(right.code) ||
-      left.message.localeCompare(right.message)
+      compareText(left.code, right.code) ||
+      compareText(left.message, right.message)
     );
   });
 }

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import { compareText } from "../dist/src/compare.js";
+import { schemaIssues } from "../dist/src/schemas.js";
 import {
   isJsonValue,
   parseCheckOutputV2,
@@ -16,6 +18,19 @@ import {
 
 const fixtureRoot = new URL("../../../fixtures/", import.meta.url);
 const contractFixtureRoot = new URL("./fixtures/", import.meta.url);
+
+test("orders canonical text by code unit instead of process locale", () => {
+  assert.deepEqual(["ä", "a", "z"].sort(compareText), ["a", "z", "ä"]);
+
+  const validator = Object.assign(() => true, {
+    errors: [schemaError("/ä"), schemaError("/a"), schemaError("/z")],
+  });
+
+  assert.deepEqual(
+    schemaIssues(validator).map((issue) => issue.instancePath),
+    ["/a", "/z", "/ä"],
+  );
+});
 
 test("parses the valid project, feature, and report fixtures", async () => {
   const project = parseProjectContract(
@@ -430,4 +445,14 @@ test("recognizes only finite JSON values and plain objects", () => {
 
 async function fixtureText(relativePath) {
   return readFile(new URL(relativePath, fixtureRoot), "utf8");
+}
+
+function schemaError(instancePath) {
+  return {
+    instancePath,
+    schemaPath: "#/properties/value/type",
+    keyword: "type",
+    params: { type: "string" },
+    message: "must be string",
+  };
 }

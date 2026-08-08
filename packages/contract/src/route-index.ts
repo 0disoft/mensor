@@ -1,3 +1,4 @@
+import { compareText } from "./compare.js";
 import { parseJsonc } from "./jsonc.js";
 import { schemaIssues, validateRouteIndex } from "./schemas.js";
 import type {
@@ -123,10 +124,6 @@ function compareRoutes(left: IndexedRoute, right: IndexedRoute): number {
     || compareText(left.path, right.path)
     || compareText(left.source.file, right.source.file)
     || compareRanges(left.source.range, right.source.range);
-}
-
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function compareRanges(left: SourceRange, right: SourceRange): number {

@@ -20,6 +20,8 @@ All notable changes to Mensor are documented in this file.
 
 - Agent command input now settles early child-process closure and `EPIPE`
   without crashing the parent process or leaving the adapter pending.
+- Contract and schema issue ordering now uses locale-independent binary string
+  comparison, preserving canonical output across host locales.
 
 ### Compatibility
 
