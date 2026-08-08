@@ -27,6 +27,21 @@ type FormControlElement = DefaultTreeAdapterTypes.Element & {
   readonly tagName: FormControlTagName;
 };
 
+interface ControlState {
+  readonly disabled: boolean;
+  readonly inputType: string;
+  readonly owner: DefaultTreeAdapterTypes.Element | undefined;
+  readonly successfulCandidate: boolean;
+}
+
+interface HtmlElementIndex {
+  readonly controls: readonly FormControlElement[];
+  readonly disabledByAncestor: ReadonlyMap<DefaultTreeAdapterTypes.Element, boolean>;
+  readonly firstElementById: ReadonlyMap<string, DefaultTreeAdapterTypes.Element>;
+  readonly forms: readonly DefaultTreeAdapterTypes.Element[];
+  readonly nearestForm: ReadonlyMap<FormControlElement, DefaultTreeAdapterTypes.Element>;
+}
+
 export interface StaticHtmlFormIndexProvider {
   readonly getIndex: (
     documentPaths: readonly string[],
@@ -99,52 +114,85 @@ export function extractStaticHtmlFormDocument(
   html: string,
 ): FormDocumentFact {
   const document = parse(html, { sourceCodeLocationInfo: true });
-  const elements: DefaultTreeAdapterTypes.Element[] = [];
-  collectElements(document.childNodes, elements);
-  const forms = elements.filter((element) => element.tagName === "form");
-  const controls = elements.filter(isFormControl);
+  const index = collectElementIndex(document.childNodes);
+  const controlStates = new Map<FormControlElement, ControlState>();
+  const controlsByForm = new Map<DefaultTreeAdapterTypes.Element, FormControlElement[]>();
+  const groupsByForm = new Map<DefaultTreeAdapterTypes.Element, Map<string, FormControlElement[]>>();
+  for (const control of index.controls) {
+    const owner = associatedForm(control, index);
+    const inputType = controlInputType(control);
+    const disabled = attribute(control, "disabled") !== null ||
+      index.disabledByAncestor.get(control) === true;
+    const state: ControlState = {
+      disabled,
+      inputType,
+      owner,
+      successfulCandidate: isSuccessfulFieldCandidate(control, inputType, disabled),
+    };
+    controlStates.set(control, state);
+    if (owner === undefined) {
+      continue;
+    }
+    appendMapArray(controlsByForm, owner, control);
+    const name = attribute(control, "name");
+    if (state.successfulCandidate && name !== null && name.length > 0) {
+      let groups = groupsByForm.get(owner);
+      if (groups === undefined) {
+        groups = new Map();
+        groupsByForm.set(owner, groups);
+      }
+      appendMapArray(groups, name, control);
+    }
+  }
 
   return {
     path: documentPath,
     contentDigest: createContentDigest(html),
     sourceKind: staticHtmlSourceKind,
     inspection: { state: "complete" },
-    forms: forms.map((form) => indexedFormFact(form, forms, controls)),
+    forms: index.forms.map((form) => indexedFormFact(
+      form,
+      controlsByForm.get(form) ?? [],
+      groupsByForm.get(form) ?? new Map(),
+      controlStates,
+    )),
   };
 }
 
 function indexedFormFact(
   form: DefaultTreeAdapterTypes.Element,
-  forms: readonly DefaultTreeAdapterTypes.Element[],
-  controls: readonly FormControlElement[],
+  ownedControls: readonly FormControlElement[],
+  nameGroups: ReadonlyMap<string, readonly FormControlElement[]>,
+  controlStates: ReadonlyMap<FormControlElement, ControlState>,
 ): IndexedFormFact {
-  const ownedControls = controls.filter(
-    (control) => associatedForm(control, forms) === form,
-  );
   return {
     identity: stringAttributeEvidence(form, "id"),
     method: methodEvidence(form),
     action: actionEvidence(form),
     range: elementStartTagRange(form),
     controls: ownedControls.map((control) =>
-      indexedControlFact(control, ownedControls),
+      indexedControlFact(control, nameGroups, controlStates),
     ),
   };
 }
 
 function indexedControlFact(
   control: FormControlElement,
-  ownedControls: readonly FormControlElement[],
+  nameGroups: ReadonlyMap<string, readonly FormControlElement[]>,
+  controlStates: ReadonlyMap<FormControlElement, ControlState>,
 ): IndexedControlFact {
   const range = elementStartTagRange(control);
-  const inputType = controlInputType(control);
+  const state = controlStates.get(control);
+  if (state === undefined) {
+    throw new Error("Missing indexed control state.");
+  }
   return {
     name: stringAttributeEvidence(control, "name"),
     controlKind: known(control.tagName, range),
-    inputType: known(inputType, range),
+    inputType: known(state.inputType, range),
     multiple: known(attribute(control, "multiple") !== null, range),
-    multiplicity: known(controlMultiplicity(control, ownedControls), range),
-    successful: successfulEvidence(control, inputType, range),
+    multiplicity: known(controlMultiplicity(control, nameGroups, state), range),
+    successful: successfulEvidence(control, state, range),
     range,
   };
 }
@@ -182,13 +230,13 @@ function stringAttributeEvidence(
 
 function successfulEvidence(
   control: DefaultTreeAdapterTypes.Element,
-  inputType: string,
+  state: ControlState,
   range: SourceRange,
 ): IndexedControlFact["successful"] {
-  if (isEffectivelyDisabled(control)) {
+  if (state.disabled) {
     return known(false, range);
   }
-  const unsupportedReason = unsupportedControlReason(control, inputType);
+  const unsupportedReason = unsupportedControlReason(control, state.inputType);
   if (unsupportedReason !== undefined) {
     return {
       state: "unsupported",
@@ -196,7 +244,7 @@ function successfulEvidence(
       range,
     };
   }
-  return known(isSuccessfulFieldCandidate(control), range);
+  return known(state.successfulCandidate, range);
 }
 
 function unsupportedControlReason(
@@ -205,7 +253,7 @@ function unsupportedControlReason(
 ): UnsupportedReason | undefined {
   const name = attribute(control, "name") ?? "";
   const isSubmitter =
-    control.tagName === "button" ||
+    (control.tagName === "button" && inputType === "submit") ||
     (control.tagName === "input" && ["image", "submit"].includes(inputType));
   if (
     isSubmitter &&
@@ -225,17 +273,14 @@ function unsupportedControlReason(
 
 function controlMultiplicity(
   control: FormControlElement,
-  ownedControls: readonly FormControlElement[],
+  nameGroups: ReadonlyMap<string, readonly FormControlElement[]>,
+  state: ControlState,
 ): "mutually-exclusive" | "repeated" | "scalar" {
   const name = attribute(control, "name");
-  if (name === null || name.length === 0 || !isSuccessfulFieldCandidate(control)) {
+  if (name === null || name.length === 0 || !state.successfulCandidate) {
     return "scalar";
   }
-  const group = ownedControls.filter(
-    (candidate) =>
-      attribute(candidate, "name") === name &&
-      isSuccessfulFieldCandidate(candidate),
-  );
+  const group = nameGroups.get(name) ?? [];
   if (
     group.length > 0 &&
     group.every(
@@ -260,13 +305,22 @@ function known<T>(value: T, range: SourceRange): IndexedEvidence<T> {
 
 function controlInputType(element: DefaultTreeAdapterTypes.Element): string {
   if (element.tagName === "input") {
-    return asciiLowercase(attribute(element, "type") ?? "text");
+    const value = asciiLowercase(attribute(element, "type") ?? "text");
+    return inputTypes.has(value) ? value : "text";
   }
   if (element.tagName === "button") {
-    return asciiLowercase(attribute(element, "type") ?? "submit");
+    const value = asciiLowercase(attribute(element, "type") ?? "submit");
+    return buttonTypes.has(value) ? value : "submit";
   }
   return "";
 }
+
+const buttonTypes = new Set(["button", "reset", "submit"]);
+const inputTypes = new Set([
+  "button", "checkbox", "color", "date", "datetime-local", "email", "file",
+  "hidden", "image", "month", "number", "password", "radio", "range",
+  "reset", "search", "submit", "tel", "text", "time", "url", "week",
+]);
 
 function asciiLowercase(value: string): string {
   return value.replace(/[A-Z]/gu, (character) =>
@@ -274,27 +328,64 @@ function asciiLowercase(value: string): string {
   );
 }
 
-function collectElements(
+function collectElementIndex(
   nodes: readonly DefaultTreeAdapterTypes.ChildNode[],
-  result: DefaultTreeAdapterTypes.Element[],
-): void {
-  const stack = [...nodes].reverse();
+): HtmlElementIndex {
+  const controls: FormControlElement[] = [];
+  const disabledByAncestor = new Map<DefaultTreeAdapterTypes.Element, boolean>();
+  const firstElementById = new Map<string, DefaultTreeAdapterTypes.Element>();
+  const forms: DefaultTreeAdapterTypes.Element[] = [];
+  const nearestForm = new Map<FormControlElement, DefaultTreeAdapterTypes.Element>();
+  const stack = [...nodes].reverse().map((node) => ({
+    ancestorDisabled: false,
+    nearestForm: undefined as DefaultTreeAdapterTypes.Element | undefined,
+    node,
+  }));
   while (stack.length > 0) {
-    const node = stack.pop();
-    if (node === undefined) {
+    const frame = stack.pop();
+    if (frame === undefined) {
       continue;
     }
+    const { node } = frame;
     if (!("tagName" in node)) {
       continue;
     }
-    result.push(node);
+    disabledByAncestor.set(node, frame.ancestorDisabled);
+    const id = attribute(node, "id");
+    if (id !== null && id.length > 0 && !firstElementById.has(id)) {
+      firstElementById.set(id, node);
+    }
+    const currentForm = node.tagName === "form" ? node : frame.nearestForm;
+    if (node.tagName === "form") {
+      forms.push(node);
+    }
+    if (isFormControl(node)) {
+      controls.push(node);
+      if (frame.nearestForm !== undefined) {
+        nearestForm.set(node, frame.nearestForm);
+      }
+    }
+    const disabledFieldset = node.tagName === "fieldset" &&
+      attribute(node, "disabled") !== null;
+    const firstLegend = disabledFieldset
+      ? node.childNodes.find(
+          (child): child is DefaultTreeAdapterTypes.Element =>
+            "tagName" in child && child.tagName === "legend",
+        )
+      : undefined;
     for (let index = node.childNodes.length - 1; index >= 0; index -= 1) {
       const child = node.childNodes[index];
       if (child !== undefined) {
-        stack.push(child);
+        stack.push({
+          ancestorDisabled: frame.ancestorDisabled ||
+            (disabledFieldset && child !== firstLegend),
+          nearestForm: currentForm,
+          node: child,
+        });
       }
     }
   }
+  return { controls, disabledByAncestor, firstElementById, forms, nearestForm };
 }
 
 function isFormControl(
@@ -305,72 +396,37 @@ function isFormControl(
 
 function isSuccessfulFieldCandidate(
   element: DefaultTreeAdapterTypes.Element,
+  inputType: string,
+  disabled: boolean,
 ): boolean {
-  if (isEffectivelyDisabled(element) || element.tagName === "button") {
+  if (disabled || element.tagName === "button") {
     return false;
   }
   if (element.tagName !== "input") {
     return true;
   }
-  const type = controlInputType(element);
-  return !["button", "file", "image", "reset", "submit"].includes(type);
-}
-
-function isEffectivelyDisabled(element: DefaultTreeAdapterTypes.Element): boolean {
-  if (attribute(element, "disabled") !== null) {
-    return true;
-  }
-  let parent = element.parentNode;
-  while (parent !== null) {
-    if (
-      "tagName" in parent &&
-      parent.tagName === "fieldset" &&
-      attribute(parent, "disabled") !== null
-    ) {
-      const firstLegend = parent.childNodes.find(
-        (child): child is DefaultTreeAdapterTypes.Element =>
-          "tagName" in child && child.tagName === "legend",
-      );
-      if (firstLegend === undefined || !isDescendantOf(element, firstLegend)) {
-        return true;
-      }
-    }
-    parent = "parentNode" in parent ? parent.parentNode : null;
-  }
-  return false;
-}
-
-function isDescendantOf(
-  element: DefaultTreeAdapterTypes.Element,
-  ancestor: DefaultTreeAdapterTypes.Element,
-): boolean {
-  let parent = element.parentNode;
-  while (parent !== null) {
-    if (parent === ancestor) {
-      return true;
-    }
-    parent = "parentNode" in parent ? parent.parentNode : null;
-  }
-  return false;
+  return !["button", "file", "image", "reset", "submit"].includes(inputType);
 }
 
 function associatedForm(
-  control: DefaultTreeAdapterTypes.Element,
-  forms: readonly DefaultTreeAdapterTypes.Element[],
+  control: FormControlElement,
+  index: HtmlElementIndex,
 ): DefaultTreeAdapterTypes.Element | undefined {
   const explicitForm = attribute(control, "form");
   if (explicitForm !== null) {
-    return forms.find((form) => attribute(form, "id") === explicitForm);
+    const owner = index.firstElementById.get(explicitForm);
+    return owner?.tagName === "form" ? owner : undefined;
   }
+  return index.nearestForm.get(control);
+}
 
-  let parent = control.parentNode;
-  while (parent !== null) {
-    if ("tagName" in parent && parent.tagName === "form") {
-      return parent;
-    }
-    parent = "parentNode" in parent ? parent.parentNode : null;
+function appendMapArray<K, V>(map: Map<K, V[]>, key: K, value: V): void {
+  const values = map.get(key);
+  if (values === undefined) {
+    map.set(key, [value]);
+  } else {
+    values.push(value);
   }
-  return undefined;
 }
 
 function attribute(

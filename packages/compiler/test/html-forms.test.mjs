@@ -246,3 +246,69 @@ test("applies disabled fieldset inheritance and the first legend exception", () 
 
   assert.deepEqual(facts[0]?.fields.map((field) => field.name), ["legend-value"]);
 });
+
+test("uses the first tree-order id element for explicit form ownership", () => {
+  const facts = extractFormFacts(`<div id="owner"></div>
+<form id="owner"><input name="nested"></form>
+<input name="external" form="owner">`);
+
+  assert.deepEqual(facts[0]?.fields.map((field) => field.name), ["nested"]);
+});
+
+test("associates explicit controls with the first duplicate form id", () => {
+  const facts = extractFormFacts(`<form id="owner"></form>
+<form id="owner"></form>
+<input name="external" form="owner">`);
+
+  assert.deepEqual(facts.map((form) => form.fields.map((field) => field.name)), [
+    ["external"],
+    [],
+  ]);
+});
+
+test("normalizes invalid control types and ignores non-submitter buttons", () => {
+  const document = extractStaticHtmlFormDocument(documentPath, `<form id="types">
+  <button type="button" name="plain">Plain</button>
+  <button type="reset" name="reset">Reset</button>
+  <button type="invalid" name="fallback">Fallback</button>
+  <input type="invalid" name="textual">
+</form>`);
+  const controls = document.forms[0]?.controls ?? [];
+
+  assert.deepEqual(
+    controls.map((control) => ({
+      inputType: control.inputType.state === "known" ? control.inputType.value : "",
+      name: control.name.state === "known" ? control.name.value : "",
+      successful: control.successful.state,
+    })),
+    [
+      { inputType: "button", name: "plain", successful: "known" },
+      { inputType: "reset", name: "reset", successful: "known" },
+      { inputType: "submit", name: "fallback", successful: "unsupported" },
+      { inputType: "text", name: "textual", successful: "known" },
+    ],
+  );
+  assert.deepEqual(extractFormFacts(`<form id="types">
+    <button type="button" name="plain">Plain</button>
+    <button type="reset" name="reset">Reset</button>
+    <input type="invalid" name="textual">
+  </form>`)[0]?.fields.map((field) => field.name), ["textual"]);
+});
+
+test("indexes large form documents without repeated global control scans", () => {
+  const formCount = 1_000;
+  const controlsPerForm = 10;
+  const html = Array.from({ length: formCount }, (_, formIndex) =>
+    `<form id="form-${formIndex}">${Array.from(
+      { length: controlsPerForm },
+      (_, controlIndex) => `<input name="field-${controlIndex}">`,
+    ).join("")}</form>`,
+  ).join("");
+
+  const document = extractStaticHtmlFormDocument(documentPath, html);
+  assert.equal(document.forms.length, formCount);
+  assert.equal(
+    document.forms.reduce((count, form) => count + form.controls.length, 0),
+    formCount * controlsPerForm,
+  );
+});
