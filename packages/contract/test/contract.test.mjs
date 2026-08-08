@@ -80,6 +80,25 @@ test("rejects duplicate keys at every object depth", () => {
   }
 });
 
+test("walks deeply nested JSON values without exhausting the call stack", () => {
+  const acceptedDepth = 1_000;
+  const accepted = parseJsonc(
+    `${"[".repeat(acceptedDepth)}null${"]".repeat(acceptedDepth)}`,
+  );
+  assert.equal(accepted.ok, true);
+
+  const rejectedDepth = 3_000;
+  const rejected = parseJsonc(
+    `${"[".repeat(rejectedDepth)}null${"]".repeat(rejectedDepth)}`,
+  );
+  assert.equal(rejected.ok, false);
+  if (!rejected.ok) {
+    assert.deepEqual(rejected.issues.map((issue) => [issue.code, issue.message]), [
+      ["jsonc.syntax", "JSONC structural depth exceeds the supported limit of 1024."],
+    ]);
+  }
+});
+
 test("rejects unknown project keys and root-escaping paths", () => {
   const text = JSON.stringify({
     version: 1,

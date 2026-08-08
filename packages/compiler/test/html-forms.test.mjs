@@ -226,6 +226,16 @@ test("ignores inert forms and controls inside template content", () => {
   assert.deepEqual(facts[0]?.fields.map((field) => field.name), ["title"]);
 });
 
+test("walks deeply nested HTML without exhausting the call stack", () => {
+  const depth = 3_000;
+  const facts = extractFormFacts(
+    `${"<div>".repeat(depth)}<form id="deep"><input name="value"></form>${"</div>".repeat(depth)}`,
+  );
+
+  assert.equal(facts.length, 1);
+  assert.deepEqual(facts[0]?.fields.map((field) => field.name), ["value"]);
+});
+
 test("applies disabled fieldset inheritance and the first legend exception", () => {
   const facts = extractFormFacts(`<form id="settings">
   <fieldset disabled>

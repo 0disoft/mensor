@@ -26,10 +26,23 @@ export interface ModuleImportFact {
 
 type BindingKind = "type" | "value";
 
+const maxSourceStructuralDepth = 1_024;
+
 export function extractModuleFact(
   sourceText: string,
   fileName: string,
 ): ModuleFact {
+  if (sourceStructuralDepthExceeds(sourceText, maxSourceStructuralDepth)) {
+    return {
+      exports: [],
+      hasExportStar: false,
+      imports: [],
+      unsupportedDynamicImports: [],
+      syntaxErrors: [
+        `Source structural depth exceeds the supported limit of ${maxSourceStructuralDepth}.`,
+      ],
+    };
+  }
   const sourceFile = ts.createSourceFile(
     fileName,
     sourceText,
@@ -69,6 +82,35 @@ export function extractModuleFact(
     unsupportedDynamicImports,
     syntaxErrors,
   };
+}
+
+function sourceStructuralDepthExceeds(sourceText: string, limit: number): boolean {
+  const scanner = ts.createScanner(
+    ts.ScriptTarget.ES2022,
+    true,
+    ts.LanguageVariant.JSX,
+    sourceText,
+  );
+  let depth = 0;
+  for (let token = scanner.scan(); token !== ts.SyntaxKind.EndOfFileToken; token = scanner.scan()) {
+    if (
+      token === ts.SyntaxKind.OpenBraceToken ||
+      token === ts.SyntaxKind.OpenBracketToken ||
+      token === ts.SyntaxKind.OpenParenToken
+    ) {
+      depth += 1;
+      if (depth > limit) {
+        return true;
+      }
+    } else if (
+      token === ts.SyntaxKind.CloseBraceToken ||
+      token === ts.SyntaxKind.CloseBracketToken ||
+      token === ts.SyntaxKind.CloseParenToken
+    ) {
+      depth = Math.max(0, depth - 1);
+    }
+  }
+  return false;
 }
 
 export function sourceFileSyntaxDiagnostics(
@@ -136,40 +178,42 @@ function collectStaticImport(
 }
 
 function collectRuntimeCalls(
-  node: ts.Node,
+  root: ts.Node,
   sourceFile: ts.SourceFile,
   imports: ModuleImportFact[],
   unsupported: SourceRange[],
   scopeBindings: ReadonlyMap<ts.Node, boolean>,
   requireShadowed: boolean,
 ): void {
-  const nestedRequireShadowed =
-    requireShadowed || (node !== sourceFile && scopeBindings.get(node) === true);
-  if (
-    ts.isCallExpression(node) &&
-    isRuntimeImportCall(node, nestedRequireShadowed)
-  ) {
-    const argument = node.arguments[0];
-    if (argument !== undefined && ts.isStringLiteralLike(argument)) {
-      imports.push({
-        edgeKind: "runtime",
-        specifier: argument.text,
-        range: nodeRange(argument, sourceFile),
-      });
-    } else {
-      unsupported.push(nodeRange(node, sourceFile));
+  const stack: Array<{ node: ts.Node; requireShadowed: boolean }> = [
+    { node: root, requireShadowed },
+  ];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (current === undefined) {
+      continue;
+    }
+    const nestedRequireShadowed = current.requireShadowed ||
+      (current.node !== sourceFile && scopeBindings.get(current.node) === true);
+    if (
+      ts.isCallExpression(current.node) &&
+      isRuntimeImportCall(current.node, nestedRequireShadowed)
+    ) {
+      const argument = current.node.arguments[0];
+      if (argument !== undefined && ts.isStringLiteralLike(argument)) {
+        imports.push({
+          edgeKind: "runtime",
+          specifier: argument.text,
+          range: nodeRange(argument, sourceFile),
+        });
+      } else {
+        unsupported.push(nodeRange(current.node, sourceFile));
+      }
+    }
+    for (const child of childNodesInReverse(current.node)) {
+      stack.push({ node: child, requireShadowed: nestedRequireShadowed });
     }
   }
-  node.forEachChild((child) =>
-    collectRuntimeCalls(
-      child,
-      sourceFile,
-      imports,
-      unsupported,
-      scopeBindings,
-      nestedRequireShadowed,
-    ),
-  );
 }
 
 function isRuntimeImportCall(
@@ -201,11 +245,18 @@ function collectRequireBindings(sourceFile: ts.SourceFile): ReadonlyMap<ts.Node,
   return bindings;
 }
 
-function visitBindingScopes(node: ts.Node, bindings: Map<ts.Node, boolean>): void {
-  if (isBindingScope(node)) {
-    bindings.set(node, scopeDeclaresRequire(node));
+function visitBindingScopes(root: ts.Node, bindings: Map<ts.Node, boolean>): void {
+  const stack: ts.Node[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (node === undefined) {
+      continue;
+    }
+    if (isBindingScope(node)) {
+      bindings.set(node, scopeDeclaresRequire(node));
+    }
+    stack.push(...childNodesInReverse(node));
   }
-  node.forEachChild((child) => visitBindingScopes(child, bindings));
 }
 
 function isBindingScope(node: ts.Node): boolean {
@@ -310,23 +361,22 @@ function statementDeclaresRequire(statement: ts.Statement): boolean {
 }
 
 function containsFunctionScopedRequire(node: ts.Node): boolean {
-  let found = false;
-  const visit = (child: ts.Node): void => {
-    if (found || (child !== node && ts.isFunctionLike(child))) {
-      return;
+  const stack: ts.Node[] = [node];
+  while (stack.length > 0) {
+    const child = stack.pop();
+    if (child === undefined || (child !== node && ts.isFunctionLike(child))) {
+      continue;
     }
     if (
       ts.isVariableDeclarationList(child) &&
       (child.flags & ts.NodeFlags.BlockScoped) === 0 &&
       declarationListContainsRequire(child)
     ) {
-      found = true;
-      return;
+      return true;
     }
-    child.forEachChild(visit);
-  };
-  visit(node);
-  return found;
+    stack.push(...childNodesInReverse(child));
+  }
+  return false;
 }
 
 function declarationListContainsRequire(list: ts.VariableDeclarationList): boolean {
@@ -336,12 +386,26 @@ function declarationListContainsRequire(list: ts.VariableDeclarationList): boole
 }
 
 function bindingNameContainsRequire(name: ts.BindingName): boolean {
-  if (ts.isIdentifier(name)) {
-    return name.text === "require";
+  const stack: ts.BindingName[] = [name];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (current === undefined) {
+      continue;
+    }
+    if (ts.isIdentifier(current)) {
+      if (current.text === "require") {
+        return true;
+      }
+      continue;
+    }
+    for (let index = current.elements.length - 1; index >= 0; index -= 1) {
+      const element = current.elements[index];
+      if (element !== undefined && !ts.isOmittedExpression(element)) {
+        stack.push(element.name);
+      }
+    }
   }
-  return name.elements.some((element) =>
-    !ts.isOmittedExpression(element) && bindingNameContainsRequire(element.name),
-  );
+  return false;
 }
 
 function importDeclarationIsTypeOnly(statement: ts.ImportDeclaration): boolean {
@@ -449,13 +513,21 @@ function collectExportBindingNames(
   sourceFile: ts.SourceFile,
   exports: ModuleExportFact[],
 ): void {
-  if (ts.isIdentifier(name)) {
-    exports.push({ kind, name: name.text, range: nodeRange(name, sourceFile) });
-    return;
-  }
-  for (const element of name.elements) {
-    if (!ts.isOmittedExpression(element)) {
-      collectExportBindingNames(element.name, kind, sourceFile, exports);
+  const stack: ts.BindingName[] = [name];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (current === undefined) {
+      continue;
+    }
+    if (ts.isIdentifier(current)) {
+      exports.push({ kind, name: current.text, range: nodeRange(current, sourceFile) });
+      continue;
+    }
+    for (let index = current.elements.length - 1; index >= 0; index -= 1) {
+      const element = current.elements[index];
+      if (element !== undefined && !ts.isOmittedExpression(element)) {
+        stack.push(element.name);
+      }
     }
   }
 }
@@ -524,15 +596,32 @@ function collectBindingKinds(
   kind: BindingKind,
   bindings: Map<string, BindingKind>,
 ): void {
-  if (ts.isIdentifier(name)) {
-    addBinding(bindings, name.text, kind);
-    return;
-  }
-  for (const element of name.elements) {
-    if (!ts.isOmittedExpression(element)) {
-      collectBindingKinds(element.name, kind, bindings);
+  const stack: ts.BindingName[] = [name];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (current === undefined) {
+      continue;
+    }
+    if (ts.isIdentifier(current)) {
+      addBinding(bindings, current.text, kind);
+      continue;
+    }
+    for (let index = current.elements.length - 1; index >= 0; index -= 1) {
+      const element = current.elements[index];
+      if (element !== undefined && !ts.isOmittedExpression(element)) {
+        stack.push(element.name);
+      }
     }
   }
+}
+
+function childNodesInReverse(node: ts.Node): readonly ts.Node[] {
+  const children: ts.Node[] = [];
+  node.forEachChild((child) => {
+    children.push(child);
+  });
+  children.reverse();
+  return children;
 }
 
 function addBinding(

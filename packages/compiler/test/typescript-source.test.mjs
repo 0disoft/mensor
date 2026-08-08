@@ -92,6 +92,27 @@ test("reports parser diagnostics without executing source", () => {
   assert.ok(fact.syntaxErrors.length > 0);
 });
 
+test("walks deeply nested TypeScript without exhausting the call stack", () => {
+  const acceptedDepth = 1_000;
+  const accepted = extractModuleFact(
+    `${"{".repeat(acceptedDepth)}void import("./deep.js");${"}".repeat(acceptedDepth)}`,
+    "deep.ts",
+  );
+  assert.deepEqual(accepted.syntaxErrors, []);
+  assert.deepEqual(accepted.imports.map((entry) => entry.specifier), ["./deep.js"]);
+
+  const rejectedDepth = 3_000;
+  const rejected = extractModuleFact(
+    `${"{".repeat(rejectedDepth)}void import("./deep.js");${"}".repeat(rejectedDepth)}`,
+    "too-deep.ts",
+  );
+  assert.deepEqual(rejected.exports, []);
+  assert.deepEqual(rejected.imports, []);
+  assert.deepEqual(rejected.syntaxErrors, [
+    "Source structural depth exceeds the supported limit of 1024.",
+  ]);
+});
+
 test("falls back to the public TS6 API when parser diagnostics are unavailable", () => {
   const sourceText = "export function broken( {";
   const sourceFile = ts.createSourceFile(

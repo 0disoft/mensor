@@ -1,5 +1,4 @@
 import {
-  getNodeValue,
   parseTree,
   printParseErrorCode,
   type Node,
@@ -15,7 +14,20 @@ const parseOptions = {
   disallowComments: false,
 } as const;
 
+const maxJsonStructuralDepth = 1_024;
+
 export function parseJsonc(text: string): ContractResult<JsonValue> {
+  if (jsonStructuralDepthExceeds(text, maxJsonStructuralDepth)) {
+    return {
+      ok: false,
+      issues: [{
+        code: "jsonc.syntax",
+        message: `JSONC structural depth exceeds the supported limit of ${maxJsonStructuralDepth}.`,
+        offset: 0,
+        length: text.length,
+      }],
+    };
+  }
   const parseErrors: ParseError[] = [];
   const root = parseTree(text, parseErrors, parseOptions);
   const syntaxIssues = deduplicateIssues(parseErrors.map(toSyntaxIssue));
@@ -43,7 +55,7 @@ export function parseJsonc(text: string): ContractResult<JsonValue> {
     return { ok: false, issues };
   }
 
-  const value: unknown = getNodeValue(root);
+  const value: unknown = materializeJsonValue(root);
   if (!isJsonValue(value)) {
     return {
       ok: false,
@@ -61,33 +73,139 @@ export function parseJsonc(text: string): ContractResult<JsonValue> {
   return { ok: true, value };
 }
 
+function jsonStructuralDepthExceeds(text: string, limit: number): boolean {
+  let depth = 0;
+  let inString = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+  let escaped = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    const next = text[index + 1];
+    if (inLineComment) {
+      if (character === "\n" || character === "\r") {
+        inLineComment = false;
+      }
+      continue;
+    }
+    if (inBlockComment) {
+      if (character === "*" && next === "/") {
+        inBlockComment = false;
+        index += 1;
+      }
+      continue;
+    }
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (character === "/" && next === "/") {
+      inLineComment = true;
+      index += 1;
+    } else if (character === "/" && next === "*") {
+      inBlockComment = true;
+      index += 1;
+    } else if (character === '"') {
+      inString = true;
+    } else if (character === "{" || character === "[") {
+      depth += 1;
+      if (depth > limit) {
+        return true;
+      }
+    } else if (character === "}" || character === "]") {
+      depth = Math.max(0, depth - 1);
+    }
+  }
+  return false;
+}
+
+function materializeJsonValue(root: Node): unknown {
+  const values = new Map<Node, unknown>();
+  const stack: Array<{ node: Node; visited: boolean }> = [
+    { node: root, visited: false },
+  ];
+  while (stack.length > 0) {
+    const frame = stack.pop();
+    if (frame === undefined) {
+      continue;
+    }
+    const { node } = frame;
+    if (node.type !== "object" && node.type !== "array") {
+      values.set(node, node.value);
+      continue;
+    }
+    if (!frame.visited) {
+      stack.push({ node, visited: true });
+      const children = node.type === "object"
+        ? (node.children ?? []).flatMap((property) => property.children?.[1] ?? [])
+        : (node.children ?? []);
+      for (let index = children.length - 1; index >= 0; index -= 1) {
+        const child = children[index];
+        if (child !== undefined) {
+          stack.push({ node: child, visited: false });
+        }
+      }
+      continue;
+    }
+    if (node.type === "array") {
+      values.set(node, (node.children ?? []).map((child) => values.get(child)));
+      continue;
+    }
+    const object: Record<string, unknown> = {};
+    for (const property of node.children ?? []) {
+      const keyNode = property.children?.[0];
+      const valueNode = property.children?.[1];
+      if (typeof keyNode?.value === "string" && valueNode !== undefined) {
+        Object.defineProperty(object, keyNode.value, {
+          configurable: true,
+          enumerable: true,
+          value: values.get(valueNode),
+          writable: true,
+        });
+      }
+    }
+    values.set(node, object);
+  }
+  return values.get(root);
+}
+
 export function isJsonValue(value: unknown): value is JsonValue {
-  if (
-    value === null ||
-    typeof value === "string" ||
-    typeof value === "boolean"
-  ) {
-    return true;
+  const stack: unknown[] = [value];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (
+      current === null ||
+      typeof current === "string" ||
+      typeof current === "boolean"
+    ) {
+      continue;
+    }
+    if (typeof current === "number") {
+      if (Number.isFinite(current)) {
+        continue;
+      }
+      return false;
+    }
+    if (Array.isArray(current)) {
+      stack.push(...current);
+      continue;
+    }
+    if (typeof current !== "object") {
+      return false;
+    }
+    const prototype: unknown = Object.getPrototypeOf(current);
+    if (prototype !== Object.prototype && prototype !== null) {
+      return false;
+    }
+    stack.push(...Object.values(current));
   }
-
-  if (typeof value === "number") {
-    return Number.isFinite(value);
-  }
-
-  if (Array.isArray(value)) {
-    return value.every(isJsonValue);
-  }
-
-  if (typeof value !== "object") {
-    return false;
-  }
-
-  const prototype: unknown = Object.getPrototypeOf(value);
-  if (prototype !== Object.prototype && prototype !== null) {
-    return false;
-  }
-
-  return Object.values(value).every(isJsonValue);
+  return true;
 }
 
 function toSyntaxIssue(error: ParseError): ContractIssue {
@@ -101,16 +219,23 @@ function toSyntaxIssue(error: ParseError): ContractIssue {
 
 function findDuplicateKeyIssues(root: Node): ContractIssue[] {
   const issues: ContractIssue[] = [];
-  visitNode(root, issues);
+  const stack: Node[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (node === undefined) {
+      continue;
+    }
+    visitNode(node, issues, stack);
+  }
   return issues;
 }
 
-function visitNode(node: Node, issues: ContractIssue[]): void {
+function visitNode(node: Node, issues: ContractIssue[], stack: Node[]): void {
   if (node.type === "object") {
     const seen = new Set<string>();
-    for (const property of node.children ?? []) {
+    const children = node.children ?? [];
+    for (const property of children) {
       const keyNode = property.children?.[0];
-      const valueNode = property.children?.[1];
       if (keyNode?.type !== "string" || typeof keyNode.value !== "string") {
         continue;
       }
@@ -125,17 +250,24 @@ function visitNode(node: Node, issues: ContractIssue[]): void {
       } else {
         seen.add(keyNode.value);
       }
-
+    }
+    for (let index = children.length - 1; index >= 0; index -= 1) {
+      const property = children[index];
+      const valueNode = property?.children?.[1];
       if (valueNode !== undefined) {
-        visitNode(valueNode, issues);
+        stack.push(valueNode);
       }
     }
     return;
   }
 
   if (node.type === "array") {
-    for (const child of node.children ?? []) {
-      visitNode(child, issues);
+    const children = node.children ?? [];
+    for (let index = children.length - 1; index >= 0; index -= 1) {
+      const child = children[index];
+      if (child !== undefined) {
+        stack.push(child);
+      }
     }
   }
 }

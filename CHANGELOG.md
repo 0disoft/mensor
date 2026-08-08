@@ -24,6 +24,8 @@ All notable changes to Mensor are documented in this file.
   comparison, preserving canonical output across host locales.
 - TypeScript handler export extraction now resolves local re-exports against
   runtime bindings and distinguishes runtime namespaces from type-only forms.
+- TypeScript, HTML, and JSON contract visitors now use iterative traversal so
+  deeply nested bounded inputs do not exhaust the JavaScript call stack.
 
 ### Compatibility
 

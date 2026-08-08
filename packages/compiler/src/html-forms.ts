@@ -278,12 +278,22 @@ function collectElements(
   nodes: readonly DefaultTreeAdapterTypes.ChildNode[],
   result: DefaultTreeAdapterTypes.Element[],
 ): void {
-  for (const node of nodes) {
+  const stack = [...nodes].reverse();
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (node === undefined) {
+      continue;
+    }
     if (!("tagName" in node)) {
       continue;
     }
     result.push(node);
-    collectElements(node.childNodes, result);
+    for (let index = node.childNodes.length - 1; index >= 0; index -= 1) {
+      const child = node.childNodes[index];
+      if (child !== undefined) {
+        stack.push(child);
+      }
+    }
   }
 }
 
