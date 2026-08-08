@@ -11,33 +11,54 @@ const zeroRange: SourceRange = {
   end: { line: 0, character: 0 },
 };
 
+export interface ContractLocator {
+  readonly lineStarts: readonly number[];
+  readonly root: Node | undefined;
+  readonly text: string;
+}
+
+const locatorCache = new Map<string, ContractLocator>();
+const maxCachedLocators = 16;
+
+export function contractLocatorFor(text: string): ContractLocator {
+  const cached = locatorCache.get(text);
+  if (cached !== undefined) {
+    locatorCache.delete(text);
+    locatorCache.set(text, cached);
+    return cached;
+  }
+  const locator = {
+    lineStarts: lineStartsFor(text),
+    root: parseTree(text),
+    text,
+  };
+  locatorCache.set(text, locator);
+  if (locatorCache.size > maxCachedLocators) {
+    const oldest = locatorCache.keys().next().value;
+    if (oldest !== undefined) {
+      locatorCache.delete(oldest);
+    }
+  }
+  return locator;
+}
+
 export function handlerFileRange(
   contractText: string,
   actionIndex: number,
 ): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
-    return zeroRange;
-  }
-  const node = findNodeAtLocation(root, ["actions", actionIndex, "handler", "file"]);
-  return node === undefined ? zeroRange : nodeRange(contractText, node);
+  return rangeAt(contractText, ["actions", actionIndex, "handler", "file"]);
 }
 
 export function handlerExportRange(
   contractText: string,
   actionIndex: number,
 ): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
-    return zeroRange;
-  }
-  const node = findNodeAtLocation(root, [
+  return rangeAt(contractText, [
     "actions",
     actionIndex,
     "handler",
     "export",
   ]);
-  return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
 export function actionSchemaPropertyRange(
@@ -45,11 +66,11 @@ export function actionSchemaPropertyRange(
   actionIndex: number,
   propertyName: string,
 ): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
+  const locator = contractLocatorFor(contractText);
+  if (locator.root === undefined) {
     return zeroRange;
   }
-  const properties = findNodeAtLocation(root, [
+  const properties = findNodeAtLocation(locator.root, [
     "actions",
     actionIndex,
     "input",
@@ -62,7 +83,7 @@ export function actionSchemaPropertyRange(
   for (const property of properties.children ?? []) {
     const key = property.children?.[0];
     if (key?.type === "string" && key.value === propertyName) {
-      return nodeRange(contractText, key);
+      return nodeRange(locator, key);
     }
   }
   return zeroRange;
@@ -73,18 +94,13 @@ export function actionFormCodecPropertyRange(
   actionIndex: number,
   propertyName: string,
 ): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
-    return zeroRange;
-  }
-  const node = findNodeAtLocation(root, [
+  return rangeAt(contractText, [
     "actions",
     actionIndex,
     "input",
     "formCodec",
     propertyName,
   ]);
-  return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
 export function actionRoutePropertyRange(
@@ -92,17 +108,12 @@ export function actionRoutePropertyRange(
   actionIndex: number,
   propertyName: "method" | "path",
 ): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
-    return zeroRange;
-  }
-  const node = findNodeAtLocation(root, [
+  return rangeAt(contractText, [
     "actions",
     actionIndex,
     "route",
     propertyName,
   ]);
-  return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
 export function actionFormPropertyRange(
@@ -110,17 +121,12 @@ export function actionFormPropertyRange(
   actionIndex: number,
   propertyName: "documentPath" | "id" | "template",
 ): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
-    return zeroRange;
-  }
-  const node = findNodeAtLocation(root, [
+  return rangeAt(contractText, [
     "actions",
     actionIndex,
     "form",
     propertyName,
   ]);
-  return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
 export function actionBindingDecoderKindRange(
@@ -128,11 +134,7 @@ export function actionBindingDecoderKindRange(
   actionIndex: number,
   bindingIndex: number,
 ): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
-    return zeroRange;
-  }
-  const node = findNodeAtLocation(root, [
+  return rangeAt(contractText, [
     "actions",
     actionIndex,
     "input",
@@ -142,57 +144,76 @@ export function actionBindingDecoderKindRange(
     "decode",
     "kind",
   ]);
-  return node === undefined ? zeroRange : nodeRange(contractText, node);
 }
 
 export function projectBoundaryRange(
   contractText: string,
   boundaryIndex: number,
 ): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
-    return zeroRange;
-  }
-  const node = findNodeAtLocation(root, ["boundaries", boundaryIndex]);
-  return node === undefined ? zeroRange : nodeRange(contractText, node);
+  return rangeAt(contractText, ["boundaries", boundaryIndex]);
 }
 
 export function projectOwnershipRuleRange(
   contractText: string,
   ruleIndex: number,
 ): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
-    return zeroRange;
-  }
-  const node = findNodeAtLocation(root, ["ownershipRules", ruleIndex]);
-  return node === undefined ? zeroRange : nodeRange(contractText, node);
+  return rangeAt(contractText, ["ownershipRules", ruleIndex]);
 }
 
 export function projectRouteIndexRange(contractText: string): SourceRange {
-  const root = parseTree(contractText);
-  if (root === undefined) {
-    return zeroRange;
-  }
-  const node = findNodeAtLocation(root, ["routeIndex"]);
-  return node === undefined ? zeroRange : nodeRange(contractText, node);
+  return rangeAt(contractText, ["routeIndex"]);
 }
 
-function nodeRange(text: string, node: Node): SourceRange {
+function rangeAt(
+  text: string,
+  path: (string | number)[],
+): SourceRange {
+  const locator = contractLocatorFor(text);
+  if (locator.root === undefined) {
+    return zeroRange;
+  }
+  const node = findNodeAtLocation(locator.root, path);
+  return node === undefined ? zeroRange : nodeRange(locator, node);
+}
+
+function nodeRange(locator: ContractLocator, node: Node): SourceRange {
   return {
-    start: positionAt(text, node.offset),
-    end: positionAt(text, node.offset + node.length),
+    start: positionAt(locator, node.offset),
+    end: positionAt(locator, node.offset + node.length),
   };
 }
 
-function positionAt(text: string, offset: number): SourcePosition {
-  let line = 0;
-  let lineStart = 0;
-  for (let index = 0; index < offset; index += 1) {
-    if (text.charCodeAt(index) === 10) {
-      line += 1;
-      lineStart = index + 1;
+function positionAt(locator: ContractLocator, offset: number): SourcePosition {
+  let low = 0;
+  let high = locator.lineStarts.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    const lineStart = locator.lineStarts[middle];
+    if (lineStart !== undefined && lineStart <= offset) {
+      low = middle + 1;
+    } else {
+      high = middle;
     }
   }
-  return { line, character: offset - lineStart };
+  const line = Math.max(0, low - 1);
+  return {
+    line,
+    character: offset - (locator.lineStarts[line] ?? 0),
+  };
+}
+
+function lineStartsFor(text: string): readonly number[] {
+  const starts = [0];
+  for (let index = 0; index < text.length; index += 1) {
+    const code = text.charCodeAt(index);
+    if (code === 13) {
+      if (text.charCodeAt(index + 1) === 10) {
+        index += 1;
+      }
+      starts.push(index + 1);
+    } else if (code === 10) {
+      starts.push(index + 1);
+    }
+  }
+  return starts;
 }
