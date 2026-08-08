@@ -28,6 +28,8 @@ All notable changes to Mensor are documented in this file.
   deeply nested bounded inputs do not exhaust the JavaScript call stack.
 - Relative JavaScript import resolution now follows NodeNext extension-family
   substitution, including declaration files and isolated MJS/CJS families.
+- Project files are now read through one bounded handle with before/after
+  identity checks, post-read path verification, and growth-safe byte limits.
 
 ### Compatibility
 

@@ -1,4 +1,4 @@
-import { lstat, readFile, readdir } from "node:fs/promises";
+import { lstat, open, readdir } from "node:fs/promises";
 import * as path from "node:path";
 
 import {
@@ -8,6 +8,46 @@ import {
   InputFailure,
   joinProjectPath,
 } from "./paths.js";
+
+interface ProjectFileStat {
+  readonly ctimeNs: bigint;
+  readonly dev: bigint;
+  readonly ino: bigint;
+  readonly mtimeNs: bigint;
+  readonly size: bigint;
+  readonly isDirectory: () => boolean;
+  readonly isFile: () => boolean;
+  readonly isSymbolicLink: () => boolean;
+}
+
+interface ProjectFileHandle {
+  readonly close: () => Promise<void>;
+  readonly read: (
+    buffer: Buffer,
+    offset: number,
+    length: number,
+    position: number,
+  ) => Promise<{ readonly bytesRead: number }>;
+  readonly stat: () => Promise<ProjectFileStat>;
+}
+
+export interface ProjectFileOperations {
+  readonly lstat: (file: string) => Promise<ProjectFileStat>;
+  readonly open: (file: string) => Promise<ProjectFileHandle>;
+}
+
+const nodeProjectFileOperations: ProjectFileOperations = {
+  lstat: (file) => lstat(file, { bigint: true }),
+  async open(file) {
+    const handle = await open(file, "r");
+    return {
+      close: () => handle.close(),
+      read: (buffer, offset, length, position) =>
+        handle.read(buffer, offset, length, position),
+      stat: () => handle.stat({ bigint: true }),
+    };
+  },
+};
 
 export async function assertProjectRoot(root: string): Promise<string> {
   const absoluteRoot = path.resolve(root);
@@ -33,20 +73,23 @@ export async function readProjectFile(
   root: string,
   relativePath: string,
   maxFileBytes: number,
+  operations: ProjectFileOperations = nodeProjectFileOperations,
 ): Promise<string> {
   const safePath = assertRelativePosixPath(relativePath, "File path");
-  await assertPathHasNoSymlink(root, safePath, false);
+  await assertParentPathHasNoSymlink(root, safePath, operations);
+  let handle: ProjectFileHandle | undefined;
+  let primaryError: unknown;
   try {
-    const stats = await lstat(fromProjectPath(root, safePath));
-    if (stats.size > maxFileBytes) {
-      throw new InputFailure(
-        "filesystem",
-        "file.size_limit_exceeded",
-        `Project file ${JSON.stringify(safePath)} exceeds the configured limit of ${maxFileBytes} bytes.`,
-        safePath,
-      );
-    }
-    const bytes = await readFile(fromProjectPath(root, safePath));
+    const absolutePath = fromProjectPath(root, safePath);
+    handle = await operations.open(absolutePath);
+    const before = await handle.stat();
+    assertRegularFile(before, safePath);
+    assertFileSize(before.size, safePath, maxFileBytes);
+    const bytes = await readBounded(handle, maxFileBytes);
+    const after = await handle.stat();
+    const pathAfter = await operations.lstat(absolutePath);
+    assertStableFile(before, after, pathAfter, safePath);
+    assertFileSize(BigInt(bytes.length), safePath, maxFileBytes);
     try {
       return new TextDecoder("utf-8", {
         fatal: true,
@@ -61,6 +104,7 @@ export async function readProjectFile(
       );
     }
   } catch (error) {
+    primaryError = error;
     if (error instanceof InputFailure) {
       throw error;
     }
@@ -70,6 +114,137 @@ export async function readProjectFile(
       `Cannot read project file ${JSON.stringify(safePath)}.`,
       safePath,
     );
+  } finally {
+    if (handle !== undefined) {
+      try {
+        await handle.close();
+      } catch (error) {
+        if (primaryError === undefined) {
+          throw filesystemFailure(
+            error,
+            "file.unreadable",
+            `Cannot close project file ${JSON.stringify(safePath)}.`,
+            safePath,
+          );
+        }
+      }
+    }
+  }
+}
+
+async function readBounded(
+  handle: ProjectFileHandle,
+  maxFileBytes: number,
+): Promise<Buffer> {
+  const bytes = Buffer.alloc(maxFileBytes + 1);
+  let offset = 0;
+  while (offset < bytes.length) {
+    const { bytesRead } = await handle.read(
+      bytes,
+      offset,
+      bytes.length - offset,
+      offset,
+    );
+    if (bytesRead === 0) {
+      break;
+    }
+    offset += bytesRead;
+  }
+  return bytes.subarray(0, offset);
+}
+
+function assertFileSize(size: bigint, safePath: string, maxFileBytes: number): void {
+  if (size > BigInt(maxFileBytes)) {
+    throw new InputFailure(
+      "filesystem",
+      "file.size_limit_exceeded",
+      `Project file ${JSON.stringify(safePath)} exceeds the configured limit of ${maxFileBytes} bytes.`,
+      safePath,
+    );
+  }
+}
+
+function assertRegularFile(stats: ProjectFileStat, safePath: string): void {
+  if (stats.isSymbolicLink()) {
+    throw new InputFailure(
+      "filesystem",
+      "path.symlink_forbidden",
+      `Project path ${JSON.stringify(safePath)} is a symlink.`,
+      safePath,
+    );
+  }
+  if (!stats.isFile()) {
+    throw new InputFailure(
+      "filesystem",
+      "path.not_file",
+      `Project path ${JSON.stringify(safePath)} has the wrong filesystem type.`,
+      safePath,
+    );
+  }
+}
+
+function assertStableFile(
+  before: ProjectFileStat,
+  after: ProjectFileStat,
+  pathAfter: ProjectFileStat,
+  safePath: string,
+): void {
+  assertRegularFile(pathAfter, safePath);
+  if (
+    !sameIdentity(before, after) ||
+    !sameIdentity(after, pathAfter) ||
+    before.size !== after.size ||
+    before.mtimeNs !== after.mtimeNs ||
+    before.ctimeNs !== after.ctimeNs
+  ) {
+    throw new InputFailure(
+      "filesystem",
+      "file.changed_during_read",
+      `Project file ${JSON.stringify(safePath)} changed while it was being read.`,
+      safePath,
+    );
+  }
+}
+
+function sameIdentity(left: ProjectFileStat, right: ProjectFileStat): boolean {
+  return left.dev === right.dev && left.ino === right.ino;
+}
+
+async function assertParentPathHasNoSymlink(
+  root: string,
+  relativePath: string,
+  operations: ProjectFileOperations,
+): Promise<void> {
+  const segments = relativePath.split("/");
+  for (let index = 0; index < segments.length - 1; index += 1) {
+    const current = segments.slice(0, index + 1).join("/");
+    let stats;
+    try {
+      stats = await operations.lstat(fromProjectPath(root, current));
+    } catch (error) {
+      throw filesystemFailure(
+        error,
+        "path.unreadable",
+        `Cannot inspect project path ${JSON.stringify(current)}.`,
+        current,
+      );
+    }
+    if (stats.isSymbolicLink()) {
+      throw new InputFailure(
+        "filesystem",
+        "path.symlink_forbidden",
+        `Project path ${JSON.stringify(current)} is a symlink.`,
+        current,
+      );
+    }
+    if (!stats.isDirectory()) {
+      throw new InputFailure(
+        "filesystem",
+        "path.not_directory",
+        `Project path ${JSON.stringify(current)} must be a directory.`,
+        current,
+      );
+    }
   }
 }
 
