@@ -30,6 +30,8 @@ All notable changes to Mensor are documented in this file.
   substitution, including declaration files and isolated MJS/CJS families.
 - Project files are now read through one bounded handle with before/after
   identity checks, post-read path verification, and growth-safe byte limits.
+- Source discovery now pins file identities in a project snapshot so later
+  reads avoid repeated parent-path scans and reject post-discovery replacement.
 - Static HTML form extraction now follows tree-order form ownership, normalizes
   invalid control types, and indexes form controls and name groups linearly.
 - Contract source locations now reuse bounded parsed locators and binary-search

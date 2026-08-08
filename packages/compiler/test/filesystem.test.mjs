@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { readProjectFile } from "../dist/src/filesystem.js";
+import {
+  readProjectFile,
+  readProjectSnapshotFile,
+} from "../dist/src/filesystem.js";
 
 test("reads through one bounded handle and verifies the post-read identity", async () => {
   const calls = [];
@@ -108,6 +111,91 @@ test("reads at most one byte beyond the configured file limit", async () => {
     (error) => error?.code === "file.size_limit_exceeded",
   );
   assert.equal(requestedLength, 5);
+});
+
+test("reads a discovered file without rechecking every parent directory", async () => {
+  const calls = [];
+  const stable = fileStat({ size: 4n });
+  const operations = {
+    async lstat(file) {
+      calls.push(["lstat", file]);
+      return stable;
+    },
+    async open(file) {
+      calls.push(["open", file]);
+      return {
+        async stat() {
+          calls.push(["fstat"]);
+          return stable;
+        },
+        async read(buffer, offset) {
+          calls.push(["read"]);
+          if (offset > 0) {
+            return { bytesRead: 0 };
+          }
+          buffer.set(Buffer.from("data"));
+          return { bytesRead: 4 };
+        },
+        async close() {
+          calls.push(["close"]);
+        },
+      };
+    },
+  };
+
+  assert.equal(
+    await readProjectSnapshotFile(
+      "C:/project",
+      "src/one/two/three/source.ts",
+      4,
+      stable,
+      operations,
+    ),
+    "data",
+  );
+  assert.deepEqual(calls.map(([name]) => name), [
+    "open",
+    "fstat",
+    "read",
+    "read",
+    "fstat",
+    "close",
+  ]);
+});
+
+test("rejects a file whose identity drifted after discovery", async () => {
+  const discovered = fileStat({ ino: 2n, size: 4n });
+  const replaced = fileStat({ ino: 3n, size: 4n });
+  let readCalled = false;
+  const operations = {
+    async lstat() {
+      return replaced;
+    },
+    async open() {
+      return {
+        async stat() {
+          return replaced;
+        },
+        async read() {
+          readCalled = true;
+          return { bytesRead: 0 };
+        },
+        async close() {},
+      };
+    },
+  };
+
+  await assert.rejects(
+    readProjectSnapshotFile(
+      "C:/project",
+      "src/source.ts",
+      4,
+      discovered,
+      operations,
+    ),
+    (error) => error?.code === "file.changed_since_discovery",
+  );
+  assert.equal(readCalled, false);
 });
 
 function fileStat(overrides = {}) {

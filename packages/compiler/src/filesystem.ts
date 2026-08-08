@@ -9,12 +9,15 @@ import {
   joinProjectPath,
 } from "./paths.js";
 
-interface ProjectFileStat {
+export interface ProjectFileIdentity {
   readonly ctimeNs: bigint;
   readonly dev: bigint;
   readonly ino: bigint;
   readonly mtimeNs: bigint;
   readonly size: bigint;
+}
+
+interface ProjectFileStat extends ProjectFileIdentity {
   readonly isDirectory: () => boolean;
   readonly isFile: () => boolean;
   readonly isSymbolicLink: () => boolean;
@@ -34,6 +37,11 @@ interface ProjectFileHandle {
 export interface ProjectFileOperations {
   readonly lstat: (file: string) => Promise<ProjectFileStat>;
   readonly open: (file: string) => Promise<ProjectFileHandle>;
+}
+
+export interface ProjectSnapshot {
+  readonly files: readonly string[];
+  readonly readFile: (relativePath: string, maxFileBytes: number) => Promise<string>;
 }
 
 const nodeProjectFileOperations: ProjectFileOperations = {
@@ -77,6 +85,27 @@ export async function readProjectFile(
 ): Promise<string> {
   const safePath = assertRelativePosixPath(relativePath, "File path");
   await assertParentPathHasNoSymlink(root, safePath, operations);
+  return readOpenedProjectFile(root, safePath, maxFileBytes, operations);
+}
+
+export async function readProjectSnapshotFile(
+  root: string,
+  relativePath: string,
+  maxFileBytes: number,
+  expected: ProjectFileIdentity,
+  operations: ProjectFileOperations = nodeProjectFileOperations,
+): Promise<string> {
+  const safePath = assertRelativePosixPath(relativePath, "File path");
+  return readOpenedProjectFile(root, safePath, maxFileBytes, operations, expected);
+}
+
+async function readOpenedProjectFile(
+  root: string,
+  safePath: string,
+  maxFileBytes: number,
+  operations: ProjectFileOperations,
+  expected?: ProjectFileIdentity,
+): Promise<string> {
   let handle: ProjectFileHandle | undefined;
   let primaryError: unknown;
   try {
@@ -84,11 +113,28 @@ export async function readProjectFile(
     handle = await operations.open(absolutePath);
     const before = await handle.stat();
     assertRegularFile(before, safePath);
+    if (expected !== undefined && !sameSnapshot(expected, before)) {
+      throw new InputFailure(
+        "filesystem",
+        "file.changed_since_discovery",
+        `Project file ${JSON.stringify(safePath)} changed after source discovery.`,
+        safePath,
+      );
+    }
     assertFileSize(before.size, safePath, maxFileBytes);
     const bytes = await readBounded(handle, maxFileBytes);
     const after = await handle.stat();
-    const pathAfter = await operations.lstat(absolutePath);
-    assertStableFile(before, after, pathAfter, safePath);
+    if (expected === undefined) {
+      const pathAfter = await operations.lstat(absolutePath);
+      assertStableFile(before, after, pathAfter, safePath);
+    } else if (!sameSnapshot(before, after)) {
+      throw new InputFailure(
+        "filesystem",
+        "file.changed_during_read",
+        `Project file ${JSON.stringify(safePath)} changed while it was being read.`,
+        safePath,
+      );
+    }
     assertFileSize(BigInt(bytes.length), safePath, maxFileBytes);
     try {
       return new TextDecoder("utf-8", {
@@ -191,11 +237,11 @@ function assertStableFile(
 ): void {
   assertRegularFile(pathAfter, safePath);
   if (
-    !sameIdentity(before, after) ||
+    !sameSnapshot(before, after) ||
     !sameIdentity(after, pathAfter) ||
-    before.size !== after.size ||
-    before.mtimeNs !== after.mtimeNs ||
-    before.ctimeNs !== after.ctimeNs
+    after.size !== pathAfter.size ||
+    after.mtimeNs !== pathAfter.mtimeNs ||
+    after.ctimeNs !== pathAfter.ctimeNs
   ) {
     throw new InputFailure(
       "filesystem",
@@ -206,7 +252,14 @@ function assertStableFile(
   }
 }
 
-function sameIdentity(left: ProjectFileStat, right: ProjectFileStat): boolean {
+function sameSnapshot(left: ProjectFileIdentity, right: ProjectFileIdentity): boolean {
+  return sameIdentity(left, right) &&
+    left.size === right.size &&
+    left.mtimeNs === right.mtimeNs &&
+    left.ctimeNs === right.ctimeNs;
+}
+
+function sameIdentity(left: ProjectFileIdentity, right: ProjectFileIdentity): boolean {
   return left.dev === right.dev && left.ino === right.ino;
 }
 
@@ -248,17 +301,18 @@ async function assertParentPathHasNoSymlink(
   }
 }
 
-export async function discoverProjectFiles(
+export async function discoverProjectSnapshot(
   root: string,
   sourceRoot: string,
   maxFiles: number,
   maxTotalBytes: number,
   maxDepth: number,
-): Promise<readonly string[]> {
+): Promise<ProjectSnapshot> {
   const safeSourceRoot = assertRelativePosixPath(sourceRoot, "sourceRoot");
   await assertPathHasNoSymlink(root, safeSourceRoot, true);
   const files: string[] = [];
-  let totalBytes = 0;
+  const identities = new Map<string, ProjectFileIdentity>();
+  let totalBytes = 0n;
 
   async function visit(relativeDirectory: string, depth: number): Promise<void> {
     if (depth > maxDepth) {
@@ -303,7 +357,7 @@ export async function discoverProjectFiles(
         }
         let stats;
         try {
-          stats = await lstat(fromProjectPath(root, relativeEntry));
+          stats = await lstat(fromProjectPath(root, relativeEntry), { bigint: true });
         } catch (error) {
           throw filesystemFailure(
             error,
@@ -312,8 +366,9 @@ export async function discoverProjectFiles(
             relativeEntry,
           );
         }
+        identities.set(relativeEntry, fileIdentity(stats));
         totalBytes += stats.size;
-        if (totalBytes > maxTotalBytes) {
+        if (totalBytes > BigInt(maxTotalBytes)) {
           throw new InputFailure(
             "filesystem",
             "discovery.total_bytes_limit_exceeded",
@@ -326,7 +381,32 @@ export async function discoverProjectFiles(
   }
 
   await visit(safeSourceRoot, 0);
-  return files;
+  return {
+    files,
+    readFile(relativePath, maxFileBytes) {
+      const safePath = assertRelativePosixPath(relativePath, "File path");
+      const identity = identities.get(safePath);
+      if (identity === undefined) {
+        throw new InputFailure(
+          "filesystem",
+          "file.not_in_snapshot",
+          `Project file ${JSON.stringify(safePath)} was not present during source discovery.`,
+          safePath,
+        );
+      }
+      return readProjectSnapshotFile(root, safePath, maxFileBytes, identity);
+    },
+  };
+}
+
+function fileIdentity(stats: ProjectFileStat): ProjectFileIdentity {
+  return {
+    ctimeNs: stats.ctimeNs,
+    dev: stats.dev,
+    ino: stats.ino,
+    mtimeNs: stats.mtimeNs,
+    size: stats.size,
+  };
 }
 
 async function assertPathHasNoSymlink(

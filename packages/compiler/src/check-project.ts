@@ -18,7 +18,7 @@ import {
 
 import {
   assertProjectRoot,
-  discoverProjectFiles,
+  discoverProjectSnapshot,
   readProjectFile,
 } from "./filesystem.js";
 import {
@@ -174,10 +174,10 @@ async function checkProjectInternal(
 
     const project = projectResult.value;
     validateFileRoles(project.fileRoles);
-    const discoveredFiles = await measure(
+    const snapshot = await measure(
       timing,
       "discovery",
-      () => discoverProjectFiles(
+      () => discoverProjectSnapshot(
         root,
         project.sourceRoot,
         maxFiles,
@@ -185,16 +185,17 @@ async function checkProjectInternal(
         maxDepth,
       ),
     );
+    const discoveredFiles = snapshot.files;
     const discovered = new Set(discoveredFiles);
     const diagnostics: Diagnostic[] = [];
     const featureOwners: FeatureOwnerFact[] = [];
     const sourceFacts = createSourceFactIndex(
-      (file) => readProjectFile(root, file, maxFileBytes),
+      (file) => snapshot.readFile(file, maxFileBytes),
       timing,
     );
     const formIndexProvider = createStaticHtmlFormIndexProvider({
       producerVersion,
-      readSource: (file) => readProjectFile(root, file, maxFileBytes),
+      readSource: (file) => snapshot.readFile(file, maxFileBytes),
       ...(timing === undefined ? {} : { timing }),
     });
     let routeIndexPath: string | undefined;
@@ -233,8 +234,7 @@ async function checkProjectInternal(
           safeFeatureContractPath,
         );
       }
-      const featureText = await readProjectFile(
-        root,
+      const featureText = await snapshot.readFile(
         safeFeatureContractPath,
         maxFileBytes,
       );
