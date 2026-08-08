@@ -340,7 +340,7 @@ function classifyProjectRole(
   )?.role ?? "unclassified";
 }
 
-function resolveImport(
+export function resolveImport(
   sourceFile: string,
   specifier: string,
   discovered: ReadonlySet<string>,
@@ -374,17 +374,23 @@ function resolveImport(
   return undefined;
 }
 
-function importCandidates(base: string): readonly string[] {
+export function importCandidates(base: string): readonly string[] {
   const extension = path.posix.extname(base);
-  if ([".js", ".mjs", ".cjs"].includes(extension)) {
-    const stem = base.slice(0, -extension.length);
+  const stem = base.slice(0, -extension.length);
+  if (extension === ".js" || extension === ".jsx") {
     return [
       `${stem}.ts`,
       `${stem}.tsx`,
-      `${stem}.mts`,
-      `${stem}.cts`,
-      base,
+      `${stem}.d.ts`,
+      `${stem}.js`,
+      `${stem}.jsx`,
     ];
+  }
+  if (extension === ".mjs") {
+    return [`${stem}.mts`, `${stem}.d.mts`, base];
+  }
+  if (extension === ".cjs") {
+    return [`${stem}.cts`, `${stem}.d.cts`, base];
   }
   if (extension.length > 0) {
     return [base];

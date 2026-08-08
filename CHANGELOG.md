@@ -26,6 +26,8 @@ All notable changes to Mensor are documented in this file.
   runtime bindings and distinguishes runtime namespaces from type-only forms.
 - TypeScript, HTML, and JSON contract visitors now use iterative traversal so
   deeply nested bounded inputs do not exhaust the JavaScript call stack.
+- Relative JavaScript import resolution now follows NodeNext extension-family
+  substitution, including declaration files and isolated MJS/CJS families.
 
 ### Compatibility
 
