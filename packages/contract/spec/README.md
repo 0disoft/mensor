@@ -196,6 +196,11 @@ value producer. Duplicate controls, checkbox or repeated-value shapes, and
 binding or ignored-field ownership conflicts fail closed. Controls disabled by
 a fieldset are excluded, except for descendants of its first legend.
 
+Feature parsing also rejects duplicate action ids, required names that are not
+declared properties, inverted string length bounds, and schema properties that
+do not have an explicit form binding. These are contract contradictions rather
+than source diagnostics and fail before compiler rules run.
+
 Diagnostic reports are semantically validated after schema validation. Status,
 summary counts, and ordered source ranges must agree with their diagnostics.
 `DiagnosticReport` and `parseDiagnosticReport` remain revision-1 compatibility

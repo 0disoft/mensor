@@ -1,4 +1,5 @@
 import { parseJsonc } from "./jsonc.js";
+import { compareText } from "./compare.js";
 import type { ValidateFunction } from "ajv";
 import {
   schemaIssues,
@@ -94,20 +95,57 @@ function applySemanticIssues<T>(
 
 function featureSemanticIssues(feature: FeatureContract): readonly ContractIssue[] {
   const issues: ContractIssue[] = [];
+  const actionIds = new Set<string>();
   feature.actions.forEach((action, actionIndex) => {
+    if (actionIds.has(action.id)) {
+      issues.push(semanticIssue(
+        `/actions/${actionIndex}/id`,
+        "Feature action ids must be unique.",
+      ));
+    }
+    actionIds.add(action.id);
+
+    const schema = action.input.schema;
+    schema.required.forEach((propertyName, requiredIndex) => {
+      if (!Object.hasOwn(schema.properties, propertyName)) {
+        issues.push(semanticIssue(
+          `/actions/${actionIndex}/input/schema/required/${requiredIndex}`,
+          "Required input properties must be declared in schema.properties.",
+        ));
+      }
+    });
+    for (const propertyName of Object.keys(schema.properties).sort(compareText)) {
+      const property = schema.properties[propertyName];
+      if (
+        property !== undefined &&
+        property.minLength !== undefined &&
+        property.maxLength !== undefined &&
+        property.minLength > property.maxLength
+      ) {
+        issues.push(semanticIssue(
+          `/actions/${actionIndex}/input/schema/properties/${escapeJsonPointer(propertyName)}`,
+          "String schema minLength must not exceed maxLength.",
+        ));
+      }
+    }
+
     const bindingNames = new Set<string>();
     const bindingPaths = new Set<string>();
+    const boundSchemaProperties = new Set<string>();
     action.input.formCodec.bindings.forEach((binding, bindingIndex) => {
       const base = `/actions/${actionIndex}/input/formCodec/bindings/${bindingIndex}`;
       const pathKey = binding.path.join("\u0000");
-      if (
-        binding.path.length !== 1 ||
-        !Object.hasOwn(action.input.schema.properties, binding.path[0] ?? "")
-      ) {
+      const propertyName = binding.path[0] ?? "";
+      const ownsSchemaProperty =
+        binding.path.length === 1 &&
+        Object.hasOwn(action.input.schema.properties, propertyName);
+      if (!ownsSchemaProperty) {
         issues.push(semanticIssue(
           `${base}/path`,
           "Form binding path must identify exactly one declared input schema property.",
         ));
+      } else {
+        boundSchemaProperties.add(propertyName);
       }
       if (bindingNames.has(binding.name)) {
         issues.push(semanticIssue(`${base}/name`, "Form binding names must be unique."));
@@ -118,6 +156,14 @@ function featureSemanticIssues(feature: FeatureContract): readonly ContractIssue
       bindingNames.add(binding.name);
       bindingPaths.add(pathKey);
     });
+    for (const propertyName of Object.keys(schema.properties).sort(compareText)) {
+      if (!boundSchemaProperties.has(propertyName)) {
+        issues.push(semanticIssue(
+          `/actions/${actionIndex}/input/schema/properties/${escapeJsonPointer(propertyName)}`,
+          "Every input schema property must have exactly one form binding.",
+        ));
+      }
+    }
     const ignoredNames = new Set<string>();
     (action.input.formCodec.ignoredFields ?? []).forEach((field, fieldIndex) => {
       const instancePath = `/actions/${actionIndex}/input/formCodec/ignoredFields/${fieldIndex}/name`;
@@ -134,6 +180,10 @@ function featureSemanticIssues(feature: FeatureContract): readonly ContractIssue
     });
   });
   return issues;
+}
+
+function escapeJsonPointer(value: string): string {
+  return value.replaceAll("~", "~0").replaceAll("/", "~1");
 }
 
 function reportSemanticIssues(

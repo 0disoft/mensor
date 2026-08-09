@@ -282,6 +282,50 @@ test("rejects form bindings that do not have one schema-owned identity", async (
   }
 });
 
+test("rejects contradictory feature action and schema semantics", async () => {
+  const text = await fixtureText(
+    "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
+  );
+  const value = JSON.parse(text);
+  value.actions.push(structuredClone(value.actions[0]));
+  value.actions[0].input.schema.properties.title.minLength = 5;
+  value.actions[0].input.schema.properties.title.maxLength = 4;
+  value.actions[0].input.schema.properties.optional = { kind: "string" };
+  value.actions[0].input.schema.required.push("missing");
+
+  const result = parseFeatureContract(JSON.stringify(value));
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.deepEqual(result.issues.map((issue) => issue.instancePath), [
+      "/actions/0/input/schema/required/1",
+      "/actions/0/input/schema/properties/title",
+      "/actions/0/input/schema/properties/optional",
+      "/actions/1/id",
+    ]);
+  }
+});
+
+test("escapes schema property names in semantic issue paths", async () => {
+  const text = await fixtureText(
+    "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
+  );
+  const value = JSON.parse(text);
+  value.actions[0].input.schema.properties["profile/name~raw"] = {
+    kind: "string",
+    minLength: 2,
+    maxLength: 1,
+  };
+
+  const result = parseFeatureContract(JSON.stringify(value));
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.deepEqual(result.issues.map((issue) => issue.instancePath), [
+      "/actions/0/input/schema/properties/profile~1name~0raw",
+      "/actions/0/input/schema/properties/profile~1name~0raw",
+    ]);
+  }
+});
+
 test("rejects diagnostic reports with contradictory derived state", async () => {
   const passing = JSON.parse(
     await fixtureText("valid/tiny-tasks/expected-report.json"),

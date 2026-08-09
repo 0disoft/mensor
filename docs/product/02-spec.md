@@ -209,7 +209,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 23. Static form facts implement disabled-fieldset submission semantics and
     reject repeated successful controls for scalar text bindings.
 24. Feature and diagnostic-report parsers reject cross-field contradictions in
-    binding ownership, summary counts, status, and source ranges.
+    action identity, schema required/property membership, string length bounds,
+    binding ownership and coverage, summary counts, status, and source ranges.
 25. Mutating evaluation APIs reject concurrent use of the same, ancestor, or
     descendant workspace, attribute agent changes before semantic evaluation,
     and revalidate the post-oracle final state.

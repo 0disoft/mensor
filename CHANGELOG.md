@@ -48,10 +48,15 @@ All notable changes to Mensor are documented in this file.
   invalid control types, and indexes form controls and name groups linearly.
 - Contract source locations now reuse bounded parsed locators and binary-search
   line tables that handle CR, LF, and CRLF consistently.
+- Feature contract parsing now rejects duplicate action ids, undeclared
+  required properties, inverted string length bounds, and unbound schema
+  properties before compiler rules run.
 
 ### Compatibility
 
-- No public API, schema, diagnostic, manifest, or CLI behavior changes.
+- No public API shape, schema revision, diagnostic, or manifest changes.
+- Invalid feature contracts that previously reached compiler rules may now fail
+  earlier with semantic `schema.violation` issues.
 - Upgrade the contract, compiler, and CLI packages together as a fixed version
   set.
 
