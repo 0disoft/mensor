@@ -15,8 +15,10 @@ filename or file contents.
 - Add optional project-owned rules with an id, resource kind, explicit suffix
   list, and required feature-relative directory.
 - Support file-level `test` and `i18n` ownership in the MVP.
-- Use the nearest declared feature root as owner; nested feature roots remain
-  unsupported.
+- Use the nearest declared feature root as owner. Nested feature roots are
+  supported through deterministic longest-root matching.
+- Require feature ids to be unique across the project and allow only one
+  feature contract in a given root directory.
 - Report matching files outside every feature as unowned.
 - Do not inspect translation keys or test symbols to invent ownership.
 
@@ -31,4 +33,4 @@ filename or file contents.
 
 - real projects require shared resource owners;
 - key-level translation ownership proves necessary; or
-- nested feature contracts gain a deterministic ownership model.
+- a project needs multiple independently owned feature contracts in one root.

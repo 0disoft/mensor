@@ -136,6 +136,10 @@ Therefore, `featureContracts` must contain
 optional `$schema` property is only an editor hint; its path depends on the
 consumer's installation layout and is not required by Mensor.
 
+After every feature contract parses independently, the compiler requires
+project-wide unique feature ids and exactly one feature contract per root
+directory. Nested roots remain valid and use longest-root ownership.
+
 The feature contract declares only the POST action. The application may serve
 the GET page through its own framework or server; revision 1 has no GET page
 contract.

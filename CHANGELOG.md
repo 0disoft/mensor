@@ -51,6 +51,8 @@ All notable changes to Mensor are documented in this file.
 - Feature contract parsing now rejects duplicate action ids, undeclared
   required properties, inverted string length bounds, and unbound schema
   properties before compiler rules run.
+- Project validation now rejects duplicate feature ids and multiple feature
+  contracts in one root before ownership and boundary rules run.
 
 ### Compatibility
 

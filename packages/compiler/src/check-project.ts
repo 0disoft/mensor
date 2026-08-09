@@ -65,7 +65,6 @@ interface CheckProjectAnySuccess {
 interface ParsedFeature {
   readonly feature: FeatureContract;
   readonly path: string;
-  readonly templatePaths: readonly string[];
   readonly text: string;
 }
 
@@ -249,23 +248,23 @@ async function checkProjectInternal(
       if (!featureResult.ok) {
         return contractFailure(safeFeatureContractPath, featureResult.issues);
       }
-      featureOwners.push({
-        id: featureResult.value.feature.id,
-        root: path.posix.dirname(safeFeatureContractPath),
-      });
       parsedFeatures.push({
         feature: featureResult.value,
         path: safeFeatureContractPath,
-        templatePaths: featureTemplatePaths(
-          safeFeatureContractPath,
-          featureResult.value,
-          discovered,
-        ),
         text: featureText,
       });
     }
+    validateProjectFeatures(parsedFeatures);
+    featureOwners.push(...parsedFeatures.map((parsedFeature) => ({
+      id: parsedFeature.feature.feature.id,
+      root: path.posix.dirname(parsedFeature.path),
+    })));
     const projectTemplatePaths = [...new Set(
-      parsedFeatures.flatMap((feature) => feature.templatePaths),
+      parsedFeatures.flatMap((parsedFeature) => featureTemplatePaths(
+        parsedFeature.path,
+        parsedFeature.feature,
+        discovered,
+      )),
     )].sort(compareText);
     const formIndex = await formIndexProvider.getIndex(projectTemplatePaths);
 
@@ -387,6 +386,36 @@ async function checkProjectInternal(
       code: "compiler.unexpected_failure",
       message: "The compiler failed unexpectedly.",
     });
+  }
+}
+
+function validateProjectFeatures(features: readonly ParsedFeature[]): void {
+  const featureIds = new Map<string, string>();
+  const featureRoots = new Map<string, string>();
+  for (const parsedFeature of features) {
+    const featureId = parsedFeature.feature.feature.id;
+    const existingIdPath = featureIds.get(featureId);
+    if (existingIdPath !== undefined) {
+      throw new InputFailure(
+        "configuration",
+        "feature_contract.duplicate_feature_id",
+        `Feature id ${JSON.stringify(featureId)} is declared by both ${JSON.stringify(existingIdPath)} and ${JSON.stringify(parsedFeature.path)}.`,
+        parsedFeature.path,
+      );
+    }
+    featureIds.set(featureId, parsedFeature.path);
+
+    const featureRoot = path.posix.dirname(parsedFeature.path);
+    const existingRootPath = featureRoots.get(featureRoot);
+    if (existingRootPath !== undefined) {
+      throw new InputFailure(
+        "configuration",
+        "feature_contract.duplicate_root",
+        `Feature root ${JSON.stringify(featureRoot)} contains both ${JSON.stringify(existingRootPath)} and ${JSON.stringify(parsedFeature.path)}.`,
+        parsedFeature.path,
+      );
+    }
+    featureRoots.set(featureRoot, parsedFeature.path);
   }
 }
 

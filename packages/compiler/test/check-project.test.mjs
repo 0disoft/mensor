@@ -602,6 +602,42 @@ test("classifies nested feature files against the longest owning root", async ()
   }
 });
 
+test("rejects duplicate feature ids across project roots", async () => {
+  const root = await projectWithSecondFeature({
+    featureId: "tasks",
+    contractPath: "src/features/other/feature.mensor.jsonc",
+  });
+  try {
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.failure.kind, "configuration");
+      assert.equal(result.failure.code, "feature_contract.duplicate_feature_id");
+      assert.equal(result.failure.file, "src/features/tasks/feature.mensor.jsonc");
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects multiple feature contracts in one project root", async () => {
+  const root = await projectWithSecondFeature({
+    featureId: "tasks-copy",
+    contractPath: "src/features/tasks/second.feature.mensor.jsonc",
+  });
+  try {
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.failure.kind, "configuration");
+      assert.equal(result.failure.code, "feature_contract.duplicate_root");
+      assert.equal(result.failure.file, "src/features/tasks/second.feature.mensor.jsonc");
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("reports a direct route-to-database import boundary", async () => {
   const fixture = "invalid/module-boundary-direct";
   const result = await checkFixture(fixture);
@@ -784,6 +820,25 @@ async function expectedReport(relativePath) {
 async function copyFixture(relativePath) {
   const root = await mkdtemp(path.join(tmpdir(), "mensor-fixture-"));
   await cp(path.join(fixtureRoot, relativePath), root, { recursive: true });
+  return root;
+}
+
+async function projectWithSecondFeature({ featureId, contractPath }) {
+  const root = await copyFixture("valid/tiny-tasks");
+  const projectFile = path.join(root, "mensor.project.jsonc");
+  const project = JSON.parse(await readFile(projectFile, "utf8"));
+  project.featureContracts.push(contractPath);
+  await writeFile(projectFile, `${JSON.stringify(project, null, 2)}\n`, "utf8");
+
+  const sourceContract = JSON.parse(await readFile(
+    path.join(root, "src/features/tasks/feature.mensor.jsonc"),
+    "utf8",
+  ));
+  sourceContract.feature.id = featureId;
+  sourceContract.actions[0].id = `${featureId}.create`;
+  const target = path.join(root, ...contractPath.split("/"));
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, `${JSON.stringify(sourceContract, null, 2)}\n`, "utf8");
   return root;
 }
 

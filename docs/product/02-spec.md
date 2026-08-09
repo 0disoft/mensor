@@ -211,6 +211,8 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 24. Feature and diagnostic-report parsers reject cross-field contradictions in
     action identity, schema required/property membership, string length bounds,
     binding ownership and coverage, summary counts, status, and source ranges.
+    Project validation rejects duplicate feature ids and multiple feature
+    contracts in one root while preserving longest-root nested ownership.
 25. Mutating evaluation APIs reject concurrent use of the same, ancestor, or
     descendant workspace, attribute agent changes before semantic evaluation,
     and revalidate the post-oracle final state.
