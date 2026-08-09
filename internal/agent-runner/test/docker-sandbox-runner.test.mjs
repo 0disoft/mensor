@@ -6,6 +6,7 @@ const workspaceRoot = path.resolve("workspace");
 
 import {
   createDockerSandboxPlan,
+  dockerSandboxFailureDetails,
   dockerSandboxPlanDigest,
   runDockerSandbox,
 } from "../dist/src/index.js";
@@ -83,7 +84,53 @@ test("does not report success when cleanup fails", async () => {
 
   await assert.rejects(
     runDockerSandbox(runOptions(port)),
-    (error) => error.message === "Docker sandbox cleanup failed.",
+    (error) => {
+      assert.equal(error.message, "Docker sandbox cleanup failed.");
+      assert.deepEqual(dockerSandboxFailureDetails(error), {
+        stage: "cleanup",
+        code: "cleanup-failed",
+        primaryStage: null,
+        primaryCode: null,
+        cleanupFailed: true,
+        cleanupCode: "cleanup-failed",
+      });
+      return true;
+    },
+  );
+  assert.deepEqual(events, ["create", "inspect", "start", "remove"]);
+});
+
+test("preserves the primary failure when cleanup also fails", async () => {
+  const events = [];
+  const port = successfulPort(events);
+  port.start = async () => {
+    events.push("start");
+    throw new Error("provider execution secret");
+  };
+  port.remove = async () => {
+    events.push("remove");
+    throw new Error("provider cleanup secret");
+  };
+
+  await assert.rejects(
+    runDockerSandbox(runOptions(port)),
+    (error) => {
+      assert.equal(
+        error.message,
+        "Docker sandbox cleanup failed after an execution failure.",
+      );
+      assert.deepEqual(dockerSandboxFailureDetails(error), {
+        stage: "cleanup",
+        code: "cleanup-failed",
+        primaryStage: "execute",
+        primaryCode: "port-failure",
+        cleanupFailed: true,
+        cleanupCode: "cleanup-failed",
+      });
+      assert.equal(JSON.stringify(error).includes("provider execution secret"), false);
+      assert.equal(JSON.stringify(error).includes("provider cleanup secret"), false);
+      return true;
+    },
   );
   assert.deepEqual(events, ["create", "inspect", "start", "remove"]);
 });

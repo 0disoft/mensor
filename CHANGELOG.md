@@ -40,6 +40,8 @@ All notable changes to Mensor are documented in this file.
   source facts, and use one parent-linked transitive traversal per boundary.
 - Agent and Docker subprocess termination now has a bounded kill-grace period,
   forced Promise settlement, and an absolute Windows taskkill path.
+- Docker sandbox failures now retain redacted primary and cleanup stage codes
+  together while preserving cleanup-authoritative canonical outcomes.
 - Static HTML form extraction now follows tree-order form ownership, normalizes
   invalid control types, and indexes form controls and name groups linearly.
 - Contract source locations now reuse bounded parsed locators and binary-search

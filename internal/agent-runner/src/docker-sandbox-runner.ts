@@ -59,20 +59,44 @@ export interface DockerSandboxRunResult {
 
 export type DockerSandboxFailureStage = "create" | "inspect" | "execute" | "cleanup";
 
-class DockerSandboxStageError extends Error {
-  readonly stage: DockerSandboxFailureStage;
+export type DockerSandboxFailureCode =
+  | "port-failure"
+  | "timeout"
+  | "invalid-result"
+  | "inspection-mismatch"
+  | "output-limit"
+  | "nonzero-exit"
+  | "cleanup-failed";
 
-  constructor(stage: DockerSandboxFailureStage, message: string) {
+export interface DockerSandboxFailureDetails {
+  readonly stage: DockerSandboxFailureStage;
+  readonly code: DockerSandboxFailureCode;
+  readonly primaryStage: Exclude<DockerSandboxFailureStage, "cleanup"> | null;
+  readonly primaryCode: Exclude<DockerSandboxFailureCode, "cleanup-failed"> | null;
+  readonly cleanupFailed: boolean;
+  readonly cleanupCode: "cleanup-failed" | null;
+}
+
+class DockerSandboxStageError extends Error {
+  readonly details: DockerSandboxFailureDetails;
+
+  constructor(details: DockerSandboxFailureDetails, message: string) {
     super(message);
     this.name = "DockerSandboxStageError";
-    this.stage = stage;
+    this.details = details;
   }
 }
 
 export function dockerSandboxFailureStage(
   error: unknown,
 ): DockerSandboxFailureStage | null {
-  return error instanceof DockerSandboxStageError ? error.stage : null;
+  return dockerSandboxFailureDetails(error)?.stage ?? null;
+}
+
+export function dockerSandboxFailureDetails(
+  error: unknown,
+): DockerSandboxFailureDetails | null {
+  return error instanceof DockerSandboxStageError ? error.details : null;
 }
 
 export async function runDockerSandbox(
@@ -93,7 +117,7 @@ export async function runDockerSandbox(
     options.plan.limits.timeoutMs,
   );
   let handle: string | null = null;
-  let executionFailed = false;
+  let primaryFailure: DockerSandboxFailureDetails | null = null;
 
   try {
     const createdHandle = await runExecutionStage(
@@ -102,13 +126,21 @@ export async function runDockerSandbox(
       executionController.signal,
     );
     if (typeof createdHandle !== "string") {
-      throw stageError("create", "Docker sandbox create returned an invalid handle.");
+      throw stageError(
+        "create",
+        "invalid-result",
+        "Docker sandbox create returned an invalid handle.",
+      );
     }
     handle = createdHandle;
     try {
       validateHandle(handle);
     } catch {
-      throw stageError("create", "Docker sandbox handle must be a bounded opaque identifier.");
+      throw stageError(
+        "create",
+        "invalid-result",
+        "Docker sandbox handle must be a bounded opaque identifier.",
+      );
     }
     const inspection = await runExecutionStage(
       "inspect",
@@ -122,7 +154,11 @@ export async function runDockerSandbox(
         collector,
       });
     } catch {
-      throw stageError("inspect", "Docker sandbox inspection did not match its plan.");
+      throw stageError(
+        "inspect",
+        "inspection-mismatch",
+        "Docker sandbox inspection did not match its plan.",
+      );
     }
     const execution = validateExecutionResult(await runExecutionStage(
       "start",
@@ -134,7 +170,7 @@ export async function runDockerSandbox(
       stdout: new Uint8Array(execution.stdout),
     };
   } catch (error) {
-    executionFailed = true;
+    primaryFailure = dockerSandboxFailureDetails(error);
     throw error;
   } finally {
     clearTimeout(executionTimeout);
@@ -142,9 +178,7 @@ export async function runDockerSandbox(
       try {
         await removeWithTimeout(options.port, handle, cleanupTimeoutMs);
       } catch {
-        throw stageError("cleanup", executionFailed
-          ? "Docker sandbox cleanup failed after an execution failure."
-          : "Docker sandbox cleanup failed.");
+        throw cleanupStageError(primaryFailure);
       }
     }
   }
@@ -164,11 +198,13 @@ async function runExecutionStage<T>(
     if (signal.aborted) {
       throw stageError(
         stage === "start" ? "execute" : stage,
+        "timeout",
         "Docker sandbox execution exceeded its timeout.",
       );
     }
     throw stageError(
       stage === "start" ? "execute" : stage,
+      "port-failure",
       `Docker sandbox ${stage} failed.`,
     );
   }
@@ -206,7 +242,11 @@ function validateExecutionResult(
   maxOutputBytes: number,
 ): DockerSandboxExecutionResult {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw stageError("execute", "Docker sandbox execution result must be an object.");
+    throw stageError(
+      "execute",
+      "invalid-result",
+      "Docker sandbox execution result must be an object.",
+    );
   }
   const keys = Object.keys(value).sort(compareText);
   if (JSON.stringify(keys) !== JSON.stringify([
@@ -214,29 +254,50 @@ function validateExecutionResult(
   ])) {
     throw stageError(
       "execute",
+      "invalid-result",
       "Docker sandbox execution result contains unsupported fields.",
     );
   }
   if (!(value.stdout instanceof Uint8Array)) {
-    throw stageError("execute", "Docker sandbox stdout must be bytes.");
+    throw stageError("execute", "invalid-result", "Docker sandbox stdout must be bytes.");
   }
   if (
     !Number.isSafeInteger(value.combinedOutputBytes) ||
     value.combinedOutputBytes < value.stdout.byteLength
   ) {
-    throw stageError("execute", "Docker sandbox combined output size is invalid.");
+    throw stageError(
+      "execute",
+      "invalid-result",
+      "Docker sandbox combined output size is invalid.",
+    );
   }
   if (value.termination === "timeout") {
-    throw stageError("execute", "Docker sandbox execution exceeded its timeout.");
+    throw stageError(
+      "execute",
+      "timeout",
+      "Docker sandbox execution exceeded its timeout.",
+    );
   }
   if (value.termination === "output-limit" || value.combinedOutputBytes > maxOutputBytes) {
-    throw stageError("execute", "Docker sandbox execution exceeded its output limit.");
+    throw stageError(
+      "execute",
+      "output-limit",
+      "Docker sandbox execution exceeded its output limit.",
+    );
   }
   if (value.termination !== "exited" || !Number.isSafeInteger(value.exitCode)) {
-    throw stageError("execute", "Docker sandbox execution result is invalid.");
+    throw stageError(
+      "execute",
+      "invalid-result",
+      "Docker sandbox execution result is invalid.",
+    );
   }
   if (value.exitCode !== 0) {
-    throw stageError("execute", "Docker sandbox execution exited unsuccessfully.");
+    throw stageError(
+      "execute",
+      "nonzero-exit",
+      "Docker sandbox execution exited unsuccessfully.",
+    );
   }
   return value;
 }
@@ -258,10 +319,33 @@ function validateHandle(value: string): void {
 }
 
 function stageError(
-  stage: DockerSandboxFailureStage,
+  stage: Exclude<DockerSandboxFailureStage, "cleanup">,
+  code: Exclude<DockerSandboxFailureCode, "cleanup-failed">,
   message: string,
 ): DockerSandboxStageError {
-  return new DockerSandboxStageError(stage, message);
+  return new DockerSandboxStageError({
+    stage,
+    code,
+    primaryStage: stage,
+    primaryCode: code,
+    cleanupFailed: false,
+    cleanupCode: null,
+  }, message);
+}
+
+function cleanupStageError(
+  primary: DockerSandboxFailureDetails | null,
+): DockerSandboxStageError {
+  return new DockerSandboxStageError({
+    stage: "cleanup",
+    code: "cleanup-failed",
+    primaryStage: primary?.primaryStage ?? null,
+    primaryCode: primary?.primaryCode ?? null,
+    cleanupFailed: true,
+    cleanupCode: "cleanup-failed",
+  }, primary === null
+    ? "Docker sandbox cleanup failed."
+    : "Docker sandbox cleanup failed after an execution failure.");
 }
 
 export function validateDockerSandboxCleanupTimeout(value: number): number {

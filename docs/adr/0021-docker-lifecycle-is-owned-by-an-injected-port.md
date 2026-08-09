@@ -24,6 +24,13 @@ bounded signal and is attempted exactly once after any successful create,
 including inspection mismatch, execution failure, and timeout. Cleanup failure
 prevents a success result.
 
+The internal lifecycle error preserves stable redacted codes for both the
+first create, inspect, or execute failure and a later cleanup failure. Its
+`primaryStage`, `primaryCode`, `cleanupFailed`, and `cleanupCode` fields are
+available to operational diagnostics and focused tests. The canonical trial
+outcome remains cleanup-authoritative and does not expose raw port errors or
+silently change its version-1 schema.
+
 The port must honor abort signals and must not resolve `create` until it owns a
 removable handle. ADR 0028 adds a private Docker CLI implementation of this
 port. Until that adapter passes a configured real-daemon integration run, this

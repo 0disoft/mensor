@@ -76,6 +76,7 @@ export type {
   DockerCliExecutionPortOptions,
 } from "./docker-cli-execution-port.js";
 export {
+  dockerSandboxFailureDetails,
   runDockerSandbox,
   validateDockerSandboxCleanupTimeout,
   validateDockerSandboxExecutionPort,
@@ -84,6 +85,9 @@ export {
 export type {
   DockerSandboxExecutionPort,
   DockerSandboxExecutionResult,
+  DockerSandboxFailureCode,
+  DockerSandboxFailureDetails,
+  DockerSandboxFailureStage,
   DockerSandboxInspection,
   DockerSandboxRunResult,
   RunDockerSandboxOptions,
