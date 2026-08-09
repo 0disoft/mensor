@@ -1,6 +1,6 @@
 # Project Invariants
 
-- Status: Proposed
+- Status: Active
 - Owner: Maintainer
 
 These rules must remain aligned across implementation, tests, fixtures,

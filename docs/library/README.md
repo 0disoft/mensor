@@ -1,6 +1,6 @@
 # Libraries
 
-- Status: Proposed
+- Status: Active
 
 Mensor exposes a small contract package and compiler package so tests, custom
 CI wrappers, and future adapters can use the same engine as the CLI. The CLI is

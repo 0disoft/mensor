@@ -1,6 +1,6 @@
 # Workspace Boundaries
 
-- Status: Proposed
+- Status: Active
 - Owner: Maintainer
 
 ## Workspace Sequence

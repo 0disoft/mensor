@@ -1,6 +1,6 @@
 # System Boundary
 
-- Status: Proposed
+- Status: Active
 
 ## Owned Components
 

@@ -1,6 +1,6 @@
 # Monorepo
 
-- Status: Proposed
+- Status: Active
 
 Mensor starts as one public repository because contracts, compiler behavior,
 diagnostics, fixtures, and CLI output must change atomically while the model is

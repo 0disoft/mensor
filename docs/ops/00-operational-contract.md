@@ -1,6 +1,6 @@
 # Operational Contract
 
-- Status: Proposed
+- Status: Active
 - Owner: Maintainer
 
 ## Operating Shape

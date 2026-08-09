@@ -1,6 +1,6 @@
 # Documentation
 
-- Status: Proposed
+- Status: Active
 
 ## Sources of Truth
 

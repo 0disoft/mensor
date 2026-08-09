@@ -1,6 +1,6 @@
 # Public API
 
-- Status: Proposed
+- Status: Active
 - Owner: Maintainer
 
 ## Current Package Surface

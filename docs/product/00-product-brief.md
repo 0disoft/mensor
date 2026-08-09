@@ -1,6 +1,6 @@
 # Product Brief
 
-- Status: Proposed
+- Status: Active
 - Owner: Maintainer
 - Product name: Mensor
 
