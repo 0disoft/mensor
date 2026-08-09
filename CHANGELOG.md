@@ -42,6 +42,8 @@ All notable changes to Mensor are documented in this file.
   forced Promise settlement, and an absolute Windows taskkill path.
 - Docker sandbox failures now retain redacted primary and cleanup stage codes
   together while preserving cleanup-authoritative canonical outcomes.
+- Evaluation workspace leases now reject ancestor/descendant overlap, and
+  snapshots bind bounded hashes to one verified file handle and path identity.
 - Static HTML form extraction now follows tree-order form ownership, normalizes
   invalid control types, and indexes form controls and name groups linearly.
 - Contract source locations now reuse bounded parsed locators and binary-search

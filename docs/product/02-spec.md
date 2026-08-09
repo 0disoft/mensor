@@ -210,14 +210,15 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     reject repeated successful controls for scalar text bindings.
 24. Feature and diagnostic-report parsers reject cross-field contradictions in
     binding ownership, summary counts, status, and source ranges.
-25. Mutating evaluation APIs reject concurrent use of one workspace, attribute
-    agent changes before semantic evaluation, and revalidate the post-oracle
-    final state.
+25. Mutating evaluation APIs reject concurrent use of the same, ancestor, or
+    descendant workspace, attribute agent changes before semantic evaluation,
+    and revalidate the post-oracle final state.
 26. Repeated command-agent evaluation validates its complete case plan before
     creating mutable state, uses one fresh workspace per attempt, disposes that
     workspace on every outcome, and merges only matching execution cohorts.
-27. Evaluation snapshots use streaming hashes and explicit file, byte,
-    aggregate-byte, and depth limits; exceeding a limit fails closed.
+27. Evaluation snapshots use same-handle streaming hashes, before/after and
+    path identity checks, and explicit file, byte, aggregate-byte, and depth
+    limits; observed drift or an exceeded limit fails closed.
 28. Execution fingerprints commit to the validated executable, arguments,
     environment, and process limits without serializing their raw values.
 29. Package validation starts from clean build output and rejects generated
