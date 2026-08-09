@@ -15,11 +15,24 @@ import { compareText, InputFailure } from "./paths.js";
 import type { SourceFactIndex } from "./source-fact-index.js";
 import type { ModuleFact } from "./typescript-source.js";
 
-interface ProjectModuleFact {
+interface ProjectModule {
   readonly file: string;
   readonly role: string;
+}
+
+interface LoadedProjectModule extends ProjectModule {
   readonly fact: ModuleFact;
   readonly edges: readonly ResolvedModuleEdge[];
+}
+
+interface ProjectModuleGraph {
+  readonly modules: ReadonlyMap<string, ProjectModule>;
+  readonly load: (file: string) => Promise<LoadedProjectModule>;
+}
+
+interface TraversalNode {
+  readonly module: LoadedProjectModule;
+  readonly parent?: TraversalNode;
 }
 
 interface ResolvedModuleEdge {
@@ -53,85 +66,105 @@ export async function checkImportBoundaries(options: {
       root: path.posix.dirname(contract),
     })),
   );
-  const parsed = new Map<string, ModuleFact>();
+  const modules = new Map<string, ProjectModule>();
   for (const file of sourceFiles) {
-    const fact = await options.sourceFacts.get(file);
-    parsed.set(file, fact);
-  }
-
-  const modules = new Map<string, ProjectModuleFact>();
-  for (const file of sourceFiles) {
-    const fact = parsed.get(file);
-    if (fact === undefined) {
-      continue;
-    }
-    const edges = fact.imports.flatMap((entry) => {
-      const target = resolveImport(file, entry.specifier, discovered);
-      if (target === undefined) {
-        return [];
-      }
-      return [{
-        edgeKind: entry.edgeKind,
-        specifier: entry.specifier,
-        range: entry.range,
-        target,
-      }];
-    });
     modules.set(file, {
       file,
       role: classifyProjectRole(file, featureRoots, options.fileRoles),
-      fact,
-      edges: [...edges].sort(compareEdges),
     });
   }
+  const graph = createProjectModuleGraph(
+    modules,
+    discovered,
+    options.sourceFacts,
+  );
 
   const diagnostics: Diagnostic[] = [];
-  options.boundaries.forEach((boundary, boundaryIndex) => {
-    const roots = [...modules.values()]
+  for (const [boundaryIndex, boundary] of options.boundaries.entries()) {
+    const roots = [...graph.modules.values()]
       .filter((module) => boundary.from.includes(module.role))
       .sort((left, right) => compareText(left.file, right.file));
-    for (const root of roots) {
-      if (boundary.mode === "direct") {
+    if (boundary.mode === "direct") {
+      for (const root of roots) {
         diagnostics.push(
-          ...checkDirectBoundary(
+          ...(await checkDirectBoundary(
             root,
             boundary,
             boundaryIndex,
-            modules,
+            graph,
             options,
-          ),
-        );
-      } else {
-        diagnostics.push(
-          ...checkTransitiveBoundary(
-            root,
-            boundary,
-            boundaryIndex,
-            modules,
-            options,
-          ),
+          )),
         );
       }
+    } else {
+      diagnostics.push(
+        ...(await checkTransitiveBoundary(
+          roots,
+          boundary,
+          boundaryIndex,
+          graph,
+          options,
+        )),
+      );
     }
-  });
+  }
   return diagnostics;
 }
 
-function checkDirectBoundary(
-  root: ProjectModuleFact,
+function createProjectModuleGraph(
+  modules: ReadonlyMap<string, ProjectModule>,
+  discovered: ReadonlySet<string>,
+  sourceFacts: SourceFactIndex,
+): ProjectModuleGraph {
+  const loaded = new Map<string, Promise<LoadedProjectModule>>();
+  return {
+    modules,
+    load(file) {
+      let module = loaded.get(file);
+      if (module === undefined) {
+        const metadata = modules.get(file);
+        if (metadata === undefined) {
+          throw new Error(`Cannot load undiscovered source module ${JSON.stringify(file)}.`);
+        }
+        module = sourceFacts.get(file).then((fact) => ({
+          ...metadata,
+          fact,
+          edges: fact.imports.flatMap((entry) => {
+            const target = resolveImport(file, entry.specifier, discovered);
+            if (target === undefined) {
+              return [];
+            }
+            return [{
+              edgeKind: entry.edgeKind,
+              specifier: entry.specifier,
+              range: entry.range,
+              target,
+            }];
+          }).sort(compareEdges),
+        }));
+        loaded.set(file, module);
+      }
+      return module;
+    },
+  };
+}
+
+async function checkDirectBoundary(
+  root: ProjectModule,
   boundary: BoundaryContract,
   boundaryIndex: number,
-  modules: ReadonlyMap<string, ProjectModuleFact>,
+  graph: ProjectModuleGraph,
   options: {
     readonly projectContractPath: string;
     readonly projectText: string;
   },
-): readonly Diagnostic[] {
-  const diagnostics: Diagnostic[] = root.fact.unsupportedDynamicImports.map((range) =>
-    dynamicImportDiagnostic(root, range, boundary, boundaryIndex, options),
+): Promise<readonly Diagnostic[]> {
+  const loadedRoot = await graph.load(root.file);
+  const diagnostics: Diagnostic[] = loadedRoot.fact.unsupportedDynamicImports.map((range) =>
+    dynamicImportDiagnostic(loadedRoot, range, boundary, boundaryIndex, options),
   );
-  for (const edge of root.edges) {
-    const target = modules.get(edge.target);
+  for (const edge of loadedRoot.edges) {
+    const target = graph.modules.get(edge.target);
     if (target !== undefined && boundary.deny.includes(target.role)) {
       diagnostics.push(
         boundaryViolationDiagnostic(
@@ -149,62 +182,83 @@ function checkDirectBoundary(
   return diagnostics;
 }
 
-function checkTransitiveBoundary(
-  root: ProjectModuleFact,
+async function checkTransitiveBoundary(
+  roots: readonly ProjectModule[],
   boundary: BoundaryContract,
   boundaryIndex: number,
-  modules: ReadonlyMap<string, ProjectModuleFact>,
+  graph: ProjectModuleGraph,
   options: {
     readonly projectContractPath: string;
     readonly projectText: string;
   },
-): readonly Diagnostic[] {
+): Promise<readonly Diagnostic[]> {
   const diagnostics: Diagnostic[] = [];
-  const queue: Array<{ readonly module: ProjectModuleFact; readonly chain: readonly string[] }> = [
-    { module: root, chain: [root.file] },
-  ];
+  const queue: Array<{
+    readonly file: string;
+    readonly root: ProjectModule;
+    readonly parent?: TraversalNode;
+  }> = roots.map((root) => ({ file: root.file, root }));
   const visited = new Set<string>();
   for (let index = 0; index < queue.length; index += 1) {
     const current = queue[index];
-    if (current === undefined || visited.has(current.module.file)) {
+    if (current === undefined || visited.has(current.file)) {
       continue;
     }
-    visited.add(current.module.file);
+    visited.add(current.file);
+    const module = await graph.load(current.file);
+    const node: TraversalNode = {
+      module,
+      ...(current.parent === undefined ? {} : { parent: current.parent }),
+    };
     diagnostics.push(
-      ...current.module.fact.unsupportedDynamicImports.map((range) =>
-        dynamicImportDiagnostic(current.module, range, boundary, boundaryIndex, options),
+      ...module.fact.unsupportedDynamicImports.map((range) =>
+        dynamicImportDiagnostic(module, range, boundary, boundaryIndex, options),
       ),
     );
-    for (const edge of current.module.edges) {
-      const target = modules.get(edge.target);
+    for (const edge of module.edges) {
+      const target = graph.modules.get(edge.target);
       if (target === undefined) {
         continue;
       }
-      const chain = [...current.chain, target.file];
       if (boundary.deny.includes(target.role)) {
         diagnostics.push(
           boundaryViolationDiagnostic(
-            root,
+            current.root,
             edge,
             target,
-            chain,
+            importChain(node, target.file),
             boundary,
             boundaryIndex,
             options,
           ),
         );
       } else if (!visited.has(target.file)) {
-        queue.push({ module: target, chain });
+        queue.push({
+          file: target.file,
+          root: current.root,
+          parent: node,
+        });
       }
     }
   }
   return diagnostics;
 }
 
+function importChain(node: TraversalNode, targetFile: string): readonly string[] {
+  const reversed = [targetFile];
+  let current: TraversalNode | undefined = node;
+  while (current !== undefined) {
+    reversed.push(current.module.file);
+    current = current.parent;
+  }
+  reversed.reverse();
+  return reversed;
+}
+
 function boundaryViolationDiagnostic(
-  root: ProjectModuleFact,
+  root: ProjectModule,
   edge: ResolvedModuleEdge,
-  target: ProjectModuleFact,
+  target: ProjectModule,
   importChain: readonly string[],
   boundary: BoundaryContract,
   boundaryIndex: number,
@@ -260,7 +314,7 @@ function boundaryViolationDiagnostic(
 }
 
 function dynamicImportDiagnostic(
-  source: ProjectModuleFact,
+  source: ProjectModule,
   range: SourceRange,
   boundary: BoundaryContract,
   boundaryIndex: number,

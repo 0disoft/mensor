@@ -186,8 +186,12 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     `handler.export_missing` without importing or executing that module.
 16. Direct and transitive import boundaries emit exact
     `module.boundary_violation` diagnostics with a deterministic import chain.
-17. A boundary-reachable non-literal dynamic import emits
-    `module.dynamic_import_unsupported` instead of reducing graph coverage.
+    Direct checks parse only from-role roots. A transitive check traverses the
+    reachable union once and reports the lexicographically first shortest
+    witness when multiple roots reach the same forbidden edge.
+17. A boundary-reachable non-literal dynamic import emits one
+    `module.dynamic_import_unsupported` per boundary and source range instead
+    of reducing graph coverage or repeating the same diagnostic for every root.
 18. Test and i18n suffix rules emit `file.ownership_mismatch` for both a wrong
     feature slot and a file outside every declared feature.
 19. An agent repair command receives the validated failing diagnostic report,

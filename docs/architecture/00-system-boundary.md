@@ -47,10 +47,16 @@ JSONC contract       TypeScript/JavaScript       static HTML       RouteIndex
 
 Parsing libraries may produce ASTs, but parser-specific objects stop at the
 extraction boundary. Rules receive only Mensor-owned serializable facts.
-TypeScript source is parsed once into facts that distinguish runtime and type
-exports, literal ESM and CommonJS edges, and computed runtime targets. Feature
-ownership and role classification share longest-root-first resolution so the
-same file cannot acquire different owners in separate rules.
+TypeScript source is parsed at most once and only when a handler or configured
+boundary reaches it. File roles are classified before parsing. Direct
+boundaries load only their from-role roots; transitive boundaries use one
+deterministic multi-source traversal and retain parent pointers until a
+canonical shortest witness chain is needed. Shared reachable modules and their
+non-literal dynamic imports are therefore analyzed once per boundary. Facts
+distinguish runtime and type exports, literal ESM and CommonJS edges, and
+computed runtime targets. Feature ownership and role classification share
+longest-root-first resolution so the same file cannot acquire different owners
+in separate rules.
 
 ## Dependency Direction
 

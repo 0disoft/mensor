@@ -36,6 +36,8 @@ All notable changes to Mensor are documented in this file.
   and identical document sets reuse the same verified index promise.
 - RouteIndex verification now reads, hashes, and line-indexes each source file
   once and reuses verified route keys across feature checks.
+- Import boundaries now classify roles before parsing, load only relevant
+  source facts, and use one parent-linked transitive traversal per boundary.
 - Agent and Docker subprocess termination now has a bounded kill-grace period,
   forced Promise settlement, and an absolute Windows taskkill path.
 - Static HTML form extraction now follows tree-order form ownership, normalizes
