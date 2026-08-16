@@ -9,6 +9,8 @@ All notable changes to Mensor are documented in this file.
 - Serializable integer, decimal, checkbox, enum, and repeated-value schema and
   form decoder contracts.
 - Compiler control-shape validation for checkbox and repeated-value decoders.
+- Canonical RuntimeManifest v1 contracts and `compileProject`, including static
+  GET pages and POST action handler identifiers.
 
 ### Compatibility
 

@@ -14,6 +14,7 @@ exports:
 - `parseDiagnosticReport(text)`;
 - `parseDiagnosticReportV2(text)` and `parseCheckOutputV2(text)`;
 - `parseRouteIndex(text)` and `serializeRouteIndex(value)`;
+- `parseRuntimeManifest(text)` and `serializeRuntimeManifest(value)`;
 - `isJsonValue(value)`; and
 - serializable contract, diagnostic, issue, and result types.
 
@@ -58,6 +59,10 @@ export function checkProject(
 export function checkProject(
   options: CheckProjectOptions,
 ): Promise<CheckProjectResult>;
+
+export function compileProject(
+  options: CompileProjectOptions,
+): Promise<CompileProjectResult>;
 ```
 
 `CheckProjectResult` separates a completed check and its `DiagnosticReport` from
@@ -69,6 +74,10 @@ Omitting `reportVersion` retains the revision-1 return type. The literal value
 `2` selects `DiagnosticReportV2`; other values fail closed at runtime for
 JavaScript callers. Inspection is derived from validated contracts and
 completed rule paths, not from an empty diagnostic list.
+
+`compileProject` reuses the same validated analysis and emits RuntimeManifest
+v1 only when the diagnostic report is clean. A diagnostic result, malformed
+configuration, or I/O failure cannot produce a partial manifest.
 
 The compiler walks the configured source root in code-unit sorted order, skips
 symlinks, enforces file-count and file-byte limits, and never imports inspected

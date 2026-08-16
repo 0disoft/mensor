@@ -84,7 +84,9 @@ try {
     path.join(consumerRoot, "contract-smoke.mjs"),
     `import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { parseCheckOutputV2, parseRouteIndex, serializeRouteIndex } from "@0disoft/mensor-contract";
+import path from "node:path";
+import { parseCheckOutputV2, parseRouteIndex, parseRuntimeManifest, serializeRouteIndex, serializeRuntimeManifest } from "@0disoft/mensor-contract";
+import { compileProject } from "@0disoft/mensor-compiler";
 
 const text = serializeRouteIndex({
   schemaVersion: 1,
@@ -103,6 +105,13 @@ const text = serializeRouteIndex({
   }]
 });
 assert.equal(parseRouteIndex(text).ok, true);
+const manifestText = serializeRuntimeManifest({
+  manifestVersion: 1,
+  producer: { name: "package-smoke", version: "1.0.0" },
+  pages: [],
+  actions: []
+});
+assert.equal(parseRuntimeManifest(manifestText).ok, true);
 assert.equal(parseCheckOutputV2(JSON.stringify({
   schemaVersion: 2,
   producer: { name: "mensor", version: "0.0.0-smoke" },
@@ -131,6 +140,16 @@ const checkOutputSchema = JSON.parse(
   await readFile(new URL(checkOutputSchemaUrl), "utf8")
 );
 assert.equal(checkOutputSchema.$id, "check-output-v2.schema.json");
+const runtimeManifestSchemaUrl = import.meta.resolve(
+  "@0disoft/mensor-contract/schemas/runtime-manifest-v1.schema.json"
+);
+const runtimeManifestSchema = JSON.parse(
+  await readFile(new URL(runtimeManifestSchemaUrl), "utf8")
+);
+assert.equal(runtimeManifestSchema.$id, "runtime-manifest-v1.schema.json");
+const compiled = await compileProject({ root: path.resolve("valid") });
+assert.equal(compiled.ok, true);
+if (compiled.ok) assert.equal(compiled.manifest.actions.length, 1);
 `,
     "utf8",
   );
@@ -151,10 +170,12 @@ assert.equal(checkOutputSchema.$id, "check-output-v2.schema.json");
       "# @0disoft/mensor-contract",
       "parseProjectContract",
       "schemas/check-output-v2.schema.json",
+      "parseRuntimeManifest",
     ],
     compiler: [
       "# @0disoft/mensor-compiler",
       "checkProject",
+      "compileProject",
       "does not\nexecute project source or configuration",
     ],
     cli: [

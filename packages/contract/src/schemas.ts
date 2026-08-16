@@ -9,6 +9,7 @@ import checkOutputV2Schema from "../spec/check-output-v2.schema.json" with { typ
 import featureContractSchema from "../spec/feature-contract-v1.schema.json" with { type: "json" };
 import projectContractSchema from "../spec/project-contract-v1.schema.json" with { type: "json" };
 import routeIndexSchema from "../spec/route-index-v1.schema.json" with { type: "json" };
+import runtimeManifestSchema from "../spec/runtime-manifest-v1.schema.json" with { type: "json" };
 
 import { compareText } from "./compare.js";
 import type {
@@ -18,6 +19,7 @@ import type {
   FeatureContract,
   ProjectContract,
   RouteIndex,
+  RuntimeManifest,
 } from "./types.js";
 
 const ajv = new Ajv2020({
@@ -47,6 +49,10 @@ export const validateCheckOutputV2 = ajv.compile<CheckOutputV2>(
 );
 
 export const validateRouteIndex = ajv.compile<RouteIndex>(routeIndexSchema);
+
+export const validateRuntimeManifest = ajv.compile<RuntimeManifest>(
+  runtimeManifestSchema,
+);
 
 export function schemaIssues(
   validator: ValidateFunction,

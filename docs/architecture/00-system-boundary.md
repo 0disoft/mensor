@@ -43,6 +43,10 @@ JSONC contract       TypeScript/JavaScript       static HTML       RouteIndex
                          pure rule execution
                                |
                   canonical DiagnosticReport
+                               |
+                    clean checks only
+                               |
+                     RuntimeManifest v1
 ```
 
 Parsing libraries may produce ASTs, but parser-specific objects stop at the
@@ -103,10 +107,14 @@ fresh-index contract disagreement is a deterministic diagnostic.
 
 ## Runtime Boundary
 
-There is no production runtime in the MVP. A runtime manifest or reference
-consumer may be introduced only after diagnostics are proven and an independent
-consumer requires it. Compiler contracts must not assume that such a runtime
-will exist.
+RuntimeManifest v1 is an optional compiled artifact emitted only after a clean
+diagnostic report. It contains static GET page HTML, POST action routes, handler
+ids, and serializable input contracts. Source paths, parser objects, module
+exports, and executable handlers do not cross this boundary.
+
+There is still no production runtime. A reference consumer may use the manifest
+through a separately injected handler registry, but the compiler does not own
+HTTP serving, authentication, CSRF, sessions, persistence, or deployment.
 
 ## Failure Model
 

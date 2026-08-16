@@ -13,7 +13,9 @@ import {
   parseJsonc,
   parseProjectContract,
   parseRouteIndex,
+  parseRuntimeManifest,
   serializeRouteIndex,
+  serializeRuntimeManifest,
 } from "@0disoft/mensor-contract";
 
 const fixtureRoot = new URL("../../../fixtures/", import.meta.url);
@@ -215,6 +217,69 @@ test("rejects duplicate routes and invalid RouteIndex ranges", () => {
       "/routes/1",
     ]);
   }
+});
+
+test("canonicalizes and parses a source-free runtime manifest", async () => {
+  const featureResult = parseFeatureContract(
+    await fixtureText("valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc"),
+  );
+  assert.equal(featureResult.ok, true);
+  if (!featureResult.ok) {
+    return;
+  }
+  const input = featureResult.value.actions[0].input;
+  const value = {
+    manifestVersion: 1,
+    producer: { name: "mensor", version: "0.3.0" },
+    pages: [
+      { id: "tasks.form.create-task", method: "GET", path: "/tasks", html: "<form></form>\n" },
+    ],
+    actions: [
+      {
+        id: "tasks.create",
+        method: "POST",
+        path: "/tasks",
+        handlerId: "tasks.create",
+        input,
+      },
+    ],
+  };
+
+  const text = serializeRuntimeManifest(value);
+  const parsed = parseRuntimeManifest(text);
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    assert.deepEqual(parsed.value, JSON.parse(text));
+    assert.equal(JSON.stringify(parsed.value).includes("feature.mensor"), false);
+    assert.equal(JSON.stringify(parsed.value).includes("server/create-task"), false);
+  }
+});
+
+test("rejects duplicate runtime routes and non-canonical encoding", async () => {
+  const featureResult = parseFeatureContract(
+    await fixtureText("valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc"),
+  );
+  assert.equal(featureResult.ok, true);
+  if (!featureResult.ok) {
+    return;
+  }
+  const action = {
+    id: "tasks.create",
+    method: "POST",
+    path: "/tasks",
+    handlerId: "tasks.create",
+    input: featureResult.value.actions[0].input,
+  };
+  const duplicate = {
+    manifestVersion: 1,
+    producer: { name: "mensor", version: "0.3.0" },
+    pages: [],
+    actions: [action, { ...action, id: "tasks.create-again", handlerId: "tasks.create-again" }],
+  };
+  assert.throws(() => serializeRuntimeManifest(duplicate), /routes must be unique/u);
+
+  const canonical = serializeRuntimeManifest({ ...duplicate, actions: [action] });
+  assert.equal(parseRuntimeManifest(canonical.trim()).ok, false);
 });
 
 test("accepts every serializable form codec family", async () => {

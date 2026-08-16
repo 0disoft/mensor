@@ -37,7 +37,8 @@
     "./schemas/feature-contract-v1.schema.json": "./dist/spec/feature-contract-v1.schema.json",
     "./schemas/diagnostic-report-v1.schema.json": "./dist/spec/diagnostic-report-v1.schema.json",
     "./schemas/check-output-v2.schema.json": "./dist/spec/check-output-v2.schema.json",
-    "./schemas/route-index-v1.schema.json": "./dist/spec/route-index-v1.schema.json"
+    "./schemas/route-index-v1.schema.json": "./dist/spec/route-index-v1.schema.json",
+    "./schemas/runtime-manifest-v1.schema.json": "./dist/spec/runtime-manifest-v1.schema.json"
   },
   "dependencies": {
     "ajv": "8.20.0",

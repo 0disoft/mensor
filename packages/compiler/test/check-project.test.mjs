@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { checkProject } from "@0disoft/mensor-compiler";
+import { checkProject, compileProject } from "@0disoft/mensor-compiler";
 import {
   parseDiagnosticReport,
   parseDiagnosticReportV2,
@@ -21,6 +21,40 @@ test("returns the canonical passing report for the valid fixture", async () => {
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.deepEqual(result.report, await expectedReport("valid/tiny-tasks"));
+  }
+});
+
+test("compiles a clean project into one canonical runtime manifest", async () => {
+  const root = path.join(fixtureRoot, "valid/tiny-tasks");
+  const result = await compileProject({ root, producerVersion: "0.3.0-test" });
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal(result.report.status, "passed");
+    assert.deepEqual(result.manifest.pages.map((page) => [page.method, page.path]), [
+      ["GET", "/tasks"],
+    ]);
+    assert.deepEqual(result.manifest.actions.map((action) => [action.method, action.path]), [
+      ["POST", "/tasks"],
+    ]);
+    assert.equal(result.manifest.actions[0]?.handlerId, "tasks.create");
+    assert.match(result.manifest.pages[0]?.html ?? "", /<form id="create-task"/u);
+    assert.equal(JSON.stringify(result.manifest).includes("server/create-task.ts"), false);
+  }
+});
+
+test("refuses to emit a manifest when diagnostics remain", async () => {
+  const root = path.join(fixtureRoot, "invalid/form-field-missing");
+  const result = await compileProject({ root, producerVersion: "0.3.0-test" });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.kind, "diagnostics");
+    if (result.kind === "diagnostics") {
+      assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+        "form.field_missing",
+      ]);
+    }
   }
 });
 

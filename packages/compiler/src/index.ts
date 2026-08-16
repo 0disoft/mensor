@@ -1,4 +1,4 @@
-export { checkProject } from "./check-project.js";
+export { checkProject, compileProject } from "./check-project.js";
 export type {
   CheckProjectFailure,
   CheckProjectBaseOptions,
@@ -9,4 +9,9 @@ export type {
   CheckProjectV2Result,
   CheckProjectV2Success,
   CompilerFailure,
+  CompileProjectDiagnostics,
+  CompileProjectFailure,
+  CompileProjectOptions,
+  CompileProjectResult,
+  CompileProjectSuccess,
 } from "./types.js";

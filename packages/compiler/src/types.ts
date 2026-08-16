@@ -2,6 +2,7 @@ import type {
   CheckFailure,
   DiagnosticReport,
   DiagnosticReportV2,
+  RuntimeManifest,
 } from "@0disoft/mensor-contract";
 
 export interface CheckProjectBaseOptions {
@@ -44,3 +45,28 @@ export interface CheckProjectFailure {
 export type CheckProjectResult = CheckProjectSuccess | CheckProjectFailure;
 
 export type CheckProjectV2Result = CheckProjectV2Success | CheckProjectFailure;
+
+export interface CompileProjectOptions extends CheckProjectBaseOptions {}
+
+export interface CompileProjectSuccess {
+  readonly ok: true;
+  readonly report: DiagnosticReport;
+  readonly manifest: RuntimeManifest;
+}
+
+export interface CompileProjectDiagnostics {
+  readonly ok: false;
+  readonly kind: "diagnostics";
+  readonly report: DiagnosticReport;
+}
+
+export interface CompileProjectFailure {
+  readonly ok: false;
+  readonly kind: "failure";
+  readonly failure: CompilerFailure;
+}
+
+export type CompileProjectResult =
+  | CompileProjectSuccess
+  | CompileProjectDiagnostics
+  | CompileProjectFailure;

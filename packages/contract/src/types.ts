@@ -66,6 +66,31 @@ export interface IndexedRoute {
   };
 }
 
+export interface RuntimeManifest {
+  readonly manifestVersion: 1;
+  readonly producer: {
+    readonly name: string;
+    readonly version: string;
+  };
+  readonly pages: readonly RuntimePage[];
+  readonly actions: readonly RuntimeAction[];
+}
+
+export interface RuntimePage {
+  readonly id: string;
+  readonly method: "GET";
+  readonly path: string;
+  readonly html: string;
+}
+
+export interface RuntimeAction {
+  readonly id: string;
+  readonly method: "POST";
+  readonly path: string;
+  readonly handlerId: string;
+  readonly input: ActionContract["input"];
+}
+
 export interface BoundaryContract {
   readonly id: string;
   readonly mode: "direct" | "transitive";

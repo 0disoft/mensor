@@ -438,8 +438,9 @@ and cannot stand in for throughput evidence.
   another attestation or eligibility layer before the first agent-authored
   build trial.
 
-- Runtime manifest and reference runtime: add only if a real consumer needs a
-  compiled artifact beyond diagnostics.
+- Reference runtime: RuntimeManifest v1 is implemented; add the bounded
+  consumer without moving HTTP, authentication, sessions, or persistence into
+  the compiler.
 - Dynamic template adapters: the built-in provider now preserves byte-identical
   diagnostics through `FormIndex`, but external extractors remain deferred
   until one separately approved agent-authored template trial and trust

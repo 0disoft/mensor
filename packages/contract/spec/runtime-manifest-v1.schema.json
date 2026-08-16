@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "runtime-manifest-v1.schema.json",
+  "title": "Mensor Runtime Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "producer", "pages", "actions"],
+  "properties": {
+    "manifestVersion": { "const": 1 },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/page" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/action" }
+    }
+  },
+  "$defs": {
+    "routePath": {
+      "type": "string",
+      "pattern": "^/[^?#]*$"
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "method", "path", "html"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "method": { "const": "GET" },
+        "path": { "$ref": "#/$defs/routePath" },
+        "html": { "type": "string" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "method", "path", "handlerId", "input"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "method": { "const": "POST" },
+        "path": { "$ref": "#/$defs/routePath" },
+        "handlerId": { "type": "string", "minLength": 1 },
+        "input": { "$ref": "feature-contract-v1.schema.json#/$defs/input" }
+      }
+    }
+  }
+}

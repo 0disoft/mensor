@@ -5,6 +5,8 @@ import {
   parseFeatureContract,
   parseProjectContract,
   parseRouteIndex,
+  parseRuntimeManifest,
+  serializeRuntimeManifest,
   type ContractIssue,
   type Diagnostic,
   type DiagnosticReport,
@@ -13,6 +15,9 @@ import {
   type FileRoleContract,
   type InspectionReport,
   type ProjectContract,
+  type RuntimeAction,
+  type RuntimeManifest,
+  type RuntimePage,
 } from "@0disoft/mensor-contract";
 
 import {
@@ -47,6 +52,8 @@ import type {
   CheckProjectResult,
   CheckProjectV2Options,
   CheckProjectV2Result,
+  CompileProjectOptions,
+  CompileProjectResult,
   CompilerFailure,
 } from "./types.js";
 
@@ -57,9 +64,12 @@ const defaultMaxTotalBytes = 67_108_864;
 const defaultMaxDepth = 64;
 const defaultProducerVersion = "0.0.0";
 
-interface CheckProjectAnySuccess {
+interface ProjectAnalysisSuccess {
   readonly ok: true;
   readonly report: DiagnosticReport | DiagnosticReportV2;
+  readonly features: readonly ParsedFeature[];
+  readonly producerVersion: string;
+  readonly readSource: (file: string) => Promise<string>;
 }
 
 interface ParsedFeature {
@@ -68,7 +78,10 @@ interface ParsedFeature {
   readonly text: string;
 }
 
-type CheckProjectAnyResult = CheckProjectAnySuccess | CheckProjectFailure;
+type ProjectAnalysisResult = ProjectAnalysisSuccess | CheckProjectFailure;
+type CheckProjectAnyResult =
+  | { readonly ok: true; readonly report: DiagnosticReport | DiagnosticReportV2 }
+  | CheckProjectFailure;
 
 export async function checkProject(
   options: CheckProjectV2Options,
@@ -79,7 +92,7 @@ export async function checkProject(
 export async function checkProject(
   options: CheckProjectOptions | CheckProjectV2Options,
 ): Promise<CheckProjectResult | CheckProjectV2Result> {
-  const result = await checkProjectInternal(options);
+  const result = publicCheckResult(await checkProjectInternal(options));
   return options.reportVersion === 2
     ? result as CheckProjectV2Result
     : result as CheckProjectResult;
@@ -106,17 +119,60 @@ export async function checkProjectWithMetrics(
 ): Promise<MeasuredCheckProjectResult | MeasuredCheckProjectV2Result> {
   const timing = new CompilerTiming();
   const startedAt = performance.now();
-  const result = await checkProjectInternal(options, timing);
+  const result = publicCheckResult(await checkProjectInternal(options, timing));
   const metrics = timing.snapshot(performance.now() - startedAt);
   return options.reportVersion === 2
     ? { result: result as CheckProjectV2Result, metrics }
     : { result: result as CheckProjectResult, metrics };
 }
 
+export async function compileProject(
+  options: CompileProjectOptions,
+): Promise<CompileProjectResult> {
+  const analysis = await checkProjectInternal(options);
+  if (!analysis.ok) {
+    return { ok: false, kind: "failure", failure: analysis.failure };
+  }
+  const report = analysis.report as DiagnosticReport;
+  if (report.diagnostics.length > 0) {
+    return { ok: false, kind: "diagnostics", report };
+  }
+  try {
+    const manifest = await createRuntimeManifest(
+      analysis.features,
+      analysis.readSource,
+      analysis.producerVersion,
+    );
+    return { ok: true, report, manifest };
+  } catch (error) {
+    if (error instanceof InputFailure) {
+      return {
+        ok: false,
+        kind: "failure",
+        failure: {
+          kind: error.kind,
+          code: error.code,
+          message: error.message,
+          ...(error.file === undefined ? {} : { file: error.file }),
+        },
+      };
+    }
+    return {
+      ok: false,
+      kind: "failure",
+      failure: {
+        kind: "internal",
+        code: "compiler.manifest_failure",
+        message: "The compiler could not emit a runtime manifest.",
+      },
+    };
+  }
+}
+
 async function checkProjectInternal(
   options: CheckProjectOptions | CheckProjectV2Options,
   timing?: CompilerTiming,
-): Promise<CheckProjectAnyResult> {
+): Promise<ProjectAnalysisResult> {
   try {
     const reportVersion = options.reportVersion ?? 1;
     if (reportVersion !== 1 && reportVersion !== 2) {
@@ -194,13 +250,23 @@ async function checkProjectInternal(
     const discovered = new Set(discoveredFiles);
     const diagnostics: Diagnostic[] = [];
     const featureOwners: FeatureOwnerFact[] = [];
+    const sourceTextCache = new Map<string, Promise<string>>();
+    const readSource = (file: string): Promise<string> => {
+      const existing = sourceTextCache.get(file);
+      if (existing !== undefined) {
+        return existing;
+      }
+      const pending = snapshot.readFile(file, maxFileBytes);
+      sourceTextCache.set(file, pending);
+      return pending;
+    };
     const sourceFacts = createSourceFactIndex(
-      (file) => snapshot.readFile(file, maxFileBytes),
+      readSource,
       timing,
     );
     const formIndexProvider = createStaticHtmlFormIndexProvider({
       producerVersion,
-      readSource: (file) => snapshot.readFile(file, maxFileBytes),
+      readSource,
       ...(timing === undefined ? {} : { timing }),
     });
     let routeIndexPath: string | undefined;
@@ -240,10 +306,7 @@ async function checkProjectInternal(
           safeFeatureContractPath,
         );
       }
-      const featureText = await snapshot.readFile(
-        safeFeatureContractPath,
-        maxFileBytes,
-      );
+      const featureText = await readSource(safeFeatureContractPath);
       const featureResult = parseFeatureContract(featureText);
       if (!featureResult.ok) {
         return contractFailure(safeFeatureContractPath, featureResult.issues);
@@ -364,6 +427,9 @@ async function checkProjectInternal(
         reportVersion,
         project,
       ),
+      features: parsedFeatures,
+      producerVersion,
+      readSource,
     };
   } catch (error) {
     if (error instanceof InputFailure) {
@@ -387,6 +453,93 @@ async function checkProjectInternal(
       message: "The compiler failed unexpectedly.",
     });
   }
+}
+
+function publicCheckResult(result: ProjectAnalysisResult): CheckProjectAnyResult {
+  return result.ok
+    ? { ok: true, report: result.report }
+    : result;
+}
+
+async function createRuntimeManifest(
+  features: readonly ParsedFeature[],
+  readSource: (file: string) => Promise<string>,
+  producerVersion: string,
+): Promise<RuntimeManifest> {
+  const pagesByRoute = new Map<string, RuntimePage>();
+  const actionIds = new Set<string>();
+  const actionRoutes = new Set<string>();
+  const actions: RuntimeAction[] = [];
+
+  for (const parsed of features) {
+    const featureRoot = path.posix.dirname(parsed.path);
+    for (const action of [...parsed.feature.actions].sort((left, right) =>
+      compareText(left.id, right.id)
+    )) {
+      if (actionIds.has(action.id)) {
+        throw new InputFailure(
+          "configuration",
+          "runtime_manifest.duplicate_handler_id",
+          `Runtime handler id ${JSON.stringify(action.id)} is declared more than once.`,
+          parsed.path,
+        );
+      }
+      actionIds.add(action.id);
+      const routeKey = `${action.route.method}\u0000${action.route.path}`;
+      if (actionRoutes.has(routeKey)) {
+        throw new InputFailure(
+          "configuration",
+          "runtime_manifest.duplicate_action_route",
+          `Runtime action route ${action.route.method} ${JSON.stringify(action.route.path)} is declared more than once.`,
+          parsed.path,
+        );
+      }
+      actionRoutes.add(routeKey);
+      actions.push({
+        id: action.id,
+        method: "POST",
+        path: action.route.path,
+        handlerId: action.id,
+        input: action.input,
+      });
+
+      if (action.form.documentPath !== undefined) {
+        const template = joinProjectPath(featureRoot, action.form.template);
+        const html = await readSource(template);
+        const page: RuntimePage = {
+          id: `${parsed.feature.feature.id}.form.${action.form.id}`,
+          method: "GET",
+          path: action.form.documentPath,
+          html,
+        };
+        const existing = pagesByRoute.get(page.path);
+        if (existing !== undefined && existing.html !== page.html) {
+          throw new InputFailure(
+            "configuration",
+            "runtime_manifest.page_conflict",
+            `GET page ${JSON.stringify(page.path)} is backed by different templates.`,
+            parsed.path,
+          );
+        }
+        if (existing === undefined) {
+          pagesByRoute.set(page.path, page);
+        }
+      }
+    }
+  }
+
+  const candidate: RuntimeManifest = {
+    manifestVersion: 1,
+    producer: { name: "mensor", version: producerVersion },
+    pages: [...pagesByRoute.values()],
+    actions,
+  };
+  const serialized = serializeRuntimeManifest(candidate);
+  const parsed = parseRuntimeManifest(serialized);
+  if (!parsed.ok) {
+    throw new Error("Serialized RuntimeManifest did not parse.");
+  }
+  return parsed.value;
 }
 
 function validateProjectFeatures(features: readonly ParsedFeature[]): void {
@@ -663,7 +816,7 @@ function compareDiagnostics(left: Diagnostic, right: Diagnostic): number {
 function contractFailure(
   file: string,
   issues: readonly ContractIssue[],
-): CheckProjectResult {
+): CheckProjectFailure {
   return failure({
     kind: "configuration",
     code: "contract.invalid",

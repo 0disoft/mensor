@@ -26,6 +26,7 @@ value is explicit in the authoring contract.
 - `feature-contract-v1.schema.json`: one feature and its form-backed actions
 - `diagnostic-report-v1.schema.json`: canonical check output
 - `route-index-v1.schema.json`: canonical source-bound application route facts
+- `runtime-manifest-v1.schema.json`: source-free GET page and POST action runtime artifact
 - `check-output-v2.schema.json`: opt-in reports and pre-report error envelopes
   with compiler-derived inspection states
 

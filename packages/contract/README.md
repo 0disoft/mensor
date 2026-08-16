@@ -17,7 +17,9 @@ import {
   parseCheckOutputV2,
   parseProjectContract,
   parseRouteIndex,
+  parseRuntimeManifest,
   serializeRouteIndex,
+  serializeRuntimeManifest,
 } from "@0disoft/mensor-contract";
 ```
 
@@ -33,6 +35,9 @@ const projectSchema = import.meta.resolve(
 const checkOutputSchema = import.meta.resolve(
   "@0disoft/mensor-contract/schemas/check-output-v2.schema.json",
 );
+const runtimeManifestSchema = import.meta.resolve(
+  "@0disoft/mensor-contract/schemas/runtime-manifest-v1.schema.json",
+);
 ```
 
 ## Documentation
@@ -40,5 +45,6 @@ const checkOutputSchema = import.meta.resolve(
 - [Contract authoring](https://github.com/0disoft/mensor/blob/main/packages/contract/spec/README.md)
 - [Public API and compatibility](https://github.com/0disoft/mensor/blob/main/docs/library/public-api.md)
 - [RouteIndex v1](https://github.com/0disoft/mensor/blob/main/docs/architecture/route-index-v1.md)
+- [RuntimeManifest v1](https://github.com/0disoft/mensor/blob/main/docs/architecture/runtime-manifest-v1.md)
 
 Mensor is licensed under Apache-2.0.

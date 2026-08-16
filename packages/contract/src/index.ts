@@ -1,6 +1,10 @@
 export { isJsonValue, parseJsonc } from "./jsonc.js";
 export { parseRouteIndex, serializeRouteIndex } from "./route-index.js";
 export {
+  parseRuntimeManifest,
+  serializeRuntimeManifest,
+} from "./runtime-manifest.js";
+export {
   parseCheckOutputV2,
   parseDiagnosticReport,
   parseDiagnosticReportV2,
@@ -74,6 +78,9 @@ export type {
   RouteIndex,
   RouteMissingDiagnostic,
   RouteMissingFacts,
+  RuntimeAction,
+  RuntimeManifest,
+  RuntimePage,
   ScalarDecoder,
   ScalarSchema,
   SourcePosition,
