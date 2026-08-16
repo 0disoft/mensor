@@ -346,6 +346,63 @@ test("accepts a radio group as one scalar text field", async () => {
   }
 });
 
+test("accepts a checkbox with an explicit boolean decoder", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    await replaceFixtureFieldContract(root, {
+      schema: { kind: "boolean" },
+      decoder: { kind: "checkbox", trueValues: ["on"], missing: false },
+      control: '<input name="title" type="checkbox" value="on" />',
+    });
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.deepEqual(result.report.diagnostics, []);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("accepts repeated values with an explicit repeat decoder", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    await replaceFixtureFieldContract(root, {
+      schema: { kind: "array", items: { kind: "enum", values: ["a", "b"] } },
+      decoder: { kind: "repeat", items: { kind: "enum", values: ["a", "b"] } },
+      control: '<select name="title" multiple><option value="a">A</option><option value="b">B</option></select>',
+    });
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.deepEqual(result.report.diagnostics, []);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a scalar control for a checkbox decoder", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    await replaceFixtureFieldContract(root, {
+      schema: { kind: "boolean" },
+      decoder: { kind: "checkbox", trueValues: ["on"], missing: false },
+      control: '<input name="title" type="text" />',
+    });
+    const result = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.deepEqual(result.report.diagnostics.map((item) => item.code), [
+        "form.control_codec_mismatch",
+      ]);
+      assert.equal(result.report.diagnostics[0]?.facts.decoderKind, "checkbox");
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("ignores duplicate form ids and fields inside inert template content", async () => {
   const root = await copyFixture("valid/tiny-tasks");
   try {
@@ -906,4 +963,20 @@ function featureContract(id, route) {
 
 function formHtml(id, route) {
   return `<!doctype html>\n<form id="${id}" method="post" action="${route}">\n  <input name="title" type="text" />\n</form>\n`;
+}
+
+async function replaceFixtureFieldContract(root, options) {
+  const contractFile = path.join(root, "src/features/tasks/feature.mensor.jsonc");
+  const contract = JSON.parse(await readFile(contractFile, "utf8"));
+  contract.actions[0].input.schema.properties.title = options.schema;
+  contract.actions[0].input.formCodec.bindings[0].decode = options.decoder;
+  await writeFile(contractFile, `${JSON.stringify(contract, null, 2)}\n`, "utf8");
+
+  const templateFile = path.join(root, "src/features/tasks/views/index.html");
+  const html = await readFile(templateFile, "utf8");
+  await writeFile(
+    templateFile,
+    html.replace('<input name="title" type="text" required="required" />', options.control),
+    "utf8",
+  );
 }

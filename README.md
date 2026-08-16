@@ -14,20 +14,21 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.2.1` is the current public preview. It adds package-specific npm
-guides while preserving the Check Output v2 and revision-1 contracts.
+Version `0.3.0` is the current public preview. It adds typed form codecs for
+base-10 integers, finite decimals, checkboxes, enums, and repeated values while
+preserving existing text-codec diagnostics.
 
 ## Registry Installation
 
 The supported CLI installation path is:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.2.1
+pnpm add --save-dev @0disoft/mensor-cli@0.3.0
 pnpm exec mensor check . --json
 ```
 
-See the [release runbook](docs/releasing/runbook.md), the [`0.2.1` migration
-note](docs/releasing/0.2.1.md), and the prior
+See the [release runbook](docs/releasing/runbook.md), the [`0.3.0` migration
+note](docs/releasing/0.3.0.md), and the prior
 [`0.2.0` release audit](docs/product/0.2.0-release-audit.md) for the publication
 process and compatibility boundary.
 

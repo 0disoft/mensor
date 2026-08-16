@@ -2,6 +2,22 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.3.0] - 2026-08-16
+
+### Added
+
+- Serializable integer, decimal, checkbox, enum, and repeated-value schema and
+  form decoder contracts.
+- Compiler control-shape validation for checkbox and repeated-value decoders.
+
+### Compatibility
+
+- Existing text contracts and canonical text-codec diagnostics remain
+  byte-compatible.
+- Feature contract v1 accepts the new additive schema and decoder variants.
+- Upgrade the contract, compiler, and CLI packages together as a fixed version
+  set.
+
 ## [0.2.1] - 2026-08-01
 
 ### Added

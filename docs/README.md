@@ -24,6 +24,7 @@
 - First public preview migration note: `releasing/0.1.0.md`
 - Check Output v2 migration note: `releasing/0.2.0.md`
 - Package guide patch migration note: `releasing/0.2.1.md`
+- Form codec expansion migration note: `releasing/0.3.0.md`
 
 ## Research Notes
 

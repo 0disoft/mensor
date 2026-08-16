@@ -116,15 +116,41 @@ function featureSemanticIssues(feature: FeatureContract): readonly ContractIssue
     });
     for (const propertyName of Object.keys(schema.properties).sort(compareText)) {
       const property = schema.properties[propertyName];
+      if (property === undefined) {
+        continue;
+      }
+      const propertyPath = `/actions/${actionIndex}/input/schema/properties/${escapeJsonPointer(propertyName)}`;
       if (
-        property !== undefined &&
+        property.kind === "string" &&
         property.minLength !== undefined &&
         property.maxLength !== undefined &&
         property.minLength > property.maxLength
       ) {
         issues.push(semanticIssue(
-          `/actions/${actionIndex}/input/schema/properties/${escapeJsonPointer(propertyName)}`,
+          propertyPath,
           "String schema minLength must not exceed maxLength.",
+        ));
+      }
+      if (
+        (property.kind === "integer" || property.kind === "number") &&
+        property.minimum !== undefined &&
+        property.maximum !== undefined &&
+        property.minimum > property.maximum
+      ) {
+        issues.push(semanticIssue(
+          propertyPath,
+          "Numeric schema minimum must not exceed maximum.",
+        ));
+      }
+      if (
+        property.kind === "array" &&
+        property.minItems !== undefined &&
+        property.maxItems !== undefined &&
+        property.minItems > property.maxItems
+      ) {
+        issues.push(semanticIssue(
+          propertyPath,
+          "Array schema minItems must not exceed maxItems.",
         ));
       }
     }
@@ -146,6 +172,13 @@ function featureSemanticIssues(feature: FeatureContract): readonly ContractIssue
         ));
       } else {
         boundSchemaProperties.add(propertyName);
+        const property = action.input.schema.properties[propertyName];
+        if (property !== undefined && !decoderMatchesSchema(binding.decode, property)) {
+          issues.push(semanticIssue(
+            `${base}/decode`,
+            `Form decoder ${JSON.stringify(binding.decode.kind)} is incompatible with schema kind ${JSON.stringify(property.kind)}.`,
+          ));
+        }
       }
       if (bindingNames.has(binding.name)) {
         issues.push(semanticIssue(`${base}/name`, "Form binding names must be unique."));
@@ -180,6 +213,32 @@ function featureSemanticIssues(feature: FeatureContract): readonly ContractIssue
     });
   });
   return issues;
+}
+
+function decoderMatchesSchema(
+  decoder: FeatureContract["actions"][number]["input"]["formCodec"]["bindings"][number]["decode"],
+  schema: FeatureContract["actions"][number]["input"]["schema"]["properties"][string],
+): boolean {
+  if (decoder.kind === "repeat") {
+    return schema.kind === "array" && decoderMatchesSchema(decoder.items, schema.items);
+  }
+  if (decoder.kind === "text") {
+    return schema.kind === "string";
+  }
+  if (decoder.kind === "integer-base10") {
+    return schema.kind === "integer";
+  }
+  if (decoder.kind === "decimal") {
+    return schema.kind === "number";
+  }
+  if (decoder.kind === "checkbox") {
+    return schema.kind === "boolean";
+  }
+  return schema.kind === "enum" && arraysEqual(decoder.values, schema.values);
+}
+
+function arraysEqual(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 function escapeJsonPointer(value: string): string {

@@ -79,9 +79,11 @@ resolved action facts with the linked action route. Omitted and empty actions
 resolve through the optional contract `documentPath`, which becomes required
 for those forms, while non-empty literal actions remain backward compatible.
 Action mismatch facts expose the source of the resolved path. The compiler
-rejects checkbox or repeated select controls bound to the v1 scalar text decoder. Radio controls sharing one
-form and wire name are one scalar field, while inert `template` content is not
-part of the static form index. Additional codec families remain later behavior.
+rejects checkbox or repeated select controls bound to the scalar text decoder.
+Radio controls sharing one form and wire name are one scalar field, while inert
+`template` content is not part of the static form index. Feature contract v1
+also exposes integer, decimal, checkbox, enum, and repeated scalar decoders with
+schema-to-decoder and control-shape validation.
 It extracts explicit TypeScript/JavaScript exports, ignores lexically shadowed
 CommonJS-like calls, resolves local import edges, and applies optional
 project-owned direct or transitive role boundaries. Handler and boundary rules

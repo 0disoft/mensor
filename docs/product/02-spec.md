@@ -116,15 +116,17 @@ opinions baked into the compiler.
 ## Form Codec
 
 HTML form input is a string multimap, not typed JSON. The contract must state
-how a raw field becomes an action value. The first schema revision supports an
-object containing string fields decoded by the text codec. Base-10 integer,
-finite decimal, checkbox, enum, and repeated scalar codecs are planned
-extensions and become supported only when their schemas and fixtures land.
+how a raw field becomes an action value. The first schema revision supports a
+flat object containing string, integer, number, boolean, enum, and scalar-array
+properties. Its form codec provides text, strict base-10 integer, finite
+decimal, checkbox, enum, and repeated scalar decoders.
 
 The codec distinguishes a missing field from an empty string, rejects duplicate
-scalar values, and rejects unknown fields unless they are explicitly listed as
-host-consumed fields such as a CSRF token. Bracketed names are exact wire names;
-nested object paths require an explicit binding.
+scalar values unless a repeat decoder owns them, and rejects unknown fields
+unless they are explicitly listed as host-consumed fields such as a CSRF token.
+Checkbox decoders declare accepted true values and the value produced when the
+wire field is missing. Bracketed names are exact wire names; nested object paths
+require an explicit binding.
 
 Files, arbitrary transforms, recursive schemas, unions, regular-expression
 refinements, and multipart bodies are outside the MVP.

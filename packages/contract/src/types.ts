@@ -91,9 +91,46 @@ export interface StringSchema {
   readonly maxLength?: number;
 }
 
+export interface IntegerSchema {
+  readonly kind: "integer";
+  readonly minimum?: number;
+  readonly maximum?: number;
+}
+
+export interface NumberSchema {
+  readonly kind: "number";
+  readonly minimum?: number;
+  readonly maximum?: number;
+}
+
+export interface BooleanSchema {
+  readonly kind: "boolean";
+}
+
+export interface EnumSchema {
+  readonly kind: "enum";
+  readonly values: readonly string[];
+}
+
+export type ScalarSchema =
+  | StringSchema
+  | IntegerSchema
+  | NumberSchema
+  | BooleanSchema
+  | EnumSchema;
+
+export interface ArraySchema {
+  readonly kind: "array";
+  readonly items: ScalarSchema;
+  readonly minItems?: number;
+  readonly maxItems?: number;
+}
+
+export type PropertySchema = ScalarSchema | ArraySchema;
+
 export interface ObjectSchema {
   readonly kind: "object";
-  readonly properties: Readonly<Record<string, StringSchema>>;
+  readonly properties: Readonly<Record<string, PropertySchema>>;
   readonly required: readonly string[];
 }
 
@@ -103,10 +140,49 @@ export interface TextDecoder {
   readonly empty: "allow" | "reject";
 }
 
+export interface IntegerDecoder {
+  readonly kind: "integer-base10";
+}
+
+export interface DecimalDecoder {
+  readonly kind: "decimal";
+}
+
+export interface CheckboxDecoder {
+  readonly kind: "checkbox";
+  readonly trueValues: readonly string[];
+  readonly missing: boolean;
+}
+
+export interface EnumDecoder {
+  readonly kind: "enum";
+  readonly values: readonly string[];
+}
+
+export type ScalarDecoder =
+  | TextDecoder
+  | IntegerDecoder
+  | DecimalDecoder
+  | CheckboxDecoder
+  | EnumDecoder;
+
+export type RepeatItemDecoder =
+  | TextDecoder
+  | IntegerDecoder
+  | DecimalDecoder
+  | EnumDecoder;
+
+export interface RepeatDecoder {
+  readonly kind: "repeat";
+  readonly items: RepeatItemDecoder;
+}
+
+export type FormDecoder = ScalarDecoder | RepeatDecoder;
+
 export interface FormBinding {
   readonly name: string;
   readonly path: readonly string[];
-  readonly decode: TextDecoder;
+  readonly decode: FormDecoder;
 }
 
 export interface IgnoredFormField {
@@ -259,10 +335,10 @@ export interface FormActionMismatchDiagnostic {
 
 export interface FormControlCodecMismatchFacts {
   readonly actionId: string;
-  readonly controlKind: "input" | "select";
+  readonly controlKind: "input" | "select" | "textarea";
   readonly controlCount?: number;
   readonly controlType: string;
-  readonly decoderKind: "text";
+  readonly decoderKind: FormDecoder["kind"];
   readonly fieldName: string;
   readonly formId: string;
   readonly multiple: boolean;

@@ -113,6 +113,74 @@
         }
       }
     },
+    "integerSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "integer" },
+        "minimum": { "type": "integer" },
+        "maximum": { "type": "integer" }
+      }
+    },
+    "numberSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "number" },
+        "minimum": { "type": "number" },
+        "maximum": { "type": "number" }
+      }
+    },
+    "booleanSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "boolean" }
+      }
+    },
+    "enumSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "values"],
+      "properties": {
+        "kind": { "const": "enum" },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "scalarSchema": {
+      "oneOf": [
+        { "$ref": "#/$defs/stringSchema" },
+        { "$ref": "#/$defs/integerSchema" },
+        { "$ref": "#/$defs/numberSchema" },
+        { "$ref": "#/$defs/booleanSchema" },
+        { "$ref": "#/$defs/enumSchema" }
+      ]
+    },
+    "arraySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "items"],
+      "properties": {
+        "kind": { "const": "array" },
+        "items": { "$ref": "#/$defs/scalarSchema" },
+        "minItems": { "type": "integer", "minimum": 0 },
+        "maxItems": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "propertySchema": {
+      "oneOf": [
+        { "$ref": "#/$defs/scalarSchema" },
+        { "$ref": "#/$defs/arraySchema" }
+      ]
+    },
     "objectSchema": {
       "type": "object",
       "additionalProperties": false,
@@ -125,7 +193,7 @@
           "type": "object",
           "minProperties": 1,
           "additionalProperties": {
-            "$ref": "#/$defs/stringSchema"
+            "$ref": "#/$defs/propertySchema"
           }
         },
         "required": {
@@ -154,6 +222,78 @@
         }
       }
     },
+    "integerDecoder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "integer-base10" }
+      }
+    },
+    "decimalDecoder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "decimal" }
+      }
+    },
+    "checkboxDecoder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "trueValues", "missing"],
+      "properties": {
+        "kind": { "const": "checkbox" },
+        "trueValues": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "missing": { "type": "boolean" }
+      }
+    },
+    "enumDecoder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "values"],
+      "properties": {
+        "kind": { "const": "enum" },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "repeatItemDecoder": {
+      "oneOf": [
+        { "$ref": "#/$defs/textDecoder" },
+        { "$ref": "#/$defs/integerDecoder" },
+        { "$ref": "#/$defs/decimalDecoder" },
+        { "$ref": "#/$defs/enumDecoder" }
+      ]
+    },
+    "repeatDecoder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "items"],
+      "properties": {
+        "kind": { "const": "repeat" },
+        "items": { "$ref": "#/$defs/repeatItemDecoder" }
+      }
+    },
+    "formDecoder": {
+      "oneOf": [
+        { "$ref": "#/$defs/textDecoder" },
+        { "$ref": "#/$defs/integerDecoder" },
+        { "$ref": "#/$defs/decimalDecoder" },
+        { "$ref": "#/$defs/checkboxDecoder" },
+        { "$ref": "#/$defs/enumDecoder" },
+        { "$ref": "#/$defs/repeatDecoder" }
+      ]
+    },
     "binding": {
       "type": "object",
       "additionalProperties": false,
@@ -172,7 +312,7 @@
           }
         },
         "decode": {
-          "$ref": "#/$defs/textDecoder"
+          "$ref": "#/$defs/formDecoder"
         }
       }
     },

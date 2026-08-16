@@ -69,8 +69,9 @@ the semantic verdict. The current `rsvp-v2` revision keeps the three-control
 radio group but adds the evaluator-owned `createRsvpApp({ templateHtml })`
 interface and protected oracle. It probes whether an agent can apply the
 documented control-shape contract instead of copying the guestbook structure.
-Checkbox decoding remains outside the implemented codec boundary and is
-intentionally absent from this brief.
+The checkbox decoder contract is implemented, but remains intentionally absent
+from this historical brief so its evaluator-owned radio-group oracle stays
+stable.
 
 ## Required Output
 

@@ -446,14 +446,14 @@
           "minLength": 1
         },
         "controlKind": {
-          "enum": ["input", "select"]
+          "enum": ["input", "select", "textarea"]
         },
         "controlCount": { "type": "integer", "minimum": 2 },
         "controlType": {
           "type": "string"
         },
         "decoderKind": {
-          "const": "text"
+          "enum": ["text", "integer-base10", "decimal", "checkbox", "enum", "repeat"]
         },
         "fieldName": {
           "type": "string",

@@ -3,6 +3,7 @@ import * as path from "node:path";
 import type {
   Diagnostic,
   FeatureContract,
+  FormDecoder,
   FormActionMismatchDiagnostic,
   FormControlCodecMismatchDiagnostic,
   FormControlUnsupportedDiagnostic,
@@ -181,19 +182,10 @@ export function checkFeatureForms(options: {
       if (field === undefined) {
         return;
       }
-      const repeatedControlsAreOneRadioGroup =
-        field.controls.length > 1 &&
-        field.controls.every(
-          (control) => control.kind === "input" && control.inputType === "radio",
-        );
-      const incompatibleControl =
-        field.controls.length > 1 && !repeatedControlsAreOneRadioGroup
-          ? field.controls[1]
-          : field.controls.find(
-              (control) =>
-                (control.kind === "input" && control.inputType === "checkbox") ||
-                (control.kind === "select" && control.multiple),
-            );
+      const incompatibleControl = incompatibleControlForDecoder(
+        field.controls,
+        binding.decode,
+      );
       if (incompatibleControl === undefined) {
         return;
       }
@@ -204,6 +196,7 @@ export function checkFeatureForms(options: {
           bindingIndex,
           controlCount: field.controls.length,
           fieldName: binding.name,
+          decoder: binding.decode,
           form,
           control: incompatibleControl,
           templateFile: projectTemplate,
@@ -215,6 +208,38 @@ export function checkFeatureForms(options: {
   }
 
   return diagnostics;
+}
+
+function incompatibleControlForDecoder(
+  controls: FormFact["fields"][number]["controls"],
+  decoder: FormDecoder,
+): FormFact["fields"][number]["controls"][number] | undefined {
+  if (decoder.kind === "repeat") {
+    return undefined;
+  }
+  if (decoder.kind === "checkbox") {
+    if (
+      controls.length === 1 &&
+      controls[0]?.kind === "input" &&
+      controls[0].inputType === "checkbox"
+    ) {
+      return undefined;
+    }
+    return controls[1] ?? controls[0];
+  }
+  const repeatedControlsAreOneRadioGroup =
+    controls.length > 1 &&
+    controls.every(
+      (control) => control.kind === "input" && control.inputType === "radio",
+    );
+  if (controls.length > 1 && !repeatedControlsAreOneRadioGroup) {
+    return controls[1];
+  }
+  return controls.find(
+    (control) =>
+      (control.kind === "input" && control.inputType === "checkbox") ||
+      (control.kind === "select" && control.multiple),
+  );
 }
 
 function unsupportedControlDiagnostic(options: {
@@ -281,6 +306,7 @@ function controlCodecMismatchDiagnostic(options: {
   readonly bindingIndex: number;
   readonly controlCount: number;
   readonly fieldName: string;
+  readonly decoder: FormDecoder;
   readonly form: FormFact;
   readonly control: FormFact["fields"][number]["controls"][number];
   readonly templateFile: string;
@@ -292,19 +318,20 @@ function controlCodecMismatchDiagnostic(options: {
     : options.control.kind === "input"
       ? `input[type=${options.control.inputType}]`
       : "select[multiple]";
+  const isLegacyTextDiagnostic = options.decoder.kind === "text";
   return {
     code: "form.control_codec_mismatch",
     severity: "error",
     category: "form-contract",
-    message: `Form field ${JSON.stringify(options.fieldName)} uses ${controlShape}, which is incompatible with the text decoder.`,
+    message: `Form field ${JSON.stringify(options.fieldName)} uses ${controlShape}, which is incompatible with the ${isLegacyTextDiagnostic ? "text" : options.decoder.kind} decoder.`,
     file: options.templateFile,
     range: options.control.range,
     facts: {
       actionId: options.actionId,
-      controlKind: options.control.kind === "select" ? "select" : "input",
+      controlKind: options.control.kind,
       ...(options.controlCount > 1 ? { controlCount: options.controlCount } : {}),
       controlType: options.control.inputType,
-      decoderKind: "text",
+      decoderKind: options.decoder.kind,
       fieldName: options.fieldName,
       formId: options.form.id,
       multiple: options.control.multiple,
@@ -313,7 +340,9 @@ function controlCodecMismatchDiagnostic(options: {
     related: [
       {
         role: "form-decoder-kind",
-        message: "The form codec declares a scalar text decoder for this field.",
+        message: isLegacyTextDiagnostic
+          ? "The form codec declares a scalar text decoder for this field."
+          : `The form codec declares a ${options.decoder.kind} decoder for this field.`,
         file: options.featureContractPath,
         range: actionBindingDecoderKindRange(
           options.featureText,
@@ -324,14 +353,18 @@ function controlCodecMismatchDiagnostic(options: {
     ],
     repair: {
       strategy: "align-control-and-decoder",
-      hint: `Use a scalar text control for ${options.fieldName}, or introduce a codec that explicitly models ${controlShape}.`,
+      hint: isLegacyTextDiagnostic
+        ? `Use a scalar text control for ${options.fieldName}, or introduce a codec that explicitly models ${controlShape}.`
+        : `Use a control shape compatible with ${options.decoder.kind} for ${options.fieldName}, or choose a decoder that explicitly models ${controlShape}.`,
       mustPreserve: [
         `action ${options.actionId}`,
         `field binding ${options.fieldName}`,
         "form-to-action linkage",
       ],
       mustNot: [
-        "coerce repeated or missing form values through the text decoder",
+        isLegacyTextDiagnostic
+          ? "coerce repeated or missing form values through the text decoder"
+          : `coerce incompatible form values through the ${options.decoder.kind} decoder`,
         "remove the field binding to hide the mismatch",
       ],
     },

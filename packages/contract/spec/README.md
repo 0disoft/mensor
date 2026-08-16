@@ -1,6 +1,6 @@
 # Contract Specifications
 
-- Status: Proposed
+- Status: Active
 
 This directory owns Mensor's machine-readable contract surfaces. Schemas use
 JSON Schema Draft 2020-12. Authoring files may use JSONC syntax, but comments are
@@ -177,10 +177,20 @@ case as invalid configuration when `documentPath` is absent. Method and path dri
 do not have to infer which route fact is wrong. Action mismatch facts identify
 whether the observed path came from a literal or the current document.
 
-The v1 codec currently owns only scalar text decoding. Checkbox controls and
-`select[multiple]` have missing-value or repeated-value semantics that cannot be
-silently coerced through that decoder, so the compiler emits
-`form.control_codec_mismatch` until a matching serializable codec exists.
+Feature contract v1 supports these schema and decoder pairs:
+
+| Schema | Decoder | Wire shape |
+| --- | --- | --- |
+| `string` | `text` | one scalar control or one radio group |
+| `integer` | `integer-base10` | one scalar control or one radio group |
+| `number` | `decimal` | one scalar control or one radio group |
+| `boolean` | `checkbox` | one checkbox |
+| `enum` | `enum` | one scalar control or one radio group |
+| `array` | `repeat` | one or more values, including `select[multiple]` |
+
+Checkbox decoders explicitly declare `trueValues` and the boolean produced when
+the field is missing. Repeat decoders contain one scalar item decoder. Enum
+decoder values must match the enum schema in the same canonical order.
 
 Named file inputs, named submitters, and submitter-specific method or action
 overrides are represented as unsupported control facts and emit
@@ -195,10 +205,12 @@ as are type-only imports. Violations emit `module.boundary_violation`, while
 computed runtime imports emit
 `module.dynamic_import_unsupported` when reached by an active boundary.
 
-Scalar text bindings own exactly one schema property and one successful wire
-value producer. Duplicate controls, checkbox or repeated-value shapes, and
-binding or ignored-field ownership conflicts fail closed. Controls disabled by
-a fieldset are excluded, except for descendants of its first legend.
+Scalar bindings own exactly one schema property and one successful wire value
+producer, except that repeated radio controls form one mutually exclusive
+scalar field. Duplicate controls and repeated-value shapes require a `repeat`
+decoder; checkbox shapes require a `checkbox` decoder. Binding or ignored-field
+ownership conflicts fail closed. Controls disabled by a fieldset are excluded,
+except for descendants of its first legend.
 
 Feature parsing also rejects duplicate action ids, required names that are not
 declared properties, inverted string length bounds, and schema properties that

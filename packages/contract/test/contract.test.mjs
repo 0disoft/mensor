@@ -217,15 +217,51 @@ test("rejects duplicate routes and invalid RouteIndex ranges", () => {
   }
 });
 
-test("rejects unsupported form codecs", async () => {
+test("accepts every serializable form codec family", async () => {
+  const text = await fixtureText(
+    "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
+  );
+  const cases = [
+    [{ kind: "integer" }, { kind: "integer-base10" }],
+    [{ kind: "number" }, { kind: "decimal" }],
+    [{ kind: "boolean" }, { kind: "checkbox", trueValues: ["on"], missing: false }],
+    [{ kind: "enum", values: ["low", "high"] }, { kind: "enum", values: ["low", "high"] }],
+    [
+      { kind: "array", items: { kind: "string" }, minItems: 1, maxItems: 3 },
+      { kind: "repeat", items: { kind: "text", trim: true, empty: "reject" } },
+    ],
+  ];
+
+  for (const [schema, decoder] of cases) {
+    const value = JSON.parse(text);
+    value.actions[0].input.schema.properties.title = schema;
+    value.actions[0].input.formCodec.bindings[0].decode = decoder;
+    const result = parseFeatureContract(JSON.stringify(value));
+    assert.equal(result.ok, true, JSON.stringify(result));
+  }
+});
+
+test("rejects decoder and schema semantic mismatches", async () => {
   const text = await fixtureText(
     "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
   );
   const value = JSON.parse(text);
-  value.actions[0].input.formCodec.bindings[0].decode.kind = "checkbox";
+  value.actions[0].input.schema.properties.title = {
+    kind: "enum",
+    values: ["low", "high"],
+  };
+  value.actions[0].input.formCodec.bindings[0].decode = {
+    kind: "enum",
+    values: ["high", "low"],
+  };
 
   const result = parseFeatureContract(JSON.stringify(value));
   assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.deepEqual(result.issues.map((issue) => issue.instancePath), [
+      "/actions/0/input/formCodec/bindings/0/decode",
+    ]);
+  }
 });
 
 test("accepts a current-document form path and rejects non-route values", async () => {
@@ -290,14 +326,35 @@ test("rejects contradictory feature action and schema semantics", async () => {
   value.actions.push(structuredClone(value.actions[0]));
   value.actions[0].input.schema.properties.title.minLength = 5;
   value.actions[0].input.schema.properties.title.maxLength = 4;
+  value.actions[0].input.schema.properties.count = {
+    kind: "integer",
+    minimum: 2,
+    maximum: 1,
+  };
+  value.actions[0].input.schema.properties.tags = {
+    kind: "array",
+    items: { kind: "string" },
+    minItems: 2,
+    maxItems: 1,
+  };
   value.actions[0].input.schema.properties.optional = { kind: "string" };
   value.actions[0].input.schema.required.push("missing");
+  value.actions[0].input.formCodec.bindings.push(
+    { name: "count", path: ["count"], decode: { kind: "integer-base10" } },
+    {
+      name: "tags",
+      path: ["tags"],
+      decode: { kind: "repeat", items: { kind: "text", trim: true, empty: "reject" } },
+    },
+  );
 
   const result = parseFeatureContract(JSON.stringify(value));
   assert.equal(result.ok, false);
   if (!result.ok) {
     assert.deepEqual(result.issues.map((issue) => issue.instancePath), [
       "/actions/0/input/schema/required/1",
+      "/actions/0/input/schema/properties/count",
+      "/actions/0/input/schema/properties/tags",
       "/actions/0/input/schema/properties/title",
       "/actions/0/input/schema/properties/optional",
       "/actions/1/id",
