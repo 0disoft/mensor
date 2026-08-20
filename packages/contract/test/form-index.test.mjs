@@ -106,8 +106,17 @@ test("rejects nonportable document paths and malformed digests", () => {
     index.documents[0].path = candidate;
     assert.throws(
       () => serializeFormIndex(index),
-      /portable project-relative POSIX path/u,
+      /cannot be serialized/u,
     );
+
+    const parsed = parseFormIndex(`${JSON.stringify(index, null, 2)}\n`);
+    assert.equal(parsed.ok, false);
+    if (!parsed.ok) {
+      assert.equal(
+        parsed.issues.some((issue) => issue.instancePath === "/documents/0/path"),
+        true,
+      );
+    }
   }
 
   const invalidDigest = validIndex();
