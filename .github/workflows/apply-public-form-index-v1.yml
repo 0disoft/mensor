@@ -7,6 +7,12 @@ on:
     paths:
       - scripts/form-index-payload.*.b64
       - .github/workflows/apply-public-form-index-v1.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/form-index-payload.*.b64
+      - .github/workflows/apply-public-form-index-v1.yml
 
 permissions:
   contents: write
@@ -17,7 +23,7 @@ concurrency:
 
 jobs:
   apply:
-    if: ${{ !contains(github.event.head_commit.message, 'feat(form-index): expose source-bound FormIndex v1') }}
+    if: ${{ github.event_name == 'pull_request' || !contains(github.event.head_commit.message, 'feat(form-index): expose source-bound FormIndex v1') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
