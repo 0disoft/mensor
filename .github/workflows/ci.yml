@@ -31,7 +31,8 @@ jobs:
           rm scripts/apply-public-form-index-v1.py
           rm scripts/form-index-payload.*.b64
           rm .github/workflows/apply-public-form-index-v1.yml
-          git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
+          git fetch --no-tags --depth=1 origin main
+          git show FETCH_HEAD:.github/workflows/ci.yml > .github/workflows/ci.yml
           git diff --check
           test ! -e packages/compiler/src/form-index-types.ts
           test ! -e packages/compiler/src/form-index-validation.ts
