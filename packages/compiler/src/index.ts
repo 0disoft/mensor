@@ -1,4 +1,5 @@
 export { checkProject, compileProject } from "./check-project.js";
+export { draftProjectContracts } from "./draft-project.js";
 export type {
   CheckProjectFailure,
   CheckProjectBaseOptions,
@@ -14,4 +15,9 @@ export type {
   CompileProjectOptions,
   CompileProjectResult,
   CompileProjectSuccess,
+  DraftContractFile,
+  DraftProjectContractsFailure,
+  DraftProjectContractsOptions,
+  DraftProjectContractsResult,
+  DraftProjectContractsSuccess,
 } from "./types.js";

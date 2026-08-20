@@ -40,35 +40,44 @@ filesystem, TypeScript compiler API, HTML parsers, or CLI concerns.
 ### `@0disoft/mensor-compiler`
 
 Owns deterministic discovery, JSONC loading, TypeScript and HTML fact
-extraction, semantic linking, rules, and report construction. It depends on the
-contract package and parser libraries. It must not depend on the CLI or execute
+extraction, semantic linking, rules, report construction, and source-derived
+contract draft construction. It depends on the contract package and parser
+libraries. It must not depend on the CLI, write project files, or execute
 inspected source.
 
 The current implementation covers bounded source discovery, feature contracts,
 handler linkage, file-role classification, placement diagnostics, static HTML
-form extraction, and explicit handler export facts. TypeScript import edges
-are normalized for configured direct and transitive role boundaries.
-Suffix-based ownership rules keep test and i18n resources inside their declared
-feature slots.
+form extraction, and explicit handler export facts. TypeScript import edges are
+normalized for configured direct and transitive role boundaries. Suffix-based
+ownership rules keep test and i18n resources inside their declared feature
+slots.
+
+`draftProjectContracts` returns project and feature JSONC as data. It may copy
+static facts already owned by source, but feature identity, handler role,
+requiredness, typed decoding, ignored host fields, and broader architecture
+remain explicit maintainer decisions.
 
 ### `@0disoft/mensor-cli`
 
 Owns argument parsing, config selection, stdout and stderr behavior, exit
-status, and future atomic artifact writes. It delegates all checking behavior
-to the compiler and does not parse source directly.
+status, and create-only artifact publication. It delegates source analysis and
+checking behavior to the compiler and does not parse source directly.
 
-The current executable exposes only `mensor check [root] [--config <path>]
-[--json] [--report-version <1|2>]` and maps compiler results to the documented
-`0/1/2/3` exit statuses. Report revision selection stays in the CLI shell;
-inspection derivation remains compiler-owned.
+The executable exposes `mensor check [root] [--config <path>] [--json]
+[--report-version <1|2>]` and `mensor init [root]` with explicit feature and
+handler-role options. `check` maps compiler results to the documented
+`0/1/2/3` exit statuses. `init` publishes the compiler-owned drafts without
+overwriting and rolls back its first created path when the second publication
+fails. Report revision selection stays in the CLI shell; inspection derivation
+remains compiler-owned.
 
 ### `internal/fixture-kit`
 
 Owns fixture execution, canonical snapshots, randomized discovery tests,
 security sentinels, the agent-trial report schema and canonical serializer,
 mutation checks that retain compiler diagnostic reports, and repair evaluation
-helpers. It may depend on public
-packages but is private and never appears in a published dependency graph.
+helpers. It may depend on public packages but is private and never appears in a
+published dependency graph.
 
 The current repair evaluator captures hashes for explicitly protected contract
 files, reruns the compiler, and invokes a trusted semantic application check.
@@ -83,8 +92,8 @@ prompts, and transcripts remain outside this package.
 
 Owns bounded external command execution for trial adapters. It depends on the
 fixture kit's provider-neutral types and the contract package's diagnostic
-validator. It must remain private and must not become
-a dependency of the compiler, CLI, or published packages.
+validator. It must remain private and must not become a dependency of the
+compiler, CLI, or published packages.
 
 It also owns canonical execution descriptors and trial-evidence envelopes.
 Those artifacts identify comparable evaluation cohorts without moving command
@@ -144,6 +153,11 @@ A change to a serialized contract must update its validator, canonical form,
 fixtures, CLI examples, and compatibility note in one pull request. A compiler
 rule may change without a contract-package release only when no public type,
 schema, diagnostic meaning, or canonical output changes.
+
+A new source-derived draft field must update the compiler API documentation,
+CLI command contract, deterministic tests, and generated review comments in one
+pull request. The CLI must not reimplement source extraction to make draft
+output more convenient.
 
 ## Deferred Packages
 

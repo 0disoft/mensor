@@ -9,9 +9,10 @@ evaluation preview:
 
 - contract: serializable authoring contracts, normalized IR, diagnostics, and
   validators;
-- compiler: discovery, source parsing, normalized facts, semantic linking, and
-  pure rules;
-- CLI: arguments, config selection, output routing, and exit status; and
+- compiler: discovery, source parsing, normalized facts, semantic linking, pure
+  rules, and source-derived contract draft construction;
+- CLI: arguments, config selection, output routing, exit status, and create-only
+  draft publication;
 - fixture kit: deterministic fixtures, snapshots, security probes, and repair
   evaluation support that is never published as a runtime dependency; and
 - agent runner: private bounded process, owned Docker CLI sandbox adapter, and
@@ -37,23 +38,27 @@ JSONC contract       TypeScript/JavaScript       static HTML       RouteIndex
                     deterministic discovery
                                |
                        normalized source facts
-                               |
-                         semantic project
-                               |
-                         pure rule execution
-                               |
-                  canonical DiagnosticReport
-                               |
-                    clean checks only
-                               |
-                     RuntimeManifest v1
+                         /             \
+                        /               \
+             contract draft data      semantic project
+                                             |
+                                       pure rule execution
+                                             |
+                                canonical DiagnosticReport
+                                             |
+                                  clean checks only
+                                             |
+                                   RuntimeManifest v1
 ```
 
 Parsing libraries may produce ASTs, but parser-specific objects stop at the
-extraction boundary. Rules receive only Mensor-owned serializable facts.
+extraction boundary. Rules and draft construction receive only Mensor-owned
+normalized facts. Draft construction returns JSONC content and relative output
+paths to the caller; it never writes the inspected repository.
+
 TypeScript source is parsed at most once and only when a handler or configured
-boundary reaches it. File roles are classified before parsing. Direct
-boundaries load only their from-role roots; transitive boundaries use one
+boundary reaches it during checking. File roles are classified before parsing.
+Direct boundaries load only their from-role roots; transitive boundaries use one
 deterministic multi-source traversal and retain parent pointers until a
 canonical shortest witness chain is needed. Shared reachable modules and their
 non-literal dynamic imports are therefore analyzed once per boundary. Facts
@@ -80,11 +85,17 @@ The inspected repository is untrusted input. The compiler must not execute its
 source or config, invoke package loaders, follow symlinks outside the root,
 access the network, or include source literals in canonical diagnostics.
 
-All configured paths are root-relative. Absolute paths, `..` escapes, and
-symlink escapes fail closed. Source discovery has explicit file-count,
-per-file byte, aggregate byte, and directory-depth limits. Parser nesting
-limits remain parser-owned and must be explicit before support for more complex
-authoring formats is claimed.
+All configured and generated paths are root-relative. Absolute paths, `..`
+escapes, and symlink escapes fail closed. Source discovery has explicit
+file-count, per-file byte, aggregate byte, and directory-depth limits. Parser
+nesting limits remain parser-owned and must be explicit before support for more
+complex authoring formats is claimed.
+
+The CLI is the only published package allowed to mutate project files. Init
+outputs are validated before publication, created without overwriting, and
+published as one recoverable pair. If the second publication fails, the CLI
+removes the first. A rollback failure is explicit because manual cleanup is
+then required.
 
 ## Adapter Boundary
 
@@ -124,3 +135,5 @@ HTTP serving, authentication, CSRF, sessions, persistence, or deployment.
 - Filesystem and internal failures remain distinct from contract violations.
 - Unsupported dynamic behavior produces an explicit diagnostic instead of a
   false claim that the project is valid.
+- Init ambiguity and existing outputs are user-correctable configuration
+  failures; publication and rollback failures remain filesystem failures.

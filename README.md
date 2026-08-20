@@ -18,6 +18,22 @@ Version `0.3.0` is the current public preview. It adds typed form codecs for
 base-10 integers, finite decimals, checkboxes, enums, and repeated values while
 preserving existing text-codec diagnostics.
 
+## Fast Start
+
+For a new project with one static POST form and one named handler export, create
+reviewable contract drafts first:
+
+```text
+pnpm exec mensor init . \
+  --feature-root src/features/guestbook \
+  --feature-id guestbook \
+  --handler-role server
+```
+
+Mensor copies only source-owned facts. The generated comments require review of
+field requiredness, decoders, ignored host fields, roles, boundaries, and
+ownership rules. Existing output files are never overwritten.
+
 ## Registry Installation
 
 The supported CLI installation path is:
@@ -103,8 +119,8 @@ When `routeIndex` is omitted, Mensor does not inspect application route
 declarations and does not run the `route.missing` rule. A passing check means
 only that every configured static contract check passed; it never proves
 runtime application semantics.
-Dynamic template languages, runtime manifests, production HTTP handling,
-autofix, arbitrary plugins, cloud processing, and telemetry are deferred.
+Dynamic template languages, a production HTTP runtime, autofix, arbitrary
+plugins, cloud processing, and telemetry are deferred.
 
 ## Repository Shape
 

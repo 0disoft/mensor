@@ -4,12 +4,14 @@ import { parseArgs } from "node:util";
 
 import { checkProject, type CompilerFailure } from "@0disoft/mensor-compiler";
 
+import { runInitCommand } from "./init-command.js";
 import type {
   CliFailureEnvelope,
   RunCliOptions,
 } from "./types.js";
 
 type CliReportVersion = 1 | 2;
+type ParsedArguments = ReturnType<typeof parseArgs>;
 
 interface CliFailureEnvelopeV2 {
   readonly schemaVersion: 2;
@@ -45,30 +47,58 @@ function readPackageVersion(): string {
   return value.version;
 }
 
-const helpText = `Usage: mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
+const helpText = `Usage:
+  mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
+  mensor init [root] --feature-root <path> --feature-id <id> --handler-role <role> [options]
 
 Commands:
   check    Check project contracts against static source facts.
+  init     Create conservative project and feature contract drafts.
 
-Options:
-  --config <path>  Root-relative project contract path.
-  --json           Write one canonical JSON document to stdout.
-  --report-version Select JSON output revision 1 or 2. Requires --json.
-  --help           Show this help.
+Check options:
+  --config <path>         Root-relative project contract path.
+  --json                  Write one canonical JSON document to stdout.
+  --report-version <1|2>  Select JSON output revision 1 or 2. Requires --json.
+
+Init options:
+  --source-root <path>    Source directory. Defaults to src.
+  --config <path>         Project contract output. Defaults to mensor.project.jsonc.
+  --feature-root <path>   Project-relative feature directory to inspect.
+  --feature-id <id>       Explicit feature identity for the draft.
+  --handler-role <role>   Explicit architectural role for the selected handler.
+  --action-id <id>        Override the generated action identity.
+  --document-path <path>  GET page route, required for current-document forms.
+  --form-file <path>      Select one project-relative static HTML file.
+  --form-id <id>          Select one form id. Requires --form-file.
+  --handler-file <path>   Select one project-relative TypeScript or JavaScript file.
+  --handler-export <name> Select one named runtime export. Requires --handler-file.
+
+General options:
+  --help, -h              Show this help.
 `;
 
 export async function runCli(options: RunCliOptions): Promise<number> {
-  let parsed: ReturnType<typeof parseArgs>;
+  let parsed: ParsedArguments;
   try {
     parsed = parseArgs({
       args: [...options.argv],
       allowPositionals: true,
       strict: true,
       options: {
+        "action-id": { type: "string" },
         config: { type: "string" },
+        "document-path": { type: "string" },
+        "feature-id": { type: "string" },
+        "feature-root": { type: "string" },
+        "form-file": { type: "string" },
+        "form-id": { type: "string" },
+        "handler-export": { type: "string" },
+        "handler-file": { type: "string" },
+        "handler-role": { type: "string" },
         help: { type: "boolean", short: "h" },
         json: { type: "boolean" },
         "report-version": { type: "string" },
+        "source-root": { type: "string" },
       },
     });
   } catch (error) {
@@ -80,7 +110,60 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     );
   }
 
+  if (parsed.values["help"] === true) {
+    options.stdout(helpText);
+    return 0;
+  }
+
+  const command = parsed.positionals[0];
+  if (command === "check") {
+    return runCheckCommand(options, parsed);
+  }
+  if (command === "init") {
+    return runInitCommand(options, parsed);
+  }
+  return writeUsageFailure(
+    options,
+    "Expected command check or init.",
+    parsed.values["json"] === true,
+    requestedReportVersion(options.argv),
+  );
+}
+
+async function runCheckCommand(
+  options: RunCliOptions,
+  parsed: ParsedArguments,
+): Promise<number> {
   const json = parsed.values["json"] === true;
+  if (parsed.positionals.length > 2) {
+    return writeUsageFailure(
+      options,
+      "Expected command check and at most one project root.",
+      json,
+      requestedReportVersion(options.argv),
+    );
+  }
+  const initOption = firstPresentOption(parsed, [
+    "action-id",
+    "document-path",
+    "feature-id",
+    "feature-root",
+    "form-file",
+    "form-id",
+    "handler-export",
+    "handler-file",
+    "handler-role",
+    "source-root",
+  ]);
+  if (initOption !== undefined) {
+    return writeUsageFailure(
+      options,
+      `--${initOption} is valid only with mensor init.`,
+      json,
+      requestedReportVersion(options.argv),
+    );
+  }
+
   const rawReportVersion = parsed.values["report-version"];
   const reportVersionValue = typeof rawReportVersion === "string"
     ? rawReportVersion
@@ -110,46 +193,22 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       reportVersion,
     );
   }
-  if (parsed.values["help"] === true) {
-    options.stdout(helpText);
-    return 0;
-  }
-  if (parsed.positionals[0] !== "check" || parsed.positionals.length > 2) {
-    return writeUsageFailure(
-      options,
-      "Expected command check and at most one project root.",
-      json,
-      reportVersion,
-    );
-  }
 
   const root = path.resolve(options.cwd, parsed.positionals[1] ?? ".");
-  const configValue = parsed.values["config"];
-  if (
-    typeof configValue === "string" &&
-    (path.isAbsolute(configValue) || path.win32.isAbsolute(configValue))
-  ) {
-    writeFailure(
-      options,
-      {
-        kind: "configuration",
-        code: "cli.config_not_relative",
-        message: "--config must be relative to the selected project root.",
-        file: configValue,
-      },
-      json,
-      reportVersion,
-    );
+  const configResult = relativeProjectOption(
+    parsed.values["config"],
+    "config",
+  );
+  if (!configResult.ok) {
+    writeFailure(options, configResult.failure, json, reportVersion);
     return 2;
   }
-  const config =
-    typeof configValue === "string"
-      ? configValue.replaceAll("\\", "/")
-      : undefined;
   const checkOptions = {
     root,
     producerVersion: cliVersion,
-    ...(config === undefined ? {} : { configFile: config }),
+    ...(configResult.value === undefined
+      ? {}
+      : { configFile: configResult.value }),
   };
   const result = reportVersion === 2
     ? await checkProject({ ...checkOptions, reportVersion: 2 })
@@ -175,6 +234,56 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     }
   }
   return result.report.summary.errorCount === 0 ? 0 : 1;
+}
+
+interface RelativeOptionSuccess {
+  readonly ok: true;
+  readonly value: string | undefined;
+}
+
+interface RelativeOptionFailure {
+  readonly ok: false;
+  readonly failure: CompilerFailure;
+}
+
+type RelativeOptionResult = RelativeOptionSuccess | RelativeOptionFailure;
+
+function relativeProjectOption(
+  value: unknown,
+  name: string,
+): RelativeOptionResult {
+  if (value === undefined) {
+    return { ok: true, value: undefined };
+  }
+  if (typeof value !== "string") {
+    return {
+      ok: false,
+      failure: {
+        kind: "configuration",
+        code: "cli.usage_invalid",
+        message: `--${name} requires one value.`,
+      },
+    };
+  }
+  if (path.isAbsolute(value) || path.win32.isAbsolute(value)) {
+    return {
+      ok: false,
+      failure: {
+        kind: "configuration",
+        code: `cli.${name.replaceAll("-", "_")}_not_relative`,
+        message: `--${name} must be relative to the selected project root.`,
+        file: value,
+      },
+    };
+  }
+  return { ok: true, value: value.replaceAll("\\", "/") };
+}
+
+function firstPresentOption(
+  parsed: ParsedArguments,
+  names: readonly string[],
+): string | undefined {
+  return names.find((name) => parsed.values[name] !== undefined);
 }
 
 function writeUsageFailure(

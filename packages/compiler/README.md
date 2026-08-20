@@ -1,6 +1,6 @@
 # @0disoft/mensor-compiler
 
-Deterministic source contract checker for Mensor projects.
+Deterministic source contract checker and draft generator for Mensor projects.
 
 ## Install
 
@@ -9,6 +9,28 @@ pnpm add @0disoft/mensor-compiler
 ```
 
 Node.js 22 or newer is required.
+
+## Draft Project Contracts
+
+```js
+import { draftProjectContracts } from "@0disoft/mensor-compiler";
+
+const result = await draftProjectContracts({
+  root: process.cwd(),
+  featureRoot: "src/features/guestbook",
+  featureId: "guestbook",
+  handlerRole: "server",
+});
+
+if (result.ok) {
+  process.stdout.write(result.project.content);
+  process.stdout.write(result.feature.content);
+}
+```
+
+The API returns content and paths but never writes files. It discovers one
+static POST form and one explicit named runtime export without executing project
+source. Ambiguous candidates require exact form and handler selectors.
 
 ## Check A Project
 
@@ -49,10 +71,9 @@ const result = await checkProject({
 });
 ```
 
-Contract failures are returned as data. Unexpected I/O or compiler failures
-remain exceptions. The compiler reads supported project files but does not
-execute project source or configuration, spawn framework tools, install
-dependencies, or access the network.
+Contract failures are returned as data. The compiler reads supported project
+files but does not execute project source or configuration, spawn framework
+tools, install dependencies, or access the network.
 
 ## Documentation
 

@@ -2,6 +2,22 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- `mensor init` for create-only project and feature contract drafts from one
+  static POST form and one named runtime export.
+- Public `draftProjectContracts` compiler API for bounded, offline draft
+  discovery without filesystem mutation.
+
+### Compatibility
+
+- Existing `mensor check`, report revisions, diagnostics, schemas, and exit
+  status meanings remain unchanged.
+- Generated drafts target the existing project and feature contract v1 schemas;
+  no serialized schema revision is added.
+
 ## [0.3.0] - 2026-08-16
 
 ### Added

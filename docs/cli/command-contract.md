@@ -11,7 +11,7 @@ toolchain decision was recorded. Future CI must test the minimum supported
 major and one newer supported major; package metadata alone is not compatibility
 evidence.
 
-## MVP Command
+## Check Command
 
 ```text
 mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
@@ -28,9 +28,63 @@ mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
   source file, 64 MiB across the discovered source tree, and 64 directory
   levels below `sourceRoot`.
 
-`compile`, `fix`, `watch`, `init`, and plugin commands are not part of the MVP.
+## Init Command
 
-## Output
+```text
+mensor init [root]
+  --feature-root <path>
+  --feature-id <id>
+  --handler-role <role>
+  [--source-root <path>]
+  [--config <path>]
+  [--action-id <id>]
+  [--document-path <path>]
+  [--form-file <path> --form-id <id>]
+  [--handler-file <path> --handler-export <name>]
+```
+
+`init` creates one project contract draft and one feature contract draft. It is
+an onboarding aid, not an architecture inference engine.
+
+- `root` defaults to the current working directory.
+- `--source-root` defaults to `src`.
+- `--config` defaults to `mensor.project.jsonc`.
+- `--feature-root` is project-relative, must be inside `sourceRoot`, and owns
+  the generated `feature.mensor.jsonc`.
+- `--feature-id` and `--handler-role` are required because source files cannot
+  prove product identity or architectural policy.
+- `--form-file` and `--form-id` must be supplied together when more than one
+  eligible form exists. Their path is project-relative.
+- `--handler-file` and `--handler-export` must be supplied together when more
+  than one named runtime export exists. Their path is project-relative.
+- `--document-path` is required when the selected form has an omitted or empty
+  action and therefore submits to the current document.
+- `--action-id` overrides the deterministic id derived from the feature and form
+  ids.
+
+The compiler performs bounded, offline discovery. It accepts only a static HTML
+form with an id, an explicit `POST` method, a static root-relative action or an
+explicit current-document route, supported named controls, and one explicit
+named TypeScript or JavaScript runtime export. It never imports application
+modules, executes configuration, launches framework tooling, installs packages,
+or accesses the network.
+
+The draft copies facts that source owns and leaves policy conservative. Scalar
+fields become optional text values. Repeated controls become optional arrays of
+text values. Requiredness, trimming, typed decoders, checkbox true values,
+ignored host fields, additional roles, boundaries, ownership rules, and
+RouteIndex remain maintainer decisions. Generated JSONC comments call out that
+review boundary.
+
+Both outputs are validated through the public contract parsers before writing.
+The CLI uses create-only publication and never overwrites an existing path. If
+publication of the second draft fails, it removes the first draft before
+returning. Parent directories are not created implicitly. `init` has human
+output only; `--json` and `--report-version` are rejected.
+
+`compile`, `fix`, `watch`, and plugin commands are not part of the MVP.
+
+## Check Output
 
 Human mode writes concise diagnostics for a terminal. JSON mode writes exactly
 one JSON document followed by one LF newline to stdout. JSON mode does not emit
@@ -67,16 +121,19 @@ canonicalization and determinism rules remain in `docs/product/02-spec.md`.
 
 ## Exit Status
 
-- `0`: checking completed with no error diagnostics
-- `1`: project contract violations were found
-- `2`: CLI arguments or project configuration are invalid
-- `3`: an unexpected filesystem, parser, or internal failure prevented checking
+- `0`: checking completed with no error diagnostics, or both init drafts were
+  created
+- `1`: project contract violations were found by `check`
+- `2`: CLI arguments or project configuration are invalid, or `init` would
+  overwrite an existing output
+- `3`: an unexpected filesystem, parser, publication, rollback, or internal
+  failure prevented completion
 
-Warnings alone do not produce exit status `1`. A failure before a report can be
-constructed still respects `--json` by emitting a documented machine-readable
-error envelope.
+Warnings alone do not produce exit status `1`. A check failure before a report
+can be constructed still respects `--json` by emitting a documented
+machine-readable error envelope.
 
-The failure envelope is:
+The check failure envelope is:
 
 ```json
 {
@@ -104,17 +161,21 @@ reported as a revision-1 usage failure.
 facts. Revision 2 omits `file` when the rejected value is absolute,
 backslash-delimited, or root-escaping rather than copying a non-canonical path
 into the envelope. JSON failures go to stdout with one LF and no stderr output.
-Human-mode setup failures go to stderr.
+Human-mode setup and init failures go to stderr.
 
 ## Failure Separation
 
 Project violations are expected compiler results. Invalid configuration is a
 user-correctable setup failure. Filesystem and internal failures must remain
 distinguishable so automation does not mistake a broken checker for a clean
-project.
+project. A failed init must not leave a newly generated partial contract pair;
+a rollback failure is reported separately because manual cleanup remains.
 
 ## Compatibility
 
 Command names, flag meaning, JSON field meaning, and exit statuses are public
 contracts after the first preview release. Help text and prose may improve in a
 patch release, but automation-facing meaning requires compatibility treatment.
+The init draft contents are review scaffolding rather than a serialized public
+wire contract; their accepted project and feature schemas remain the public
+compatibility boundary.

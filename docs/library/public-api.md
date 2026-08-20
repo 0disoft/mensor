@@ -63,6 +63,10 @@ export function checkProject(
 export function compileProject(
   options: CompileProjectOptions,
 ): Promise<CompileProjectResult>;
+
+export function draftProjectContracts(
+  options: DraftProjectContractsOptions,
+): Promise<DraftProjectContractsResult>;
 ```
 
 `CheckProjectResult` separates a completed check and its `DiagnosticReport` from
@@ -78,6 +82,22 @@ completed rule paths, not from an empty diagnostic list.
 `compileProject` reuses the same validated analysis and emits RuntimeManifest
 v1 only when the diagnostic report is clean. A diagnostic result, malformed
 configuration, or I/O failure cannot produce a partial manifest.
+
+`draftProjectContracts` performs bounded source discovery and returns project
+and feature JSONC drafts as data. It requires explicit feature identity and
+handler-role policy, then selects one eligible static POST form and one explicit
+named runtime export. Ambiguous forms or handlers require exact selectors. The
+API does not write files, execute source, load framework configuration, install
+packages, or access the network.
+
+Draft field contracts are deliberately conservative. Supported scalar controls
+become optional text bindings and repeated controls become optional arrays with
+repeat text decoders. The API rejects checkbox semantics because the current
+static fact boundary does not own a trustworthy true-value decision. It also
+rejects unsupported controls, dynamic routes, missing form ids, and implicit
+handler selection across multiple exports rather than inventing policy. The
+returned JSONC is validated by the public project and feature parsers before
+success.
 
 The compiler walks the configured source root in code-unit sorted order, skips
 symlinks, enforces file-count and file-byte limits, and never imports inspected
@@ -123,11 +143,17 @@ compatibility promise.
 
 ## Current CLI Surface
 
-`@0disoft/mensor-cli` exports `runCli(options)` for process-isolated testing and host
-embedding, plus the `mensor` executable. The library function receives argv,
-cwd, stdout, and stderr ports explicitly and returns an exit status without
-mutating global process state. The executable is the only module that writes to
-the real process streams and `process.exitCode`.
+`@0disoft/mensor-cli` exports `runCli(options)` for process-isolated testing and
+host embedding, plus the `mensor` executable. The library function receives
+argv, cwd, stdout, and stderr ports explicitly and returns an exit status
+without mutating global process state. The executable is the only module that
+writes to the real process streams and `process.exitCode`.
+
+The executable exposes `mensor check` and `mensor init`. `check` maps compiler
+reports to the documented `0/1/2/3` statuses. `init` asks the compiler for draft
+content, publishes both paths without overwriting, and rolls back the first
+created path if the second cannot be published. Filesystem mutation remains in
+the CLI package; the compiler draft API remains pure apart from bounded reads.
 
 ## Schema Ownership
 
@@ -144,14 +170,13 @@ history has no compatibility promise. Beginning with the first public package
 release, every breaking public change requires release notes and migration
 guidance.
 
-Serialized contracts carry their own schema version. Package version and
-schema version do not advance together unless both implementation and wire
-format change. A public diagnostic code cannot silently change meaning.
+Serialized contracts carry their own schema version. Package version and schema
+version do not advance together unless both implementation and wire format
+change. A public diagnostic code cannot silently change meaning.
 
-Version `0.0.50` includes optional `form.documentPath` authoring and the
-required `actualActionSource` fact to `form.action_mismatch`. The latter is a
-pre-release breaking diagnostic shape change; no preview compatibility promise
-exists yet.
+Version `0.0.50` includes optional `form.documentPath` authoring and the required
+`actualActionSource` fact to `form.action_mismatch`. The latter is a pre-release
+breaking diagnostic shape change; no preview compatibility promise exists yet.
 
 Version `0.0.51` requires action form template paths to end in `.html`, aligning
 the authoring schema with the static-HTML-only compiler boundary.
@@ -163,9 +188,13 @@ as `@0disoft/mensor-contract`, `@0disoft/mensor-compiler`, and
 `@0disoft/mensor-cli`; the provisional private `@mensor/*` identities were
 never published and have no compatibility promise.
 
-Version `0.2.0` adds opt-in Check Output v2, its public schema and parsers,
-typed compiler overloads, and CLI report revision selection. Revision 1 remains
-the default wire and library contract.
+Version `0.2.0` adds opt-in Check Output v2, its public schema and parsers, typed
+compiler overloads, and CLI report revision selection. Revision 1 remains the
+default wire and library contract.
+
+Version `0.3.0` adds typed form codec families, RuntimeManifest v1, and
+`compileProject`. Contract drafts returned by `draftProjectContracts` target
+these existing schemas and do not introduce another serialized schema revision.
 
 ## Deprecation
 

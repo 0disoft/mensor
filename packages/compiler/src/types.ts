@@ -70,3 +70,53 @@ export type CompileProjectResult =
   | CompileProjectSuccess
   | CompileProjectDiagnostics
   | CompileProjectFailure;
+
+export interface DraftProjectContractsOptions {
+  readonly root: string;
+  readonly sourceRoot?: string;
+  readonly configFile?: string;
+  readonly featureRoot: string;
+  readonly featureId: string;
+  readonly handlerRole: string;
+  readonly actionId?: string;
+  readonly documentPath?: string;
+  readonly form?: {
+    readonly file: string;
+    readonly id: string;
+  };
+  readonly handler?: {
+    readonly file: string;
+    readonly export: string;
+  };
+}
+
+export interface DraftContractFile {
+  readonly path: string;
+  readonly content: string;
+}
+
+export interface DraftProjectContractsSuccess {
+  readonly ok: true;
+  readonly project: DraftContractFile;
+  readonly feature: DraftContractFile;
+  readonly selection: {
+    readonly actionId: string;
+    readonly form: {
+      readonly file: string;
+      readonly id: string;
+    };
+    readonly handler: {
+      readonly file: string;
+      readonly export: string;
+    };
+  };
+}
+
+export interface DraftProjectContractsFailure {
+  readonly ok: false;
+  readonly failure: CompilerFailure;
+}
+
+export type DraftProjectContractsResult =
+  | DraftProjectContractsSuccess
+  | DraftProjectContractsFailure;
