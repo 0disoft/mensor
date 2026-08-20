@@ -407,9 +407,11 @@ serializes, validates, source-binds, and hands index facts to semantic rules
 without changing the maintained diagnostic reports. This does not claim
 dynamic template compatibility or authorize an external extractor.
 
-The private `FormIndex` types, validator, canonical serializer/parser, source
-digest and range binding, built-in provider, and semantic translator remain
-compiler internals. They are not public exports or CLI inputs.
+FormIndex v1 is a public contract-package artifact and optional project input.
+The compiler accepts only canonical serialized facts, rebinds every indexed
+document to current discovered source bytes and UTF-16 ranges, and never runs a
+producer. The built-in static HTML provider remains the default when no external
+index is configured.
 
 ADR-0033 owns the public RouteIndex boundary. Unlike FormIndex, RouteIndex has a
 public schema, parser, serializer, and project-contract input. This accepts
@@ -441,10 +443,9 @@ and cannot stand in for throughput evidence.
 - Reference runtime: RuntimeManifest v1 is implemented; add the bounded
   consumer without moving HTTP, authentication, sessions, or persistence into
   the compiler.
-- Dynamic template adapters: the built-in provider now preserves byte-identical
-  diagnostics through `FormIndex`, but external extractors remain deferred
-  until one separately approved agent-authored template trial and trust
-  boundary exist.
+- Dynamic template adapters: FormIndex v1 now provides the public data boundary.
+  Individual extractors remain separate packages and require their own source-
+  language fixtures before any framework compatibility claim.
 - IDE, SARIF, watch mode, caching, and cloud services: post-MVP integrations.
 - Public diagnostic compatibility: begins with the first published preview,
   not with private pre-implementation drafts.

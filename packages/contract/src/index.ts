@@ -1,3 +1,4 @@
+export { parseFormIndex, serializeFormIndex } from "./form-index.js";
 export { isJsonValue, parseJsonc } from "./jsonc.js";
 export { parseRouteIndex, serializeRouteIndex } from "./route-index.js";
 export {
@@ -27,6 +28,8 @@ export type {
   ContractSuccess,
   ContentDigest,
   DecimalDecoder,
+  DocumentInspection,
+  DynamicReason,
   Diagnostic,
   DiagnosticReport,
   DiagnosticReportV1,
@@ -37,9 +40,12 @@ export type {
   FileRoleContract,
   FileRoleMismatchDiagnostic,
   FileRoleMismatchFacts,
+  FormActionEvidence,
   FormBinding,
   FormCodec,
   FormDecoder,
+  FormDocumentFact,
+  FormIndex,
   FormActionMismatchDiagnostic,
   FormActionMismatchFacts,
   FormControlCodecMismatchDiagnostic,
@@ -61,6 +67,9 @@ export type {
   IgnoredFormField,
   IntegerDecoder,
   IntegerSchema,
+  IndexedControlFact,
+  IndexedEvidence,
+  IndexedFormFact,
   IndexedRoute,
   InspectionBasis,
   InspectionDomain,
@@ -92,4 +101,5 @@ export type {
   RepeatDecoder,
   RepeatItemDecoder,
   TextDecoder,
+  UnsupportedReason,
 } from "./types.js";

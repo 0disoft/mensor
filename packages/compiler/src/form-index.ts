@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
 
-import type { SourcePosition, SourceRange } from "@0disoft/mensor-contract";
+import type {
+  ContentDigest,
+  FormIndex,
+  SourcePosition,
+  SourceRange,
+} from "@0disoft/mensor-contract";
 
-import {
-  FormIndexFailure,
-  type ContentDigest,
-  type FormIndex,
-} from "./form-index-types.js";
-import { canonicalizeFormIndex } from "./form-index-validation.js";
+export { parseFormIndex, serializeFormIndex } from "@0disoft/mensor-contract";
 
 export type {
   ContentDigest,
@@ -16,13 +16,36 @@ export type {
   FormActionEvidence,
   FormDocumentFact,
   FormIndex,
-  FormIndexFailureCode,
   IndexedControlFact,
   IndexedEvidence,
   IndexedFormFact,
   UnsupportedReason,
-} from "./form-index-types.js";
-export { FormIndexFailure } from "./form-index-types.js";
+} from "@0disoft/mensor-contract";
+
+export type FormIndexFailureCode =
+  | "form_index.digest_mismatch"
+  | "form_index.range_invalid"
+  | "form_index.source_encoding_invalid"
+  | "form_index.source_missing";
+
+export class FormIndexFailure extends Error {
+  readonly code: FormIndexFailureCode;
+  readonly instancePath: string;
+  readonly file: string;
+
+  constructor(
+    code: FormIndexFailureCode,
+    instancePath: string,
+    message: string,
+    file: string,
+  ) {
+    super(message);
+    this.name = "FormIndexFailure";
+    this.code = code;
+    this.instancePath = instancePath;
+    this.file = file;
+  }
+}
 
 export function createContentDigest(
   source: string | Uint8Array,
@@ -30,46 +53,18 @@ export function createContentDigest(
   return `sha256:${createHash("sha256").update(source).digest("hex")}`;
 }
 
-export function serializeFormIndex(value: unknown): string {
-  const canonical = canonicalizeFormIndex(value);
-  return `${JSON.stringify(canonical, null, 2)}\n`;
-}
-
-export function parseFormIndex(text: string): FormIndex {
-  let value: unknown;
-  try {
-    value = JSON.parse(text) as unknown;
-  } catch {
-    throw new FormIndexFailure(
-      "form_index.json_invalid",
-      "",
-      "FormIndex must be strict JSON.",
-    );
-  }
-
-  const canonical = canonicalizeFormIndex(value);
-  if (serializeFormIndex(canonical) !== text) {
-    throw new FormIndexFailure(
-      "form_index.noncanonical",
-      "",
-      "FormIndex JSON is not in canonical form.",
-    );
-  }
-  return canonical;
-}
-
 export function verifyFormIndexContent(
-  value: unknown,
+  value: FormIndex,
   sourceForPath: (path: string) => string | Uint8Array | undefined,
 ): FormIndex {
-  const canonical = canonicalizeFormIndex(value);
-  for (const [index, document] of canonical.documents.entries()) {
+  for (const [index, document] of value.documents.entries()) {
     const source = sourceForPath(document.path);
     if (source === undefined) {
       throw new FormIndexFailure(
         "form_index.source_missing",
         `/documents/${index}/path`,
-        "Indexed source document is missing.",
+        "Indexed source document is missing from the discovered source tree.",
+        document.path,
       );
     }
     if (createContentDigest(source) !== document.contentDigest) {
@@ -77,11 +72,12 @@ export function verifyFormIndexContent(
         "form_index.digest_mismatch",
         `/documents/${index}/contentDigest`,
         "Indexed source digest does not match the current source bytes.",
+        document.path,
       );
     }
     verifyDocumentRanges(document, source, `/documents/${index}`);
   }
-  return canonical;
+  return value;
 }
 
 function verifyDocumentRanges(
@@ -89,14 +85,17 @@ function verifyDocumentRanges(
   source: string | Uint8Array,
   instancePath: string,
 ): void {
-  const text = sourceText(source, instancePath);
+  const text = sourceText(source, instancePath, document.path);
   const lines = text.split(/\r\n|\n|\r/u);
   const ranges: Array<{
     readonly instancePath: string;
     readonly range: SourceRange;
   }> = [];
 
-  if (document.inspection.state === "incomplete" && document.inspection.range !== undefined) {
+  if (
+    document.inspection.state === "incomplete" &&
+    document.inspection.range !== undefined
+  ) {
     ranges.push({
       instancePath: `${instancePath}/inspection/range`,
       range: document.inspection.range,
@@ -121,8 +120,18 @@ function verifyDocumentRanges(
   });
 
   for (const entry of ranges) {
-    assertPositionWithinSource(entry.range.start, lines, `${entry.instancePath}/start`);
-    assertPositionWithinSource(entry.range.end, lines, `${entry.instancePath}/end`);
+    assertPositionWithinSource(
+      entry.range.start,
+      lines,
+      `${entry.instancePath}/start`,
+      document.path,
+    );
+    assertPositionWithinSource(
+      entry.range.end,
+      lines,
+      `${entry.instancePath}/end`,
+      document.path,
+    );
   }
 }
 
@@ -140,6 +149,7 @@ function assertPositionWithinSource(
   position: SourcePosition,
   lines: readonly string[],
   instancePath: string,
+  file: string,
 ): void {
   const line = lines[position.line];
   if (line === undefined || position.character > line.length) {
@@ -147,11 +157,16 @@ function assertPositionWithinSource(
       "form_index.range_invalid",
       instancePath,
       "Indexed range falls outside the bound source document.",
+      file,
     );
   }
 }
 
-function sourceText(source: string | Uint8Array, instancePath: string): string {
+function sourceText(
+  source: string | Uint8Array,
+  instancePath: string,
+  file: string,
+): string {
   if (typeof source === "string") {
     return source;
   }
@@ -162,6 +177,7 @@ function sourceText(source: string | Uint8Array, instancePath: string): string {
       "form_index.source_encoding_invalid",
       instancePath,
       "Indexed source bytes must be valid UTF-8.",
+      file,
     );
   }
 }

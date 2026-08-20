@@ -15,9 +15,11 @@ Node.js 22 or newer is required.
 ```js
 import {
   parseCheckOutputV2,
+  parseFormIndex,
   parseProjectContract,
   parseRouteIndex,
   parseRuntimeManifest,
+  serializeFormIndex,
   serializeRouteIndex,
   serializeRuntimeManifest,
 } from "@0disoft/mensor-contract";
@@ -32,6 +34,9 @@ Published schemas are available through package export paths, including:
 const projectSchema = import.meta.resolve(
   "@0disoft/mensor-contract/schemas/project-contract-v1.schema.json",
 );
+const formIndexSchema = import.meta.resolve(
+  "@0disoft/mensor-contract/schemas/form-index-v1.schema.json",
+);
 const checkOutputSchema = import.meta.resolve(
   "@0disoft/mensor-contract/schemas/check-output-v2.schema.json",
 );
@@ -44,6 +49,7 @@ const runtimeManifestSchema = import.meta.resolve(
 
 - [Contract authoring](https://github.com/0disoft/mensor/blob/main/packages/contract/spec/README.md)
 - [Public API and compatibility](https://github.com/0disoft/mensor/blob/main/docs/library/public-api.md)
+- [FormIndex v1](https://github.com/0disoft/mensor/blob/main/docs/architecture/form-index-v1.md)
 - [RouteIndex v1](https://github.com/0disoft/mensor/blob/main/docs/architecture/route-index-v1.md)
 - [RuntimeManifest v1](https://github.com/0disoft/mensor/blob/main/docs/architecture/runtime-manifest-v1.md)
 

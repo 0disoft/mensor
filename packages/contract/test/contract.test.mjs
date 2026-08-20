@@ -119,12 +119,16 @@ test("rejects unknown project keys and root-escaping paths", () => {
   }
 });
 
-test("accepts one optional project RouteIndex path", async () => {
+test("accepts optional source-bound project index paths", async () => {
   const text = await fixtureText("valid/tiny-tasks/mensor.project.jsonc");
   const value = JSON.parse(text);
+  value.formIndex = "mensor.form-index.json";
   value.routeIndex = "mensor.route-index.json";
 
   assert.equal(parseProjectContract(JSON.stringify(value)).ok, true);
+  value.formIndex = "../form-index.json";
+  assert.equal(parseProjectContract(JSON.stringify(value)).ok, false);
+  value.formIndex = "mensor.form-index.json";
   value.routeIndex = "../route-index.json";
   assert.equal(parseProjectContract(JSON.stringify(value)).ok, false);
 });
@@ -342,20 +346,14 @@ test("accepts a current-document form path and rejects non-route values", async 
   assert.equal(invalid.ok, false);
 });
 
-test("rejects non-HTML form templates before source parsing", async () => {
+test("accepts non-HTML template paths for external FormIndex consumers", async () => {
   const text = await fixtureText(
     "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
   );
   const value = JSON.parse(text);
   value.actions[0].form.template = "views/index.ts";
 
-  const result = parseFeatureContract(JSON.stringify(value));
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.ok(result.issues.some((issue) =>
-      issue.instancePath === "/actions/0/form/template"
-    ));
-  }
+  assert.equal(parseFeatureContract(JSON.stringify(value)).ok, true);
 });
 
 test("rejects form bindings that do not have one schema-owned identity", async () => {

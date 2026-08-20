@@ -3,6 +3,7 @@ import { performance } from "node:perf_hooks";
 
 import {
   parseFeatureContract,
+  parseFormIndex,
   parseProjectContract,
   parseRouteIndex,
   parseRuntimeManifest,
@@ -13,6 +14,7 @@ import {
   type DiagnosticReportV2,
   type FeatureContract,
   type FileRoleContract,
+  type FormIndex,
   type InspectionReport,
   type ProjectContract,
   type RuntimeAction,
@@ -31,7 +33,10 @@ import {
   type CompilerPhase,
 } from "./compiler-timing.js";
 import { checkFeatureForms } from "./form-rule.js";
-import { FormIndexFailure } from "./form-index.js";
+import {
+  FormIndexFailure,
+  verifyFormIndexContent,
+} from "./form-index.js";
 import { checkFeatureHandlers } from "./handler-rule.js";
 import { createStaticHtmlFormIndexProvider } from "./html-forms.js";
 import { handlerFileRange } from "./locations.js";
@@ -264,11 +269,6 @@ async function checkProjectInternal(
       readSource,
       timing,
     );
-    const formIndexProvider = createStaticHtmlFormIndexProvider({
-      producerVersion,
-      readSource,
-      ...(timing === undefined ? {} : { timing }),
-    });
     let routeIndexPath: string | undefined;
     let routeIndex: VerifiedRouteIndex | undefined;
     if (project.routeIndex !== undefined) {
@@ -327,9 +327,46 @@ async function checkProjectInternal(
         parsedFeature.path,
         parsedFeature.feature,
         discovered,
+        project.formIndex !== undefined,
       )),
     )].sort(compareText);
-    const formIndex = await formIndexProvider.getIndex(projectTemplatePaths);
+    let formIndex: FormIndex;
+    if (project.formIndex === undefined) {
+      const formIndexProvider = createStaticHtmlFormIndexProvider({
+        producerVersion,
+        readSource,
+        ...(timing === undefined ? {} : { timing }),
+      });
+      formIndex = await formIndexProvider.getIndex(projectTemplatePaths);
+    } else {
+      const formIndexPath = assertRelativePosixPath(
+        project.formIndex,
+        "formIndex path",
+      );
+      const formIndexText = await readProjectFile(
+        root,
+        formIndexPath,
+        maxFileBytes,
+      );
+      const formIndexResult = parseFormIndex(formIndexText);
+      if (!formIndexResult.ok) {
+        return contractFailure(formIndexPath, formIndexResult.issues);
+      }
+      const indexedSources = new Map<string, string>();
+      for (const document of formIndexResult.value.documents) {
+        if (discovered.has(document.path)) {
+          indexedSources.set(document.path, await readSource(document.path));
+        }
+      }
+      formIndex = measureSync(
+        timing,
+        "formIndexValidation",
+        () => verifyFormIndexContent(
+          formIndexResult.value,
+          (documentPath) => indexedSources.get(documentPath),
+        ),
+      );
+    }
 
     for (const parsedFeature of parsedFeatures) {
       diagnostics.push(
@@ -445,6 +482,7 @@ async function checkProjectInternal(
         kind: "configuration",
         code: error.code,
         message: error.message,
+        file: error.file,
       });
     }
     return failure({
@@ -505,6 +543,14 @@ async function createRuntimeManifest(
 
       if (action.form.documentPath !== undefined) {
         const template = joinProjectPath(featureRoot, action.form.template);
+        if (!action.form.template.endsWith(".html")) {
+          throw new InputFailure(
+            "configuration",
+            "runtime_manifest.template_kind_unsupported",
+            "RuntimeManifest pages require an exact static .html template.",
+            template,
+          );
+        }
         const html = await readSource(template);
         const page: RuntimePage = {
           id: `${parsed.feature.feature.id}.form.${action.form.id}`,
@@ -576,6 +622,7 @@ function featureTemplatePaths(
   featureContractPath: string,
   feature: FeatureContract,
   discovered: ReadonlySet<string>,
+  externalFormIndex: boolean,
 ): readonly string[] {
   const featureRoot = path.posix.dirname(featureContractPath);
   const templates = new Set<string>();
@@ -585,6 +632,14 @@ function featureTemplatePaths(
       "form template",
     );
     const projectTemplate = joinProjectPath(featureRoot, templateFile);
+    if (!externalFormIndex && !templateFile.endsWith(".html")) {
+      throw new InputFailure(
+        "configuration",
+        "form.template_kind_unsupported",
+        "The built-in form provider accepts only static .html templates. Configure project.formIndex for another source kind.",
+        projectTemplate,
+      );
+    }
     if (!discovered.has(projectTemplate)) {
       throw new InputFailure(
         "configuration",
@@ -775,7 +830,9 @@ function createInspection(project: ProjectContract): InspectionReport {
     },
     forms: {
       state: "checked",
-      basis: "static-html-form-index",
+      basis: project.formIndex === undefined
+        ? "static-html-form-index"
+        : "external-form-index",
     },
     handlers: {
       state: "checked",

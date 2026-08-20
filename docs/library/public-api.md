@@ -10,6 +10,7 @@ exports:
 
 - `parseJsonc(text)` for strict JSONC parsing with duplicate-key detection;
 - `parseProjectContract(text)`;
+- `parseFormIndex(text)` and `serializeFormIndex(value)`;
 - `parseFeatureContract(text)`;
 - `parseDiagnosticReport(text)`;
 - `parseDiagnosticReportV2(text)` and `parseCheckOutputV2(text)`;
@@ -100,6 +101,12 @@ share one lazy source-fact index so each source file is read and parsed at most
 once per check. External package imports remain graph leaves.
 Optional ownership rules also enforce suffix-based test and i18n slots without
 inferring a feature owner from file content or naming conventions.
+
+An optional project `formIndex` selects a canonical source-bound template
+artifact. The compiler rebinds every indexed document to current discovered
+source bytes before form rules run. Without that field, the built-in static HTML
+provider remains the only template source. Non-HTML feature templates are
+accepted only behind the external FormIndex boundary.
 
 An optional project `routeIndex` selects a canonical source-bound route
 artifact. The compiler verifies indexed files, digests, and ranges before

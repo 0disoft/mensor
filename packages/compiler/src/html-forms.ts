@@ -103,7 +103,10 @@ export function createStaticHtmlFormIndexProvider(options: {
               documents: indexedDocuments,
             });
             const parsed = parseFormIndex(serialized);
-            return verifyFormIndexContent(parsed, (documentPath) =>
+            if (!parsed.ok) {
+              throw new Error("Built-in FormIndex serialization did not parse.");
+            }
+            return verifyFormIndexContent(parsed.value, (documentPath) =>
               sources.get(documentPath),
             );
           };

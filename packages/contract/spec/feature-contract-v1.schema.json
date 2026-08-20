@@ -64,10 +64,7 @@
       "required": ["template", "id"],
       "properties": {
         "template": {
-          "allOf": [
-            { "$ref": "#/$defs/relativePath" },
-            { "type": "string", "pattern": "\\.html$" }
-          ]
+          "$ref": "#/$defs/relativePath"
         },
         "id": {
           "type": "string",

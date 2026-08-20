@@ -7,6 +7,7 @@ import {
 import diagnosticReportSchema from "../spec/diagnostic-report-v1.schema.json" with { type: "json" };
 import checkOutputV2Schema from "../spec/check-output-v2.schema.json" with { type: "json" };
 import featureContractSchema from "../spec/feature-contract-v1.schema.json" with { type: "json" };
+import formIndexSchema from "../spec/form-index-v1.schema.json" with { type: "json" };
 import projectContractSchema from "../spec/project-contract-v1.schema.json" with { type: "json" };
 import routeIndexSchema from "../spec/route-index-v1.schema.json" with { type: "json" };
 import runtimeManifestSchema from "../spec/runtime-manifest-v1.schema.json" with { type: "json" };
@@ -17,6 +18,7 @@ import type {
   CheckOutputV2,
   DiagnosticReport,
   FeatureContract,
+  FormIndex,
   ProjectContract,
   RouteIndex,
   RuntimeManifest,
@@ -39,6 +41,8 @@ export const validateProjectContract = ajv.compile<ProjectContract>(
 export const validateFeatureContract = ajv.compile<FeatureContract>(
   featureContractSchema,
 );
+
+export const validateFormIndex = ajv.compile<FormIndex>(formIndexSchema);
 
 export const validateDiagnosticReport = ajv.compile<DiagnosticReport>(
   diagnosticReportSchema,

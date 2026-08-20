@@ -1,0 +1,454 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "form-index-v1.schema.json",
+  "title": "Mensor FormIndex v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "producer", "documents"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "producer": {
+      "$ref": "#/$defs/producer"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/document"
+      }
+    }
+  },
+  "$defs": {
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/identifier"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._+-]{0,127})$"
+        }
+      }
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9._/-]{0,127})$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//).+$"
+    },
+    "contentDigest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line", "character"],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "character": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/position"
+        },
+        "end": {
+          "$ref": "#/$defs/position"
+        }
+      }
+    },
+    "dynamicReason": {
+      "enum": [
+        "computed-attribute",
+        "conditional-presence",
+        "custom-helper-semantics",
+        "dynamic-interpolation",
+        "repeated-generation"
+      ]
+    },
+    "unsupportedReason": {
+      "enum": [
+        "file-input",
+        "named-submitter",
+        "provider-resource-limit",
+        "submitter-route-override",
+        "unsupported-control-kind"
+      ]
+    },
+    "unresolvedReason": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/dynamicReason"
+        },
+        {
+          "$ref": "#/$defs/unsupportedReason"
+        }
+      ]
+    },
+    "absentEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {
+          "const": "absent"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "dynamicEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reason", "range"],
+      "properties": {
+        "state": {
+          "const": "dynamic"
+        },
+        "reason": {
+          "$ref": "#/$defs/dynamicReason"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "unsupportedEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reason", "range"],
+      "properties": {
+        "state": {
+          "const": "unsupported"
+        },
+        "reason": {
+          "$ref": "#/$defs/unsupportedReason"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "knownNonEmptyString": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "value", "range"],
+      "properties": {
+        "state": {
+          "const": "known"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "knownString": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "value", "range"],
+      "properties": {
+        "state": {
+          "const": "known"
+        },
+        "value": {
+          "type": "string"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "knownBoolean": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "value", "range"],
+      "properties": {
+        "state": {
+          "const": "known"
+        },
+        "value": {
+          "type": "boolean"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "knownControlKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "value", "range"],
+      "properties": {
+        "state": {
+          "const": "known"
+        },
+        "value": {
+          "enum": ["button", "input", "select", "textarea"]
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "knownMultiplicity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "value", "range"],
+      "properties": {
+        "state": {
+          "const": "known"
+        },
+        "value": {
+          "enum": ["mutually-exclusive", "repeated", "scalar"]
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "nonEmptyStringEvidence": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/knownNonEmptyString"
+        },
+        {
+          "$ref": "#/$defs/absentEvidence"
+        },
+        {
+          "$ref": "#/$defs/dynamicEvidence"
+        },
+        {
+          "$ref": "#/$defs/unsupportedEvidence"
+        }
+      ]
+    },
+    "stringEvidence": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/knownString"
+        },
+        {
+          "$ref": "#/$defs/absentEvidence"
+        },
+        {
+          "$ref": "#/$defs/dynamicEvidence"
+        },
+        {
+          "$ref": "#/$defs/unsupportedEvidence"
+        }
+      ]
+    },
+    "booleanEvidence": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/knownBoolean"
+        },
+        {
+          "$ref": "#/$defs/absentEvidence"
+        },
+        {
+          "$ref": "#/$defs/dynamicEvidence"
+        },
+        {
+          "$ref": "#/$defs/unsupportedEvidence"
+        }
+      ]
+    },
+    "controlKindEvidence": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/knownControlKind"
+        },
+        {
+          "$ref": "#/$defs/absentEvidence"
+        },
+        {
+          "$ref": "#/$defs/dynamicEvidence"
+        },
+        {
+          "$ref": "#/$defs/unsupportedEvidence"
+        }
+      ]
+    },
+    "multiplicityEvidence": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/knownMultiplicity"
+        },
+        {
+          "$ref": "#/$defs/absentEvidence"
+        },
+        {
+          "$ref": "#/$defs/dynamicEvidence"
+        },
+        {
+          "$ref": "#/$defs/unsupportedEvidence"
+        }
+      ]
+    },
+    "currentDocumentEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "range"],
+      "properties": {
+        "state": {
+          "const": "current-document"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "actionEvidence": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/currentDocumentEvidence"
+        },
+        {
+          "$ref": "#/$defs/nonEmptyStringEvidence"
+        }
+      ]
+    },
+    "inspection": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state"],
+          "properties": {
+            "state": {
+              "const": "complete"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state", "reason"],
+          "properties": {
+            "state": {
+              "const": "incomplete"
+            },
+            "reason": {
+              "$ref": "#/$defs/unresolvedReason"
+            },
+            "range": {
+              "$ref": "#/$defs/range"
+            }
+          }
+        }
+      ]
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "controlKind",
+        "inputType",
+        "multiple",
+        "multiplicity",
+        "successful",
+        "range"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyStringEvidence"
+        },
+        "controlKind": {
+          "$ref": "#/$defs/controlKindEvidence"
+        },
+        "inputType": {
+          "$ref": "#/$defs/stringEvidence"
+        },
+        "multiple": {
+          "$ref": "#/$defs/booleanEvidence"
+        },
+        "multiplicity": {
+          "$ref": "#/$defs/multiplicityEvidence"
+        },
+        "successful": {
+          "$ref": "#/$defs/booleanEvidence"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "form": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "method", "action", "range", "controls"],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/nonEmptyStringEvidence"
+        },
+        "method": {
+          "$ref": "#/$defs/stringEvidence"
+        },
+        "action": {
+          "$ref": "#/$defs/actionEvidence"
+        },
+        "range": {
+          "$ref": "#/$defs/range"
+        },
+        "controls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/control"
+          }
+        }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "contentDigest", "sourceKind", "inspection", "forms"],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/contentDigest"
+        },
+        "sourceKind": {
+          "$ref": "#/$defs/identifier"
+        },
+        "inspection": {
+          "$ref": "#/$defs/inspection"
+        },
+        "forms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/form"
+          }
+        }
+      }
+    }
+  }
+}

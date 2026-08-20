@@ -4,6 +4,7 @@ import {
   parseCheckOutputV2,
   parseDiagnosticReport,
   parseFeatureContract,
+  parseFormIndex,
   parseProjectContract,
   parseRouteIndex,
 } from "../packages/contract/dist/src/index.js";
@@ -73,6 +74,7 @@ const fixtures = [
 for (const file of [
   "project-contract-v1.schema.json",
   "feature-contract-v1.schema.json",
+  "form-index-v1.schema.json",
   "diagnostic-report-v1.schema.json",
   "route-index-v1.schema.json",
   "check-output-v2.schema.json",

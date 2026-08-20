@@ -2,6 +2,23 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Public canonical FormIndex v1 schema, parser, serializer, and immutable types.
+- Optional project `formIndex` ingestion with source digest, UTF-8, discovery,
+  and UTF-16 range rebinding before form rules run.
+- External FormIndex inspection coverage in Check Output v2 and conditional
+  support for non-HTML feature templates.
+
+### Compatibility
+
+- Existing projects retain the built-in static HTML provider and byte-compatible
+  revision-1 diagnostics when `formIndex` is omitted.
+- RuntimeManifest GET pages remain static-HTML-only; non-HTML template source is
+  never copied into runtime output.
+
 ## [0.3.0] - 2026-08-16
 
 ### Added

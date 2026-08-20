@@ -7,6 +7,7 @@
 - Product identity and outcomes: `docs/product/00-product-brief.md`
 - MVP requirements and acceptance criteria: `docs/product/02-spec.md`
 - Component and trust boundaries: `docs/architecture/00-system-boundary.md`
+- External template fact artifact: `docs/architecture/form-index-v1.md`
 - Runtime manifest artifact: `docs/architecture/runtime-manifest-v1.md`
 - Non-negotiable engineering rules: `docs/engineering/00-project-invariants.md`
 - Operational and release expectations: `docs/ops/00-operational-contract.md`
@@ -65,7 +66,8 @@
 - Response artifact schema: `../internal/agent-runner/spec/agent-authored-project-artifact-v1.schema.json`
 - Exploratory subagent observation schema: `../internal/agent-runner/spec/agent-authored-build-exploratory-observation-v4.schema.json`
 - Response-artifact observations: `../internal/agent-runner/observations/codex-subagents-response-v1-oracle-v3-replay/`
-- FormIndex v0 design: `docs/architecture/form-index-v0.md`
+- Historical FormIndex v0 design: `docs/architecture/form-index-v0.md`
+- Public FormIndex v1 contract: `docs/architecture/form-index-v1.md`
 - RouteIndex v1 contract: `docs/architecture/route-index-v1.md`
 - Accepted Check Output v2 inspection design:
   `docs/architecture/check-output-v2.md`

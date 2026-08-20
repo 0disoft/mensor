@@ -25,6 +25,7 @@ value is explicit in the authoring contract.
 - `project-contract-v1.schema.json`: project root and feature-contract inputs
 - `feature-contract-v1.schema.json`: one feature and its form-backed actions
 - `diagnostic-report-v1.schema.json`: canonical check output
+- `form-index-v1.schema.json`: canonical source-bound template facts
 - `route-index-v1.schema.json`: canonical source-bound application route facts
 - `runtime-manifest-v1.schema.json`: source-free GET page and POST action runtime artifact
 - `check-output-v2.schema.json`: opt-in reports and pre-report error envelopes
@@ -126,6 +127,7 @@ Path bases are explicit and do not inherit from `sourceRoot`:
 | --- | --- |
 | `sourceRoot` | project root |
 | `featureContracts[]` | project root |
+| `formIndex` | project root |
 | `routeIndex` | project root |
 | `fileRoles[].withinFeature` | directory containing the feature contract |
 | action `form.template` | directory containing the feature contract |
@@ -158,9 +160,12 @@ more expressive matcher is needed.
 
 ## Form Slice
 
-An action links to static HTML through its feature-relative `.html` template
-path and exact form id. Contract validation rejects other extensions before the
-compiler can parse TypeScript or another source kind as HTML. The compiler uses
+An action links to one feature-relative template path and exact form id.
+Without project `formIndex`, the compiler requires a `.html` template and uses
+its built-in static HTML provider. With `formIndex`, the selected canonical
+artifact may bind the same action contract to another discovered source kind.
+Every indexed document is revalidated against current source bytes and ranges
+before semantic rules run. The compiler uses
 the action schema and form codec to identify
 required wire fields. When a required binding has no named field candidate in
 the linked form, the diagnostic report contains `form.field_missing`.

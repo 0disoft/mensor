@@ -9,45 +9,6 @@ permissions:
   contents: read
 
 jobs:
-  materialize-public-form-index:
-    name: Materialize public FormIndex v1 implementation
-    if: github.event_name == 'pull_request' && github.head_ref == 'feat/public-form-index-v1'
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: feat/public-form-index-v1
-      - name: Apply bounded source patch
-        run: |
-          if [ ! -f scripts/form-index-payload.00.b64 ]; then
-            exit 0
-          fi
-          cat scripts/form-index-payload.*.b64 > /tmp/form-index-payload.b64
-          base64 --decode /tmp/form-index-payload.b64 | tar -xzf -
-          python3 scripts/apply-public-form-index-v1.py
-          rm scripts/apply-public-form-index-v1.py
-          rm scripts/form-index-payload.*.b64
-          rm .github/workflows/apply-public-form-index-v1.yml
-          git fetch --no-tags --depth=1 origin main
-          git show FETCH_HEAD:.github/workflows/ci.yml > .github/workflows/ci.yml
-          git diff --check
-          test ! -e packages/compiler/src/form-index-types.ts
-          test ! -e packages/compiler/src/form-index-validation.ts
-          test -e packages/contract/spec/form-index-v1.schema.json
-      - name: Commit implementation
-        run: |
-          if git diff --quiet; then
-            exit 0
-          fi
-          git config user.name "ZeroDi"
-          git config user.email "rodisoft1@gmail.com"
-          git add -A
-          git commit -s -m "feat(form-index): expose source-bound FormIndex v1"
-          git push origin HEAD:feat/public-form-index-v1
-
   check:
     name: Node ${{ matrix.node }} on ${{ matrix.os }}
     strategy:

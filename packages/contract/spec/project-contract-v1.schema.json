@@ -42,6 +42,9 @@
         "$ref": "#/$defs/ownershipRule"
       }
     },
+    "formIndex": {
+      "$ref": "#/$defs/relativePath"
+    },
     "routeIndex": {
       "$ref": "#/$defs/relativePath"
     }
