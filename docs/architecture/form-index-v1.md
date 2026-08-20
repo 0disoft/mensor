@@ -30,6 +30,46 @@ serializeFormIndex(value): string
 The package also exports the FormIndex v1 TypeScript types and the schema through
 `@0disoft/mensor-contract/schemas/form-index-v1.schema.json`.
 
+A producer writes canonical output itself instead of relying on a generic JSON
+formatter:
+
+```ts
+import { createHash } from "node:crypto";
+import { readFile, writeFile } from "node:fs/promises";
+
+import {
+  serializeFormIndex,
+  type FormIndex,
+} from "@0disoft/mensor-contract";
+
+const path = "src/features/tasks/view.ts";
+const source = await readFile(path, "utf8");
+const contentDigest = `sha256:${createHash("sha256")
+  .update(source)
+  .digest("hex")}` as const;
+
+const index: FormIndex = {
+  schemaVersion: 1,
+  producer: { name: "example/hono-form-index", version: "1.0.0" },
+  documents: [{
+    path,
+    contentDigest,
+    sourceKind: "example/hono-template",
+    inspection: { state: "complete" },
+    forms: extractedForms,
+  }],
+};
+
+await writeFile(
+  "mensor.form-index.json",
+  serializeFormIndex(index),
+  "utf8",
+);
+```
+
+`extractedForms` must preserve source ranges and unresolved evidence. The
+compiler independently re-reads `path` and rejects stale `contentDigest` values.
+
 ## Envelope
 
 ```ts
