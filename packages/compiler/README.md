@@ -72,8 +72,9 @@ const result = await checkProject({
 ```
 
 Contract failures are returned as data. The compiler reads supported project
-files but does not execute project source or configuration, spawn framework
-tools, install dependencies, or access the network.
+files but does not
+execute project source or configuration, spawn framework tools, install
+dependencies, or access the network.
 
 ## Documentation
 
