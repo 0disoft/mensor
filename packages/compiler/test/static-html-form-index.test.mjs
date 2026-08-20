@@ -36,11 +36,15 @@ test("built-in provider emits a canonical source-bound FormIndex once per docume
   const first = await provider.getIndex([documentPath, documentPath]);
   const second = await provider.getIndex([documentPath]);
   const serialized = serializeFormIndex(first);
+  const parsed = parseFormIndex(serialized);
 
   assert.equal(reads, 1);
   assert.equal(second, first);
   assert.equal(serializeFormIndex(second), serialized);
-  assert.deepEqual(parseFormIndex(serialized), first);
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    assert.deepEqual(parsed.value, first);
+  }
   assert.equal(first.documents.length, 1);
   assert.equal(first.documents[0].forms.length, 1);
   assert.deepEqual(
