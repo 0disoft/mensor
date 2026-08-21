@@ -112,9 +112,15 @@ diagnostic report. It contains static GET page HTML, POST action routes, handler
 ids, and serializable input contracts. Source paths, parser objects, module
 exports, and executable handlers do not cross this boundary.
 
-There is still no production runtime. A reference consumer may use the manifest
-through a separately injected handler registry, but the compiler does not own
-HTTP serving, authentication, CSRF, sessions, persistence, or deployment.
+`examples/runtime-manifest-consumer` proves one bounded use of the artifact
+through standard `Request` and `Response` values and a separately injected
+handler registry. It is outside the workspace package graph and creates no
+published runtime compatibility promise.
+
+There is still no production runtime. The compiler does not own HTTP serving,
+authentication, authorization, CSRF, sessions, persistence, rate limiting,
+deployment, or observability. Those remain host responsibilities even when the
+reference consumer performs route matching and form decoding.
 
 ## Failure Model
 

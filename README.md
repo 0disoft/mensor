@@ -5,6 +5,10 @@ HTML applications.
 
 The runnable [`examples/dogfood-tasks`](examples/dogfood-tasks/) application
 keeps compiler checks tied to real GET/POST behavior instead of fixtures alone.
+The bounded
+[`examples/runtime-manifest-consumer`](examples/runtime-manifest-consumer/)
+example proves that a clean RuntimeManifest can drive a source-free request
+consumer without moving executable handlers into the artifact.
 
 The project turns architectural knowledge that normally lives in a maintainer's
 head into machine-readable project contracts. It links static HTML forms,
@@ -89,6 +93,18 @@ The current proof:
 5. rejects checker-clean repairs that weaken a protected contract or delete
    feature semantics.
 
+## RuntimeManifest Reference Consumer
+
+`compileProject` emits RuntimeManifest v1 only after a clean check. The reference
+consumer maps exact static `GET` pages and `POST` actions to standard
+`Request`/`Response` values, decodes every current form codec, enforces bounded
+request input, and invokes host-registered handlers by stable id.
+
+The example remains outside the workspace package graph. It proves the runtime
+boundary before Mensor commits to a published runtime API. Authentication,
+authorization, CSRF, sessions, persistence, rate limiting, deployment, and
+observability remain host responsibilities.
+
 ## Product Boundary
 
 Mensor is not a web framework, router, template engine, ORM, deployment
@@ -103,8 +119,10 @@ When `routeIndex` is omitted, Mensor does not inspect application route
 declarations and does not run the `route.missing` rule. A passing check means
 only that every configured static contract check passed; it never proves
 runtime application semantics.
-Dynamic template languages, runtime manifests, production HTTP handling,
-autofix, arbitrary plugins, cloud processing, and telemetry are deferred.
+RuntimeManifest is a source-free build artifact, and the repository contains a
+bounded reference consumer. Production HTTP handling, dynamic template
+languages, autofix, arbitrary plugins, cloud processing, and telemetry remain
+deferred.
 
 ## Repository Shape
 
@@ -113,6 +131,7 @@ autofix, arbitrary plugins, cloud processing, and telemetry are deferred.
 - `packages/cli`: command parsing, output, and exit codes
 - `internal/fixture-kit`: deterministic fixture and repair-test support
 - `fixtures`: valid and intentionally broken example projects
+- `examples`: runnable semantic dogfood and the RuntimeManifest consumer proof
 
 See [the product specification](docs/product/02-spec.md),
 [system boundary](docs/architecture/00-system-boundary.md), and

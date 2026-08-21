@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Mensor RuntimeManifest consumer</title>
+  </head>
+  <body>
+    <main>
+      <h1>RuntimeManifest signup</h1>
+      <form id="signup-form" method="post" action="/signup">
+        <input type="hidden" name="csrf" value="">
+        <label>
+          Name
+          <input name="name" required maxlength="80">
+        </label>
+        <label>
+          Seats
+          <input type="number" name="seats" min="1" max="20" required>
+        </label>
+        <label>
+          Budget
+          <input type="number" name="budget" min="0" max="10000" step="any" required>
+        </label>
+        <label>
+          <input type="checkbox" name="newsletter" value="yes">
+          Newsletter
+        </label>
+        <label>
+          Plan
+          <select name="plan" required>
+            <option value="free">Free</option>
+            <option value="pro">Pro</option>
+          </select>
+        </label>
+        <fieldset>
+          <legend>Topics</legend>
+          <label><input type="checkbox" name="topics" value="security">Security</label>
+          <label><input type="checkbox" name="topics" value="performance">Performance</label>
+          <label><input type="checkbox" name="topics" value="tooling">Tooling</label>
+        </fieldset>
+        <button type="submit">Register</button>
+      </form>
+    </main>
+  </body>
+</html>

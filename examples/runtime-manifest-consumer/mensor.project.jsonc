@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "sourceRoot": "src",
+  "featureContracts": [
+    "src/features/signup/feature.mensor.jsonc"
+  ],
+  "fileRoles": [
+    {
+      "role": "server",
+      "withinFeature": "server"
+    },
+    {
+      "role": "view",
+      "withinFeature": "views"
+    }
+  ]
+}

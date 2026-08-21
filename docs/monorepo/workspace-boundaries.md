@@ -19,6 +19,7 @@ fixtures/
   compound/
 examples/
   dogfood-tasks/
+  runtime-manifest-consumer/
 ```
 
 The contract, compiler, CLI, fixture-kit, and agent-runner packages are current.
@@ -28,6 +29,12 @@ reserved for a possible runtime, adapter, SDK, or formatter are forbidden.
 `examples/dogfood-tasks` is a dependency-free runnable application, not a
 workspace package. It proves the compiler contract and application semantics
 against the same source and contributes a digest-pinned mutation baseline.
+
+`examples/runtime-manifest-consumer` is also outside the workspace package
+graph. It consumes a compiler-emitted RuntimeManifest through standard
+`Request` and `Response` values, binds executable handlers by id, and proves
+bounded URL-encoded input decoding. It creates no published runtime API or
+framework-support claim.
 
 ## Package Ownership
 
@@ -116,6 +123,10 @@ consumer, and verifies package identity, public publication metadata, and
 license bytes. Deleted or renamed source cannot survive as stale distributable
 code.
 
+Examples are source-only repository evidence. They are not packed into public
+packages and must not become implicit runtime dependencies of contract,
+compiler, or CLI packages.
+
 ## Dependency Rules
 
 ```text
@@ -147,6 +158,7 @@ schema, diagnostic meaning, or canonical output changes.
 
 ## Deferred Packages
 
-Reference runtime, framework adapters, SARIF formatter, language server, and
-benchmark packages are deferred. Add one only after an implemented consumer
-proves an ownership boundary that cannot remain internal.
+A published reference runtime, framework adapters, SARIF formatter, language
+server, and benchmark packages are deferred. Add one only after an implemented
+consumer proves an ownership boundary that cannot remain an example or internal
+module.

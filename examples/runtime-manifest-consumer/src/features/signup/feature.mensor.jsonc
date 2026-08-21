@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "feature": {
+    "id": "signup"
+  },
+  "actions": [
+    {
+      "id": "signup.register",
+      "route": {
+        "method": "POST",
+        "path": "/signup"
+      },
+      "form": {
+        "template": "views/index.html",
+        "id": "signup-form",
+        "documentPath": "/signup"
+      },
+      "handler": {
+        "file": "server/register.mjs",
+        "export": "registerSignup",
+        "role": "server"
+      },
+      "input": {
+        "schema": {
+          "kind": "object",
+          "properties": {
+            "name": {
+              "kind": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "seats": {
+              "kind": "integer",
+              "minimum": 1,
+              "maximum": 20
+            },
+            "budget": {
+              "kind": "number",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "newsletter": {
+              "kind": "boolean"
+            },
+            "plan": {
+              "kind": "enum",
+              "values": ["free", "pro"]
+            },
+            "topics": {
+              "kind": "array",
+              "items": {
+                "kind": "enum",
+                "values": ["security", "performance", "tooling"]
+              },
+              "minItems": 1,
+              "maxItems": 3
+            }
+          },
+          "required": ["name", "seats", "budget", "newsletter", "plan", "topics"]
+        },
+        "formCodec": {
+          "encoding": "urlencoded",
+          "unknownFields": "reject",
+          "bindings": [
+            {
+              "name": "name",
+              "path": ["name"],
+              "decode": {
+                "kind": "text",
+                "trim": true,
+                "empty": "reject"
+              }
+            },
+            {
+              "name": "seats",
+              "path": ["seats"],
+              "decode": {
+                "kind": "integer-base10"
+              }
+            },
+            {
+              "name": "budget",
+              "path": ["budget"],
+              "decode": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "newsletter",
+              "path": ["newsletter"],
+              "decode": {
+                "kind": "checkbox",
+                "trueValues": ["yes"],
+                "missing": false
+              }
+            },
+            {
+              "name": "plan",
+              "path": ["plan"],
+              "decode": {
+                "kind": "enum",
+                "values": ["free", "pro"]
+              }
+            },
+            {
+              "name": "topics",
+              "path": ["topics"],
+              "decode": {
+                "kind": "repeat",
+                "items": {
+                  "kind": "enum",
+                  "values": ["security", "performance", "tooling"]
+                }
+              }
+            }
+          ],
+          "ignoredFields": [
+            {
+              "name": "csrf",
+              "consumer": "host-csrf-verifier"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

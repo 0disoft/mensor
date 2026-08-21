@@ -8,6 +8,7 @@
 - MVP requirements and acceptance criteria: `docs/product/02-spec.md`
 - Component and trust boundaries: `docs/architecture/00-system-boundary.md`
 - Runtime manifest artifact: `docs/architecture/runtime-manifest-v1.md`
+- RuntimeManifest reference consumer: `examples/runtime-manifest-consumer/README.md`
 - Non-negotiable engineering rules: `docs/engineering/00-project-invariants.md`
 - Operational and release expectations: `docs/ops/00-operational-contract.md`
 - Package ownership and dependency direction: `docs/monorepo/workspace-boundaries.md`
