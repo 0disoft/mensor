@@ -1,7 +1,7 @@
 {
   "name": "@0disoft/mensor-cli",
   "version": "0.3.0",
-  "description": "CLI for checking Mensor project contracts.",
+  "description": "CLI for checking Mensor project contracts and emitting RuntimeManifest artifacts.",
   "license": "Apache-2.0",
   "publishConfig": {
     "access": "public",
@@ -17,7 +17,14 @@
   "bugs": {
     "url": "https://github.com/0disoft/mensor/issues"
   },
-  "keywords": ["mensor", "cli", "static-analysis", "contracts", "developer-tools"],
+  "keywords": [
+    "mensor",
+    "cli",
+    "static-analysis",
+    "contracts",
+    "developer-tools",
+    "runtime-manifest"
+  ],
   "type": "module",
   "sideEffects": false,
   "engines": {

@@ -2,14 +2,23 @@ import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
 
-import { checkProject, type CompilerFailure } from "@0disoft/mensor-compiler";
+import {
+  checkProject,
+  compileProject,
+  type CompilerFailure,
+} from "@0disoft/mensor-compiler";
 
+import {
+  validateProjectOutputPath,
+  writeProjectFileAtomically,
+} from "./atomic-write.js";
 import type {
   CliFailureEnvelope,
   RunCliOptions,
 } from "./types.js";
 
 type CliReportVersion = 1 | 2;
+type CliCommand = "check" | "compile";
 
 interface CliFailureEnvelopeV2 {
   readonly schemaVersion: 2;
@@ -45,16 +54,20 @@ function readPackageVersion(): string {
   return value.version;
 }
 
-const helpText = `Usage: mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
+const helpText = `Usage:
+  mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
+  mensor compile [root] [--config <path>] [--output <path>]
 
 Commands:
   check    Check project contracts against static source facts.
+  compile  Emit RuntimeManifest v1 after a clean contract check.
 
 Options:
-  --config <path>  Root-relative project contract path.
-  --json           Write one canonical JSON document to stdout.
-  --report-version Select JSON output revision 1 or 2. Requires --json.
-  --help           Show this help.
+  --config <path>         Root-relative project contract path.
+  --json                  Write one canonical check report to stdout. Check only.
+  --report-version <1|2> Select check JSON revision 1 or 2. Requires --json.
+  --output <path>         Atomically write the manifest to a root-relative path. Compile only.
+  --help                  Show this help.
 `;
 
 export async function runCli(options: RunCliOptions): Promise<number> {
@@ -68,6 +81,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         config: { type: "string" },
         help: { type: "boolean", short: "h" },
         json: { type: "boolean" },
+        output: { type: "string" },
         "report-version": { type: "string" },
       },
     });
@@ -75,12 +89,28 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     return writeUsageFailure(
       options,
       errorMessage(error),
-      options.argv.includes("--json"),
+      rawCommandUsesJson(options.argv),
       requestedReportVersion(options.argv),
     );
   }
 
-  const json = parsed.values["json"] === true;
+  if (parsed.values["help"] === true) {
+    options.stdout(helpText);
+    return 0;
+  }
+
+  const command = parseCommand(parsed.positionals[0]);
+  const rawJson = parsed.values["json"] === true;
+  const json = command === "compile" || rawJson;
+  if (command === undefined || parsed.positionals.length > 2) {
+    return writeUsageFailure(
+      options,
+      "Expected command check or compile and at most one project root.",
+      json,
+      1,
+    );
+  }
+
   const rawReportVersion = parsed.values["report-version"];
   const reportVersionValue = typeof rawReportVersion === "string"
     ? rawReportVersion
@@ -93,6 +123,14 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       1,
     );
   }
+  if (command === "compile" && reportVersionValue !== undefined) {
+    return writeUsageFailure(
+      options,
+      "--report-version is valid only with check.",
+      true,
+      1,
+    );
+  }
   const reportVersion = parseReportVersion(reportVersionValue);
   if (reportVersion === undefined) {
     return writeUsageFailure(
@@ -102,7 +140,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       1,
     );
   }
-  if (reportVersionValue !== undefined && !json) {
+  if (command === "check" && reportVersionValue !== undefined && !rawJson) {
     return writeUsageFailure(
       options,
       "--report-version requires --json.",
@@ -110,17 +148,30 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       reportVersion,
     );
   }
-  if (parsed.values["help"] === true) {
-    options.stdout(helpText);
-    return 0;
-  }
-  if (parsed.positionals[0] !== "check" || parsed.positionals.length > 2) {
+  if (command === "compile" && rawJson) {
     return writeUsageFailure(
       options,
-      "Expected command check and at most one project root.",
-      json,
+      "compile already emits canonical JSON; --json is valid only with check.",
+      true,
+      1,
+    );
+  }
+
+  const outputValue = parsed.values["output"];
+  if (command === "check" && outputValue !== undefined) {
+    return writeUsageFailure(
+      options,
+      "--output is valid only with compile.",
+      rawJson,
       reportVersion,
     );
+  }
+  const outputPath = command === "compile" && typeof outputValue === "string"
+    ? validateProjectOutputPath(outputValue)
+    : undefined;
+  if (outputPath?.ok === false) {
+    writeFailure(options, outputPath.failure, true, 1);
+    return 2;
   }
 
   const root = path.resolve(options.cwd, parsed.positionals[1] ?? ".");
@@ -138,7 +189,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         file: configValue,
       },
       json,
-      reportVersion,
+      command === "check" ? reportVersion : 1,
     );
     return 2;
   }
@@ -146,14 +197,35 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     typeof configValue === "string"
       ? configValue.replaceAll("\\", "/")
       : undefined;
-  const checkOptions = {
+  const projectOptions = {
     root,
     producerVersion: cliVersion,
     ...(config === undefined ? {} : { configFile: config }),
   };
+
+  if (command === "compile") {
+    return runCompile(
+      options,
+      projectOptions,
+      outputPath?.ok === true ? outputPath.path : undefined,
+    );
+  }
+  return runCheck(options, projectOptions, rawJson, reportVersion);
+}
+
+async function runCheck(
+  options: RunCliOptions,
+  projectOptions: {
+    readonly root: string;
+    readonly producerVersion: string;
+    readonly configFile?: string;
+  },
+  json: boolean,
+  reportVersion: CliReportVersion,
+): Promise<number> {
   const result = reportVersion === 2
-    ? await checkProject({ ...checkOptions, reportVersion: 2 })
-    : await checkProject(checkOptions);
+    ? await checkProject({ ...projectOptions, reportVersion: 2 })
+    : await checkProject(projectOptions);
 
   if (!result.ok) {
     const exitCode = result.failure.kind === "configuration" ? 2 : 3;
@@ -162,19 +234,78 @@ export async function runCli(options: RunCliOptions): Promise<number> {
   }
 
   if (json) {
-    options.stdout(`${JSON.stringify(result.report, null, 2)}\n`);
+    writeJson(options, result.report);
   } else if (result.report.diagnostics.length === 0) {
     options.stdout("No contract violations found.\n");
   } else {
-    for (const diagnostic of result.report.diagnostics) {
-      const line = diagnostic.range.start.line + 1;
-      const character = diagnostic.range.start.character + 1;
-      options.stdout(
-        `${diagnostic.file}:${line}:${character} ${diagnostic.code} ${diagnostic.message}\n`,
-      );
-    }
+    writeHumanDiagnostics(options, result.report.diagnostics);
   }
   return result.report.summary.errorCount === 0 ? 0 : 1;
+}
+
+async function runCompile(
+  options: RunCliOptions,
+  projectOptions: {
+    readonly root: string;
+    readonly producerVersion: string;
+    readonly configFile?: string;
+  },
+  outputPath: string | undefined,
+): Promise<number> {
+  const result = await compileProject(projectOptions);
+  if (!result.ok) {
+    if (result.kind === "diagnostics") {
+      writeJson(options, result.report);
+      return 1;
+    }
+    const exitCode = result.failure.kind === "configuration" ? 2 : 3;
+    writeFailure(options, result.failure, true, 1);
+    return exitCode;
+  }
+
+  const manifestText = `${JSON.stringify(result.manifest, null, 2)}\n`;
+  if (outputPath === undefined) {
+    options.stdout(manifestText);
+    return 0;
+  }
+  const written = await writeProjectFileAtomically(
+    projectOptions.root,
+    outputPath,
+    manifestText,
+  );
+  if (!written.ok) {
+    const exitCode = written.failure.kind === "configuration" ? 2 : 3;
+    writeFailure(options, written.failure, true, 1);
+    return exitCode;
+  }
+  return 0;
+}
+
+function writeJson(options: RunCliOptions, value: unknown): void {
+  options.stdout(`${JSON.stringify(value, null, 2)}\n`);
+}
+
+function writeHumanDiagnostics(
+  options: RunCliOptions,
+  diagnostics: readonly {
+    readonly file: string;
+    readonly code: string;
+    readonly message: string;
+    readonly range: {
+      readonly start: {
+        readonly line: number;
+        readonly character: number;
+      };
+    };
+  }[],
+): void {
+  for (const diagnostic of diagnostics) {
+    const line = diagnostic.range.start.line + 1;
+    const character = diagnostic.range.start.character + 1;
+    options.stdout(
+      `${diagnostic.file}:${line}:${character} ${diagnostic.code} ${diagnostic.message}\n`,
+    );
+  }
 }
 
 function writeUsageFailure(
@@ -217,7 +348,7 @@ function writeFailure(
             status: "error",
             failure,
           };
-    options.stdout(`${JSON.stringify(envelope, null, 2)}\n`);
+    writeJson(options, envelope);
     return;
   }
   options.stderr(`mensor: ${failure.code}: ${failure.message}\n`);
@@ -242,6 +373,10 @@ function canonicalV2Failure(failure: CompilerFailure): CompilerFailure {
   };
 }
 
+function parseCommand(value: string | undefined): CliCommand | undefined {
+  return value === "check" || value === "compile" ? value : undefined;
+}
+
 function parseReportVersion(value: string | undefined): CliReportVersion | undefined {
   if (value === undefined || value === "1") {
     return 1;
@@ -260,6 +395,10 @@ function requestedReportVersion(argv: readonly string[]): CliReportVersion {
     }
   }
   return 1;
+}
+
+function rawCommandUsesJson(argv: readonly string[]): boolean {
+  return argv[0] === "compile" || argv.includes("--json");
 }
 
 function errorMessage(error: unknown): string {

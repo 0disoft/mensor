@@ -40,8 +40,9 @@ filesystem, TypeScript compiler API, HTML parsers, or CLI concerns.
 ### `@0disoft/mensor-compiler`
 
 Owns deterministic discovery, JSONC loading, TypeScript and HTML fact
-extraction, semantic linking, rules, and report construction. It depends on the
-contract package and parser libraries. It must not depend on the CLI or execute
+extraction, semantic linking, rules, report construction, and clean-check
+RuntimeManifest construction. It depends on the contract package and parser
+libraries. It must not depend on the CLI, write deployment artifacts, or execute
 inspected source.
 
 The current implementation covers bounded source discovery, feature contracts,
@@ -49,26 +50,37 @@ handler linkage, file-role classification, placement diagnostics, static HTML
 form extraction, and explicit handler export facts. TypeScript import edges
 are normalized for configured direct and transitive role boundaries.
 Suffix-based ownership rules keep test and i18n resources inside their declared
-feature slots.
+feature slots. `compileProject` reuses the verified analysis and returns
+RuntimeManifest v1 only when no diagnostic remains.
 
 ### `@0disoft/mensor-cli`
 
 Owns argument parsing, config selection, stdout and stderr behavior, exit
-status, and future atomic artifact writes. It delegates all checking behavior
-to the compiler and does not parse source directly.
+status, and atomic RuntimeManifest file writes. It delegates source checking and
+manifest construction to the compiler and does not parse source directly.
 
-The current executable exposes only `mensor check [root] [--config <path>]
-[--json] [--report-version <1|2>]` and maps compiler results to the documented
-`0/1/2/3` exit statuses. Report revision selection stays in the CLI shell;
-inspection derivation remains compiler-owned.
+The executable exposes:
+
+```text
+mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
+mensor compile [root] [--config <path>] [--output <path>]
+```
+
+`check` maps compiler results to the documented `0/1/2/3` exit statuses. Report
+revision selection stays in the CLI shell; inspection derivation remains
+compiler-owned. `compile` serializes the compiler-owned RuntimeManifest to
+stdout or atomically replaces one verified project-root-relative output file.
+The CLI owns path confinement, parent-directory creation, temporary-file
+cleanup, and output-write failure mapping. It does not add runtime semantics to
+the manifest.
 
 ### `internal/fixture-kit`
 
 Owns fixture execution, canonical snapshots, randomized discovery tests,
 security sentinels, the agent-trial report schema and canonical serializer,
 mutation checks that retain compiler diagnostic reports, and repair evaluation
-helpers. It may depend on public
-packages but is private and never appears in a published dependency graph.
+helpers. It may depend on public packages but is private and never appears in a
+published dependency graph.
 
 The current repair evaluator captures hashes for explicitly protected contract
 files, reruns the compiler, and invokes a trusted semantic application check.
@@ -83,8 +95,8 @@ prompts, and transcripts remain outside this package.
 
 Owns bounded external command execution for trial adapters. It depends on the
 fixture kit's provider-neutral types and the contract package's diagnostic
-validator. It must remain private and must not become
-a dependency of the compiler, CLI, or published packages.
+validator. It must remain private and must not become a dependency of the
+compiler, CLI, or published packages.
 
 It also owns canonical execution descriptors and trial-evidence envelopes.
 Those artifacts identify comparable evaluation cohorts without moving command
@@ -116,6 +128,10 @@ consumer, and verifies package identity, public publication metadata, and
 license bytes. Deleted or renamed source cannot survive as stale distributable
 code.
 
+A CLI-generated RuntimeManifest is application output, not repository build
+output. It is never used as source truth and should live in a caller-owned
+ignored or deployment-artifact directory.
+
 ## Dependency Rules
 
 ```text
@@ -135,15 +151,16 @@ contract <- compiler <- cli
 
 Public packages use one fixed version during `0.x` to avoid compatibility
 matrices before the boundaries settle. Serialized contract, diagnostic-report,
-and future artifact schema versions remain independent from the package
-version.
+and artifact schema versions remain independent from the package version.
 
 ## Change Coordination
 
 A change to a serialized contract must update its validator, canonical form,
 fixtures, CLI examples, and compatibility note in one pull request. A compiler
 rule may change without a contract-package release only when no public type,
-schema, diagnostic meaning, or canonical output changes.
+schema, diagnostic meaning, or canonical output changes. A CLI artifact write
+change must preserve the compiler-owned manifest bytes and document replacement
+and rollback behavior.
 
 ## Deferred Packages
 

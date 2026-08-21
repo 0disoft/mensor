@@ -11,26 +11,43 @@ toolchain decision was recorded. Future CI must test the minimum supported
 major and one newer supported major; package metadata alone is not compatibility
 evidence.
 
-## MVP Command
+## Commands
 
 ```text
 mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
+mensor compile [root] [--config <path>] [--output <path>]
 ```
+
+Both commands use these rules:
 
 - `root` defaults to the current working directory.
 - `--config` defaults to `mensor.project.jsonc` inside `root`.
+- Config paths must resolve inside `root`.
+- Environment variables do not alter contract or rule behavior.
+- Compiler defaults allow 10,000 discovered files, 1 MiB per source file,
+  64 MiB across the discovered source tree, and 64 directory levels below
+  `sourceRoot`.
+
+`check` accepts these report options:
+
 - `--json` selects the canonical machine-readable report.
 - `--report-version` selects JSON revision `1` or `2` and is invalid without
   `--json`. The default is revision `1`.
-- Paths supplied through flags must resolve inside `root`.
-- Environment variables do not alter contract or rule behavior in the MVP.
-- The CLI applies compiler defaults of 10,000 discovered files, 1 MiB per
-  source file, 64 MiB across the discovered source tree, and 64 directory
-  levels below `sourceRoot`.
 
-`compile`, `fix`, `watch`, `init`, and plugin commands are not part of the MVP.
+`compile` accepts one artifact option:
 
-## Output
+- `--output` writes RuntimeManifest v1 to a project-root-relative portable POSIX
+  file path. It is invalid with `check`.
+- Output paths reject absolute paths, backslashes, empty segments, current or
+  parent directory segments, and parent symlinks that resolve outside `root`.
+- Missing output directories are created below the verified project root.
+- An existing regular output file is replaced. Directories, symbolic links,
+  and other special files are rejected.
+
+`fix`, `watch`, `init`, and plugin commands are not part of the current command
+surface.
+
+## Check Output
 
 Human mode writes concise diagnostics for a terminal. JSON mode writes exactly
 one JSON document followed by one LF newline to stdout. JSON mode does not emit
@@ -65,18 +82,47 @@ The normative diagnostic fields are in
 in `packages/contract/spec/check-output-v2.schema.json`. Product-level
 canonicalization and determinism rules remain in `docs/product/02-spec.md`.
 
+## Compile Output
+
+`compile` runs the same complete revision-1 analysis as `check`. It emits a
+RuntimeManifest only when the analysis completed with zero diagnostics. The
+manifest contains static GET page HTML, POST action routes, stable handler ids,
+and serializable form input contracts. It contains no executable handler,
+source path, parser object, timestamp, or random identifier.
+
+Without `--output`, success writes exactly one canonical RuntimeManifest v1 JSON
+document and one LF to stdout. With `--output`, success writes no stdout or
+stderr. The destination is replaced through a same-directory temporary file:
+write, file sync, close, then rename. A failed compile or failed output write
+does not replace the destination, and temporary files are removed after handled
+failures.
+
+When diagnostics prevent compilation, `compile` writes canonical
+DiagnosticReport v1 JSON to stdout and exits `1`; it does not create or replace
+the selected output file. Configuration, filesystem, and internal failures use
+the revision-1 failure envelope on stdout. Compile output is already canonical
+JSON, so `--json` and `--report-version` are invalid with `compile`.
+
+Static HTML is embedded in the manifest. Consumers must treat the file as
+deployable application data rather than a harmless diagnostic report.
+
 ## Exit Status
 
-- `0`: checking completed with no error diagnostics
-- `1`: project contract violations were found
-- `2`: CLI arguments or project configuration are invalid
-- `3`: an unexpected filesystem, parser, or internal failure prevented checking
+- `0`: checking passed, or a RuntimeManifest was emitted or written.
+- `1`: project diagnostics were found; compilation produced no manifest.
+- `2`: CLI arguments, project configuration, or output-path policy is invalid.
+- `3`: a filesystem, parser, output-write, or internal failure prevented the
+  operation.
 
-Warnings alone do not produce exit status `1`. A failure before a report can be
-constructed still respects `--json` by emitting a documented machine-readable
-error envelope.
+Warnings alone do not produce exit status `1` for `check`. `compile` is stricter:
+any diagnostic prevents a manifest because RuntimeManifest is a clean-check
+artifact.
 
-The failure envelope is:
+A failure before a check report can be constructed respects `--json` by emitting
+a machine-readable error envelope. Compile failures always use that JSON
+envelope because compile is a machine-output command.
+
+The revision-1 failure envelope is:
 
 ```json
 {
@@ -95,26 +141,27 @@ The failure envelope is:
 }
 ```
 
-When revision 2 was selected successfully, pre-report failures use the same
-failure shape with `schemaVersion: 2`. Error envelopes never contain
+When revision 2 was selected successfully for `check`, pre-report failures use
+the same failure shape with `schemaVersion: 2`. Error envelopes never contain
 `inspection`. An unsupported revision cannot select its own envelope and is
 reported as a revision-1 usage failure.
 
-`file` and `issues` are present only when the compiler failure owns those
-facts. Revision 2 omits `file` when the rejected value is absolute,
-backslash-delimited, or root-escaping rather than copying a non-canonical path
-into the envelope. JSON failures go to stdout with one LF and no stderr output.
-Human-mode setup failures go to stderr.
+`file` and `issues` are present only when the failure owns those facts. Revision
+2 omits `file` when the rejected value is absolute, backslash-delimited, or
+root-escaping rather than copying a non-canonical path into the envelope. JSON
+failures go to stdout with one LF and no stderr output. Human-mode check setup
+failures go to stderr.
 
 ## Failure Separation
 
 Project violations are expected compiler results. Invalid configuration is a
-user-correctable setup failure. Filesystem and internal failures must remain
-distinguishable so automation does not mistake a broken checker for a clean
-project.
+user-correctable setup failure. Filesystem and internal failures remain
+distinguishable so automation does not mistake a broken checker or failed
+artifact write for a clean project.
 
 ## Compatibility
 
-Command names, flag meaning, JSON field meaning, and exit statuses are public
-contracts after the first preview release. Help text and prose may improve in a
-patch release, but automation-facing meaning requires compatibility treatment.
+Command names, flag meaning, JSON field meaning, output-file replacement, and
+exit statuses are public contracts after release. Help text and prose may
+improve in a patch release, but automation-facing meaning requires compatibility
+treatment.

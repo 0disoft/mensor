@@ -2,6 +2,23 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- `mensor compile [root] [--config <path>] [--output <path>]` for emitting
+  canonical RuntimeManifest v1 from the existing clean-check compiler API.
+- Project-root-confined atomic manifest file replacement with parent-directory
+  creation, same-directory temporary files, file sync, cleanup, and explicit
+  output-path failures.
+
+### Compatibility
+
+- Existing `mensor check` behavior, report revisions, JSON envelopes, and exit
+  statuses remain unchanged.
+- Compile stdout and output-file bytes use RuntimeManifest v1 canonical JSON.
+  Diagnostics prevent artifact creation and retain DiagnosticReport v1 output.
+
 ## [0.3.0] - 2026-08-16
 
 ### Added

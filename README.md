@@ -16,11 +16,12 @@ JSON that a person, CI job, or coding agent can act on.
 
 Version `0.3.0` is the current public preview. It adds typed form codecs for
 base-10 integers, finite decimals, checkboxes, enums, and repeated values while
-preserving existing text-codec diagnostics.
+preserving existing text-codec diagnostics. The current source tree also exposes
+`mensor compile`, which emits RuntimeManifest v1 only after a clean check.
 
 ## Registry Installation
 
-The supported CLI installation path is:
+The supported CLI installation path for the current public preview is:
 
 ```text
 pnpm add --save-dev @0disoft/mensor-cli@0.3.0
@@ -53,28 +54,32 @@ in `featureContracts`, while its handler may be declared as
 
 ## Source Checkout
 
-The current preview runs from a source checkout with Node.js 22 or newer and
-pnpm 11:
+The current source tree runs with Node.js 22 or newer and pnpm 11:
 
 ```text
 pnpm install --frozen-lockfile
 pnpm build
 pnpm mensor check fixtures/valid/tiny-tasks --json
 pnpm mensor check fixtures/valid/tiny-tasks --json --report-version 2
+pnpm mensor compile fixtures/valid/tiny-tasks
+pnpm mensor compile fixtures/valid/tiny-tasks --output generated/runtime-manifest.json
 ```
 
 Both check commands exit `0`. The first preserves DiagnosticReport v1; the
-second adds compiler-derived inspection states through Check Output v2. To
-inspect a deterministic contract failure, run:
+second adds compiler-derived inspection states through Check Output v2. The
+compile commands emit the same canonical RuntimeManifest v1, either to stdout
+or through an atomic project-root-relative file replacement. To inspect a
+deterministic contract failure, run:
 
 ```text
 pnpm mensor check fixtures/invalid/form-field-missing --json
 ```
 
-That command exits `1` and reports `form.field_missing`. The complete project
-and feature contract authoring example lives in
-[`packages/contract/spec/README.md`](packages/contract/spec/README.md). This is
-the contributor path for exercising the current source tree; registry
+That command exits `1` and reports `form.field_missing`. Compiling the same
+invalid fixture also exits `1`, writes DiagnosticReport v1 to stdout, and emits
+no manifest. The complete project and feature contract authoring example lives
+in [`packages/contract/spec/README.md`](packages/contract/spec/README.md). This
+is the contributor path for exercising the current source tree; registry
 installation is the supported consumer path.
 
 ## First Proof
@@ -85,8 +90,10 @@ The current proof:
 2. extracts static HTML forms and TypeScript/JavaScript source facts;
 3. detects form, route, handler, import-boundary, placement, and ownership
    violations;
-4. emits byte-stable diagnostics through `mensor check --json`; and
-5. rejects checker-clean repairs that weaken a protected contract or delete
+4. emits byte-stable diagnostics through `mensor check --json`;
+5. emits source-free RuntimeManifest v1 only after a zero-diagnostic analysis;
+   and
+6. rejects checker-clean repairs that weaken a protected contract or delete
    feature semantics.
 
 ## Product Boundary
@@ -98,19 +105,22 @@ with those kinds of tools.
 
 The MVP supports TypeScript or JavaScript projects with static `.html` files.
 An optional canonical RouteIndex lets an external producer supply static route
-facts without granting the compiler code-execution authority.
-When `routeIndex` is omitted, Mensor does not inspect application route
-declarations and does not run the `route.missing` rule. A passing check means
-only that every configured static contract check passed; it never proves
-runtime application semantics.
-Dynamic template languages, runtime manifests, production HTTP handling,
-autofix, arbitrary plugins, cloud processing, and telemetry are deferred.
+facts without granting the compiler code-execution authority. When `routeIndex`
+is omitted, Mensor does not inspect application route declarations and does not
+run the `route.missing` rule. A passing check means only that every configured
+static contract check passed; it never proves runtime application semantics.
+
+RuntimeManifest v1 contains static GET page HTML, POST action routes, handler
+ids, and serializable input contracts. It does not contain executable handlers
+or own HTTP serving, authentication, CSRF, sessions, persistence, or deployment.
+Dynamic template languages, a production runtime, autofix, arbitrary plugins,
+cloud processing, and telemetry are deferred.
 
 ## Repository Shape
 
 - `packages/contract`: serializable contracts, diagnostics, and validation
 - `packages/compiler`: discovery, source facts, semantic linking, and rules
-- `packages/cli`: command parsing, output, and exit codes
+- `packages/cli`: command parsing, output, atomic manifest writes, and exit codes
 - `internal/fixture-kit`: deterministic fixture and repair-test support
 - `fixtures`: valid and intentionally broken example projects
 

@@ -123,11 +123,25 @@ compatibility promise.
 
 ## Current CLI Surface
 
-`@0disoft/mensor-cli` exports `runCli(options)` for process-isolated testing and host
-embedding, plus the `mensor` executable. The library function receives argv,
-cwd, stdout, and stderr ports explicitly and returns an exit status without
+`@0disoft/mensor-cli` exports `runCli(options)` for process-isolated testing and
+host embedding, plus the `mensor` executable. The library function receives
+argv, cwd, stdout, and stderr ports explicitly and returns an exit status without
 mutating global process state. The executable is the only module that writes to
 the real process streams and `process.exitCode`.
+
+The executable exposes these public commands:
+
+```text
+mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
+mensor compile [root] [--config <path>] [--output <path>]
+```
+
+`compile` calls the public compiler API and preserves its canonical manifest
+value. The CLI owns only command validation, serialization to canonical JSON,
+and optional atomic file replacement. `--output` is project-root-relative,
+rejects root escape and unsafe target kinds, and leaves an existing destination
+unchanged when checking, compilation, sync, or rename fails. The atomic writer
+is internal CLI implementation and is not exported as a library API.
 
 ## Schema Ownership
 
@@ -167,6 +181,10 @@ Version `0.2.0` adds opt-in Check Output v2, its public schema and parsers,
 typed compiler overloads, and CLI report revision selection. Revision 1 remains
 the default wire and library contract.
 
+The unreleased CLI compile surface is additive. It does not change the
+`compileProject` return type, RuntimeManifest v1 schema, check report envelopes,
+or existing check flags.
+
 ## Deprecation
 
 Before `1.0`, a published public API should be deprecated for at least one
@@ -186,3 +204,6 @@ local tarballs into an isolated consumer. Public third-party dependencies use
 normal package-manager resolution. The consumer must execute the installed
 `mensor` binary successfully for a valid fixture and return the documented
 diagnostic exit status for an invalid fixture.
+
+RuntimeManifest files written by the CLI are caller-owned application artifacts.
+They are not package payloads, compiler caches, or repository source truth.
