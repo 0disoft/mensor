@@ -42,6 +42,7 @@ export interface ProjectContract {
   readonly fileRoles: readonly FileRoleContract[];
   readonly boundaries?: readonly BoundaryContract[];
   readonly ownershipRules?: readonly OwnershipRuleContract[];
+  readonly formIndex?: string;
   readonly routeIndex?: string;
 }
 
@@ -64,6 +65,85 @@ export interface IndexedRoute {
     readonly contentDigest: ContentDigest;
     readonly range: SourceRange;
   };
+}
+
+export type FormIndexDynamicReason =
+  | "computed-attribute"
+  | "conditional-presence"
+  | "custom-helper-semantics"
+  | "dynamic-interpolation"
+  | "repeated-generation";
+
+export type FormIndexUnsupportedReason =
+  | "file-input"
+  | "named-submitter"
+  | "provider-resource-limit"
+  | "submitter-route-override"
+  | "unsupported-control-kind";
+
+export type FormIndexEvidence<T> =
+  | { readonly state: "known"; readonly value: T; readonly range: SourceRange }
+  | { readonly state: "absent"; readonly range?: SourceRange }
+  | {
+      readonly state: "dynamic";
+      readonly reason: FormIndexDynamicReason;
+      readonly range: SourceRange;
+    }
+  | {
+      readonly state: "unsupported";
+      readonly reason: FormIndexUnsupportedReason;
+      readonly range: SourceRange;
+    };
+
+export type FormIndexActionEvidence =
+  | FormIndexEvidence<string>
+  | { readonly state: "current-document"; readonly range: SourceRange };
+
+export type FormIndexDocumentInspection =
+  | { readonly state: "complete" }
+  | {
+      readonly state: "incomplete";
+      readonly reason: FormIndexDynamicReason | FormIndexUnsupportedReason;
+      readonly range?: SourceRange;
+    };
+
+export interface FormIndex {
+  readonly schemaVersion: 1;
+  readonly producer: {
+    readonly name: string;
+    readonly version: string;
+  };
+  readonly documents: readonly FormIndexDocument[];
+}
+
+export interface FormIndexDocument {
+  readonly path: string;
+  readonly contentDigest: ContentDigest;
+  readonly sourceKind: string;
+  readonly inspection: FormIndexDocumentInspection;
+  readonly forms: readonly FormIndexForm[];
+}
+
+export interface FormIndexForm {
+  readonly identity: FormIndexEvidence<string>;
+  readonly method: FormIndexEvidence<string>;
+  readonly action: FormIndexActionEvidence;
+  readonly range: SourceRange;
+  readonly controls: readonly FormIndexControl[];
+}
+
+export interface FormIndexControl {
+  readonly name: FormIndexEvidence<string>;
+  readonly controlKind: FormIndexEvidence<
+    "button" | "input" | "select" | "textarea"
+  >;
+  readonly inputType: FormIndexEvidence<string>;
+  readonly multiple: FormIndexEvidence<boolean>;
+  readonly multiplicity: FormIndexEvidence<
+    "mutually-exclusive" | "repeated" | "scalar"
+  >;
+  readonly successful: FormIndexEvidence<boolean>;
+  readonly range: SourceRange;
 }
 
 export interface RuntimeManifest {
@@ -558,6 +638,7 @@ export type InspectionState = "checked" | "not-configured" | "out-of-scope";
 
 export type InspectionBasis =
   | "file-roles"
+  | "form-index"
   | "static-html-form-index"
   | "static-module-facts"
   | "module-graph"
@@ -575,7 +656,10 @@ export interface InspectionDomain<
 
 export interface InspectionReport {
   readonly filePlacement: InspectionDomain<"checked", "file-roles">;
-  readonly forms: InspectionDomain<"checked", "static-html-form-index">;
+  readonly forms: InspectionDomain<
+    "checked",
+    "form-index" | "static-html-form-index"
+  >;
   readonly handlers: InspectionDomain<"checked", "static-module-facts">;
   readonly moduleBoundaries: InspectionDomain<
     "checked" | "not-configured",

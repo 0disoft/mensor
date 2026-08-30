@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -9,10 +9,12 @@ import { checkProject, compileProject } from "@0disoft/mensor-compiler";
 import {
   parseDiagnosticReport,
   parseDiagnosticReportV2,
+  serializeFormIndex,
   parseRouteIndex,
   serializeRouteIndex,
 } from "@0disoft/mensor-contract";
 import { contentDigest } from "../dist/src/route-index.js";
+import { extractStaticHtmlFormDocument } from "../dist/src/html-forms.js";
 
 const fixtureRoot = fileURLToPath(new URL("../../../fixtures/", import.meta.url));
 
@@ -155,6 +157,61 @@ test("fails closed when a source-bound RouteIndex is stale", async () => {
         result.failure.file,
         "src/features/tasks/routes/tasks.mjs",
       );
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("uses one source-bound external FormIndex for a non-HTML template", async () => {
+  const root = await copyFixture("valid/tiny-tasks");
+  try {
+    const projectFile = path.join(root, "mensor.project.jsonc");
+    const featureFile = path.join(root, "src/features/tasks/feature.mensor.jsonc");
+    const htmlFile = path.join(root, "src/features/tasks/views/index.html");
+    const templateFile = path.join(root, "src/features/tasks/views/index.ts");
+    const source = await readFile(htmlFile, "utf8");
+    await rename(htmlFile, templateFile);
+
+    const project = JSON.parse(await readFile(projectFile, "utf8"));
+    project.formIndex = "mensor.form-index.json";
+    await writeFile(projectFile, `${JSON.stringify(project, null, 2)}\n`, "utf8");
+
+    const feature = JSON.parse(await readFile(featureFile, "utf8"));
+    feature.actions[0].form.template = "views/index.ts";
+    await writeFile(featureFile, `${JSON.stringify(feature, null, 2)}\n`, "utf8");
+
+    const document = extractStaticHtmlFormDocument(
+      "src/features/tasks/views/index.ts",
+      source,
+    );
+    const formIndex = serializeFormIndex({
+      schemaVersion: 1,
+      producer: { name: "fixture/typescript-template", version: "1.0.0" },
+      documents: [{ ...document, sourceKind: "fixture/typescript-template" }],
+    });
+    await writeFile(path.join(root, "mensor.form-index.json"), formIndex, "utf8");
+
+    const result = await checkProject({
+      root,
+      producerVersion: "0.0.0-fixture",
+      reportVersion: 2,
+    });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.report.status, "passed");
+      assert.deepEqual(result.report.inspection.forms, {
+        state: "checked",
+        basis: "form-index",
+      });
+    }
+
+    await writeFile(templateFile, `${source}\n`, "utf8");
+    const stale = await checkProject({ root, producerVersion: "0.0.0-fixture" });
+    assert.equal(stale.ok, false);
+    if (!stale.ok) {
+      assert.equal(stale.failure.code, "form_index.digest_mismatch");
+      assert.equal(stale.failure.file, "src/features/tasks/views/index.ts");
     }
   } finally {
     await rm(root, { recursive: true, force: true });

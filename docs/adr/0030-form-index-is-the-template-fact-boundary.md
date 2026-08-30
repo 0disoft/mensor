@@ -54,6 +54,9 @@ round-trip through canonical index JSON, source digest and range validation,
 and semantic translation before rules run. This implementation note does not
 authorize public index exports, CLI ingestion, or an external extractor.
 
+ADR-0039 later publishes revision 1 and authorizes source-bound project input.
+The no-producer-execution and no-generic-plugin constraints remain unchanged.
+
 ## Consequences
 
 - Static HTML behavior can remain narrow while compiler rules stop depending

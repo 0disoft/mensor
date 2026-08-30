@@ -8,6 +8,7 @@ import {
   type FormIndex,
 } from "./form-index-types.js";
 import { canonicalizeFormIndex } from "./form-index-validation.js";
+import { InputFailure } from "./paths.js";
 
 export type {
   ContentDigest,
@@ -82,6 +83,44 @@ export function verifyFormIndexContent(
     verifyDocumentRanges(document, source, `/documents/${index}`);
   }
   return canonical;
+}
+
+export async function verifyExternalFormIndex(options: {
+  readonly value: FormIndex;
+  readonly discovered: ReadonlySet<string>;
+  readonly readSource: (path: string) => Promise<string>;
+}): Promise<FormIndex> {
+  const sources = new Map<string, string>();
+  for (const document of options.value.documents) {
+    if (!options.discovered.has(document.path)) {
+      throw new InputFailure(
+        "configuration",
+        "form_index.source_not_discovered",
+        `FormIndex source ${JSON.stringify(document.path)} is not a discovered source file.`,
+        document.path,
+      );
+    }
+    sources.set(document.path, await options.readSource(document.path));
+  }
+  try {
+    return verifyFormIndexContent(options.value, (documentPath) =>
+      sources.get(documentPath)
+    );
+  } catch (error) {
+    if (!(error instanceof FormIndexFailure)) {
+      throw error;
+    }
+    const match = /^\/documents\/(\d+)/u.exec(error.instancePath);
+    const document = match === null
+      ? undefined
+      : options.value.documents[Number(match[1])];
+    throw new InputFailure(
+      "configuration",
+      error.code,
+      error.message,
+      document?.path,
+    );
+  }
 }
 
 function verifyDocumentRanges(

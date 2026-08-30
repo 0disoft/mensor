@@ -25,6 +25,7 @@ value is explicit in the authoring contract.
 - `project-contract-v1.schema.json`: project root and feature-contract inputs
 - `feature-contract-v1.schema.json`: one feature and its form-backed actions
 - `diagnostic-report-v1.schema.json`: canonical check output
+- `form-index-v1.schema.json`: canonical source-bound template form facts
 - `route-index-v1.schema.json`: canonical source-bound application route facts
 - `runtime-manifest-v1.schema.json`: source-free GET page and POST action runtime artifact
 - `check-output-v2.schema.json`: opt-in reports and pre-report error envelopes
@@ -126,6 +127,7 @@ Path bases are explicit and do not inherit from `sourceRoot`:
 | --- | --- |
 | `sourceRoot` | project root |
 | `featureContracts[]` | project root |
+| `formIndex` | project root |
 | `routeIndex` | project root |
 | `fileRoles[].withinFeature` | directory containing the feature contract |
 | action `form.template` | directory containing the feature contract |
@@ -158,9 +160,10 @@ more expressive matcher is needed.
 
 ## Form Slice
 
-An action links to static HTML through its feature-relative `.html` template
-path and exact form id. Contract validation rejects other extensions before the
-compiler can parse TypeScript or another source kind as HTML. The compiler uses
+An action links to a template through its feature-relative path and exact form
+id. Without project `formIndex`, the compiler requires `.html` and uses its
+built-in static HTML provider. With `formIndex`, it verifies the canonical
+artifact against discovered source bytes and uses its indexed facts. The compiler uses
 the action schema and form codec to identify
 required wire fields. When a required binding has no named field candidate in
 the linked form, the diagnostic report contains `form.field_missing`.
@@ -251,5 +254,5 @@ HTML parser nodes are not contract values. Source ranges, field names, method,
 and action are normalized compiler facts before any rule runs.
 
 Version `1` project, feature, diagnostic, and RouteIndex contracts became
-public preview surfaces in `0.1.0`. Check Output v2 is additive and does not
-change those revision-1 schemas.
+public preview surfaces in `0.1.0`. FormIndex v1 became public in `0.7.0`.
+Check Output v2 is additive and does not change those revision-1 schemas.

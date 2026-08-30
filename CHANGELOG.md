@@ -2,6 +2,22 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.7.0] - 2026-08-30
+
+### Added
+
+- Public FormIndex v1 schema, types, canonical parser, serializer, and package
+  schema export.
+- Optional project `formIndex` ingestion with discovered-source, SHA-256,
+  UTF-8, source-range, and linked-document verification.
+
+### Compatibility
+
+- Existing projects without `formIndex` retain the built-in static HTML path.
+- Non-HTML `form.template` paths are accepted only when a project FormIndex is
+  configured and source-bound.
+- Upgrade all four public packages together as a fixed version set.
+
 ## [0.6.0] - 2026-08-30
 
 ### Added

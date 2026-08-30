@@ -14,6 +14,7 @@ exports:
 - `parseDiagnosticReport(text)`;
 - `parseDiagnosticReportV2(text)` and `parseCheckOutputV2(text)`;
 - `parseRouteIndex(text)` and `serializeRouteIndex(value)`;
+- `parseFormIndex(text)` and `serializeFormIndex(value)`;
 - `parseRuntimeManifest(text)` and `serializeRuntimeManifest(value)`;
 - `isJsonValue(value)`; and
 - serializable contract, diagnostic, issue, and result types.
@@ -100,6 +101,10 @@ share one lazy source-fact index so each source file is read and parsed at most
 once per check. External package imports remain graph leaves.
 Optional ownership rules also enforce suffix-based test and i18n slots without
 inferring a feature owner from file content or naming conventions.
+
+An optional project `formIndex` selects a canonical source-bound template fact
+artifact. The compiler verifies every document and linked template before form
+rules run. Omitting it retains the built-in static HTML provider.
 
 An optional project `routeIndex` selects a canonical source-bound route
 artifact. The compiler verifies indexed files, digests, and ranges before

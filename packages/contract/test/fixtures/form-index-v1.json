@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "producer": {
+    "name": "fixture/form-index",
+    "version": "1.0.0"
+  },
+  "documents": [
+    {
+      "path": "src/views/tasks.ts",
+      "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "sourceKind": "fixture/typescript-template",
+      "inspection": {
+        "state": "complete"
+      },
+      "forms": []
+    }
+  ]
+}

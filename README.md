@@ -14,22 +14,22 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.6.0` is the current public preview. It adds an explicit, source-bound
-Hono RouteIndex producer without executing application code.
+Version `0.7.0` is the current public preview. It publishes FormIndex v1 and
+accepts source-bound template facts without executing a producer.
 
 ## Registry Installation
 
 The supported CLI installation path is:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.6.0
+pnpm add --save-dev @0disoft/mensor-cli@0.7.0
 pnpm exec mensor check . --json
 pnpm exec mensor compile . --out .mensor/manifest.json
 pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app
 ```
 
-See the [release runbook](docs/releasing/runbook.md), the [`0.6.0` migration
-note](docs/releasing/0.6.0.md), and the prior
+See the [release runbook](docs/releasing/runbook.md), the [`0.7.0` migration
+note](docs/releasing/0.7.0.md), and the prior
 [`0.2.0` release audit](docs/product/0.2.0-release-audit.md) for the publication
 process and compatibility boundary.
 
@@ -42,6 +42,7 @@ Mensor uses two path bases. Project-level discovery paths do not become
 | --- | --- |
 | `sourceRoot` | project root |
 | `featureContracts[]` | project root; include the `sourceRoot` prefix when applicable |
+| `formIndex` | project root |
 | `routeIndex` | project root |
 | `fileRoles[].withinFeature` | directory containing the feature contract |
 | action `form.template` | directory containing the feature contract |
@@ -100,7 +101,10 @@ platform, or LLM wrapper. It does not replace htmx, Turbo, Unpoly, LiveView,
 Livewire, or a server framework. It checks contracts around applications built
 with those kinds of tools.
 
-The MVP supports TypeScript or JavaScript projects with static `.html` files.
+The built-in provider supports TypeScript or JavaScript projects with static
+`.html` files. A public canonical FormIndex can instead supply source-bound
+facts for other template files; unresolved evidence fails closed and no
+producer is run by the compiler.
 An optional canonical RouteIndex lets an explicit producer supply static route
 facts without granting the compiler code-execution authority. The CLI includes
 one narrow Hono producer for explicitly listed source files and receiver names.
@@ -111,7 +115,7 @@ declarations and does not run the `route.missing` rule. A passing check means
 only that every configured static contract check passed; it never proves
 runtime application semantics.
 RuntimeManifest v1 and a bounded Request/Response reference consumer are
-implemented. Dynamic template languages, production framework integration,
+implemented. Dynamic template producers, production framework integration,
 autofix, arbitrary plugins, cloud processing, and telemetry remain deferred.
 
 ## Repository Shape

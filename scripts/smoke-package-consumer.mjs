@@ -87,7 +87,7 @@ try {
     `import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseCheckOutputV2, parseRouteIndex, parseRuntimeManifest, serializeRouteIndex, serializeRuntimeManifest } from "@0disoft/mensor-contract";
+import { parseCheckOutputV2, parseFormIndex, parseRouteIndex, parseRuntimeManifest, serializeFormIndex, serializeRouteIndex, serializeRuntimeManifest } from "@0disoft/mensor-contract";
 import { compileProject } from "@0disoft/mensor-compiler";
 import { createReferenceRuntime } from "@0disoft/mensor-reference-runtime";
 
@@ -108,6 +108,12 @@ const text = serializeRouteIndex({
   }]
 });
 assert.equal(parseRouteIndex(text).ok, true);
+const formIndexText = serializeFormIndex({
+  schemaVersion: 1,
+  producer: { name: "package-smoke", version: "1.0.0" },
+  documents: []
+});
+assert.equal(parseFormIndex(formIndexText).ok, true);
 const manifestText = serializeRuntimeManifest({
   manifestVersion: 1,
   producer: { name: "package-smoke", version: "1.0.0" },
@@ -136,6 +142,13 @@ const schemaUrl = import.meta.resolve(
 );
 const schema = JSON.parse(await readFile(new URL(schemaUrl), "utf8"));
 assert.equal(schema.$id, "route-index-v1.schema.json");
+const formIndexSchemaUrl = import.meta.resolve(
+  "@0disoft/mensor-contract/schemas/form-index-v1.schema.json"
+);
+const formIndexSchema = JSON.parse(
+  await readFile(new URL(formIndexSchemaUrl), "utf8")
+);
+assert.equal(formIndexSchema.$id, "form-index-v1.schema.json");
 const checkOutputSchemaUrl = import.meta.resolve(
   "@0disoft/mensor-contract/schemas/check-output-v2.schema.json"
 );

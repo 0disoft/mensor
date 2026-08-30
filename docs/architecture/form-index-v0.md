@@ -1,8 +1,8 @@
 # FormIndex v0 Design
 
-- Status: Built-in static HTML provider integrated; external ingestion unavailable
+- Status: Historical private design; superseded by FormIndex v1
 - Authority: ADR-0030
-- Public compatibility: None
+- Public compatibility: See `docs/architecture/form-index-v1.md`
 
 ## Purpose
 

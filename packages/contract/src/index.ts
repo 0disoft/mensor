@@ -1,5 +1,6 @@
 export { isJsonValue, parseJsonc } from "./jsonc.js";
 export { parseRouteIndex, serializeRouteIndex } from "./route-index.js";
+export { parseFormIndex, serializeFormIndex } from "./form-index.js";
 export {
   parseRuntimeManifest,
   serializeRuntimeManifest,
@@ -38,6 +39,15 @@ export type {
   FileRoleMismatchDiagnostic,
   FileRoleMismatchFacts,
   FormBinding,
+  FormIndex,
+  FormIndexActionEvidence,
+  FormIndexControl,
+  FormIndexDocument,
+  FormIndexDocumentInspection,
+  FormIndexDynamicReason,
+  FormIndexEvidence,
+  FormIndexForm,
+  FormIndexUnsupportedReason,
   FormCodec,
   FormDecoder,
   FormActionMismatchDiagnostic,

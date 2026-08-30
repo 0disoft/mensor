@@ -31,6 +31,7 @@
 - Compile command migration note: `releasing/0.5.0.md`
 - Hono RouteIndex producer: `architecture/hono-route-index-producer-v1.md`
 - Hono producer migration note: `releasing/0.6.0.md`
+- FormIndex v1 migration note: `releasing/0.7.0.md`
 - Atomic manifest materialization decision:
   `adr/0037-cli-owns-atomic-manifest-materialization.md`
 
@@ -73,10 +74,12 @@
 - Exploratory subagent observation schema: `../internal/agent-runner/spec/agent-authored-build-exploratory-observation-v4.schema.json`
 - Response-artifact observations: `../internal/agent-runner/observations/codex-subagents-response-v1-oracle-v3-replay/`
 - FormIndex v0 design: `docs/architecture/form-index-v0.md`
+- FormIndex v1 public contract: `docs/architecture/form-index-v1.md`
 - RouteIndex v1 contract: `docs/architecture/route-index-v1.md`
 - Accepted Check Output v2 inspection design:
   `docs/architecture/check-output-v2.md`
 - FormIndex boundary decision: `docs/adr/0030-form-index-is-the-template-fact-boundary.md`
+- Public FormIndex input decision: `docs/adr/0039-form-index-v1-is-a-public-source-bound-input.md`
 - Evaluator-owned semantic oracle decision: `docs/adr/0031-semantic-oracles-are-evaluator-owned.md`
 - Model response materialization decision: `docs/adr/0032-agent-projects-cross-the-model-boundary-as-data.md`
 - Source-bound route artifact decision:

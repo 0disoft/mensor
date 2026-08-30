@@ -81,7 +81,7 @@
               "type": "object",
               "properties": {
                 "state": { "const": "checked" },
-                "basis": { "const": "static-html-form-index" }
+                "basis": { "enum": ["form-index", "static-html-form-index"] }
               }
             }
           ]

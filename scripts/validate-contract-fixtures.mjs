@@ -4,6 +4,7 @@ import {
   parseCheckOutputV2,
   parseDiagnosticReport,
   parseFeatureContract,
+  parseFormIndex,
   parseProjectContract,
   parseRouteIndex,
 } from "../packages/contract/dist/src/index.js";
@@ -85,6 +86,14 @@ for (const fixture of [
     fixture,
   );
 }
+
+assertSuccess(
+  parseFormIndex(await readFile(new URL(
+    "../packages/contract/test/fixtures/form-index-v1.json",
+    import.meta.url,
+  ), "utf8")),
+  "packages/contract/test/fixtures/form-index-v1.json",
+);
 
 function fixture(root, options = {}) {
   return {

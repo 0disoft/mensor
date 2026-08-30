@@ -10,11 +10,13 @@ import {
   parseDiagnosticReport,
   parseDiagnosticReportV2,
   parseFeatureContract,
+  parseFormIndex,
   parseJsonc,
   parseProjectContract,
   parseRouteIndex,
   parseRuntimeManifest,
   serializeRouteIndex,
+  serializeFormIndex,
   serializeRuntimeManifest,
 } from "@0disoft/mensor-contract";
 
@@ -127,6 +129,66 @@ test("accepts one optional project RouteIndex path", async () => {
   assert.equal(parseProjectContract(JSON.stringify(value)).ok, true);
   value.routeIndex = "../route-index.json";
   assert.equal(parseProjectContract(JSON.stringify(value)).ok, false);
+});
+
+test("accepts one optional project FormIndex path", async () => {
+  const text = await fixtureText("valid/tiny-tasks/mensor.project.jsonc");
+  const value = JSON.parse(text);
+  value.formIndex = "mensor.form-index.json";
+
+  assert.equal(parseProjectContract(JSON.stringify(value)).ok, true);
+  value.formIndex = "../form-index.json";
+  assert.equal(parseProjectContract(JSON.stringify(value)).ok, false);
+});
+
+test("canonicalizes strict source-bound FormIndex JSON", () => {
+  const range = {
+    start: { line: 0, character: 0 },
+    end: { line: 0, character: 6 },
+  };
+  const value = {
+    schemaVersion: 1,
+    producer: { name: "fixture/form-index", version: "1.0.0" },
+    documents: [
+      {
+        path: "src/z.ts",
+        contentDigest: `sha256:${"0".repeat(64)}`,
+        sourceKind: "fixture/typescript-template",
+        inspection: { state: "complete" },
+        forms: [],
+      },
+      {
+        path: "src/a.ts",
+        contentDigest: `sha256:${"1".repeat(64)}`,
+        sourceKind: "fixture/typescript-template",
+        inspection: { state: "complete" },
+        forms: [
+          {
+            identity: { state: "known", value: "task", range },
+            method: { state: "known", value: "post", range },
+            action: { state: "known", value: "/tasks", range },
+            range,
+            controls: [],
+          },
+        ],
+      },
+    ],
+  };
+  const text = serializeFormIndex(value);
+  const result = parseFormIndex(text);
+
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.value.documents.map((document) => document.path), [
+      "src/a.ts",
+      "src/z.ts",
+    ]);
+  }
+  assert.equal(parseFormIndex(text.trim()).ok, false);
+  assert.throws(
+    () => serializeFormIndex({ ...value, hostname: "private-host" }),
+    /cannot be serialized/u,
+  );
 });
 
 test("canonicalizes strict source-bound RouteIndex JSON", () => {
@@ -342,20 +404,16 @@ test("accepts a current-document form path and rejects non-route values", async 
   assert.equal(invalid.ok, false);
 });
 
-test("rejects non-HTML form templates before source parsing", async () => {
+test("accepts portable non-HTML template paths for external FormIndex projects", async () => {
   const text = await fixtureText(
     "valid/tiny-tasks/src/features/tasks/feature.mensor.jsonc",
   );
   const value = JSON.parse(text);
   value.actions[0].form.template = "views/index.ts";
 
-  const result = parseFeatureContract(JSON.stringify(value));
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.ok(result.issues.some((issue) =>
-      issue.instancePath === "/actions/0/form/template"
-    ));
-  }
+  assert.equal(parseFeatureContract(JSON.stringify(value)).ok, true);
+  value.actions[0].form.template = "../views/index.ts";
+  assert.equal(parseFeatureContract(JSON.stringify(value)).ok, false);
 });
 
 test("rejects form bindings that do not have one schema-owned identity", async () => {
