@@ -4,6 +4,7 @@ const workspace = await json("../package.json");
 const contract = await json("../packages/contract/package.json");
 const compiler = await json("../packages/compiler/package.json");
 const cli = await json("../packages/cli/package.json");
+const referenceRuntime = await json("../packages/reference-runtime/package.json");
 const fixtureKit = await json("../internal/fixture-kit/package.json");
 const agentRunner = await json("../internal/agent-runner/package.json");
 const rootLicense = await readFile(new URL("../LICENSE", import.meta.url), "utf8");
@@ -44,6 +45,12 @@ if (compiler.dependencies?.["@typescript/typescript6"] !== "6.0.2") {
 if (cli.dependencies?.["@0disoft/mensor-compiler"] !== "workspace:*") {
   failures.push("@0disoft/mensor-cli must use the public workspace compiler package.");
 }
+if (referenceRuntime.dependencies?.["@0disoft/mensor-contract"] !== "workspace:*") {
+  failures.push("@0disoft/mensor-reference-runtime must use the public workspace contract package.");
+}
+if (Object.hasOwn(referenceRuntime.dependencies ?? {}, "@0disoft/mensor-compiler")) {
+  failures.push("@0disoft/mensor-reference-runtime must not depend on the compiler package.");
+}
 if (fixtureKit.dependencies?.["@0disoft/mensor-compiler"] !== "workspace:*") {
   failures.push("@mensor/fixture-kit must use the public workspace compiler package.");
 }
@@ -72,6 +79,7 @@ for (const [manifest, expectedName, directory] of [
   [contract, "@0disoft/mensor-contract", "packages/contract"],
   [compiler, "@0disoft/mensor-compiler", "packages/compiler"],
   [cli, "@0disoft/mensor-cli", "packages/cli"],
+  [referenceRuntime, "@0disoft/mensor-reference-runtime", "packages/reference-runtime"],
 ]) {
   if (manifest.name !== expectedName) {
     failures.push(`${directory} must use package name ${expectedName}.`);
@@ -118,6 +126,7 @@ if (
   workspace.version !== contract.version ||
   workspace.version !== compiler.version ||
   workspace.version !== cli.version ||
+  workspace.version !== referenceRuntime.version ||
   workspace.version !== fixtureKit.version ||
   workspace.version !== agentRunner.version
 ) {
@@ -129,6 +138,7 @@ for (const forbidden of ["preinstall", "install", "postinstall", "prepare"]) {
     contract.scripts?.[forbidden] !== undefined ||
     compiler.scripts?.[forbidden] !== undefined ||
     cli.scripts?.[forbidden] !== undefined ||
+    referenceRuntime.scripts?.[forbidden] !== undefined ||
     fixtureKit.scripts?.[forbidden] !== undefined ||
     agentRunner.scripts?.[forbidden] !== undefined
   ) {

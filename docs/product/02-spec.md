@@ -438,9 +438,9 @@ and cannot stand in for throughput evidence.
   another attestation or eligibility layer before the first agent-authored
   build trial.
 
-- Reference runtime: RuntimeManifest v1 is implemented; add the bounded
-  consumer without moving HTTP, authentication, sessions, or persistence into
-  the compiler.
+- Reference runtime: RuntimeManifest v1 and its bounded Request/Response
+  consumer are implemented. Authentication, CSRF policy, sessions,
+  persistence, and deployment remain host-owned.
 - Dynamic template adapters: the built-in provider now preserves byte-identical
   diagnostics through `FormIndex`, but external extractors remain deferred
   until one separately approved agent-authored template trial and trust

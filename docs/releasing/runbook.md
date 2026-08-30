@@ -16,12 +16,12 @@ Run from a clean release commit with Node 22 or newer and pnpm 11.11.0:
 
 ```text
 pnpm install --frozen-lockfile
-pnpm run release-check -- --version 0.3.0 --tag latest
+pnpm run release-check -- --version 0.4.0 --tag latest
 pnpm run check
-pnpm run release:pack -- --version 0.3.0
+pnpm run release:pack -- --version 0.4.0
 ```
 
-Review `dist/release/manifest.json`, the three tarballs, package names,
+Review `dist/release/manifest.json`, the four tarballs, package names,
 versions, license files, dependency ranges, and checksums before any registry
 operation. The release pack command removes and recreates only
 `dist/release/`.
@@ -36,6 +36,18 @@ npm publish ./dist/release/0disoft-mensor-contract-0.1.0.tgz --access public --t
 npm publish ./dist/release/0disoft-mensor-compiler-0.1.0.tgz --access public --tag latest --provenance=false
 npm publish ./dist/release/0disoft-mensor-cli-0.1.0.tgz --access public --tag latest --provenance=false
 ```
+
+The reference runtime first appears in `0.4.0` and needs the same one-time
+identity bootstrap before staged publishing can manage later versions:
+
+```text
+npm publish ./dist/release/0disoft-mensor-reference-runtime-0.4.0.tgz --access public --tag latest --provenance=false
+```
+
+For that release only, publish the reviewed reference-runtime tarball first,
+then dispatch the workflow for `0.4.0` with `stage_reference_runtime` disabled
+so the existing three packages are staged without attempting to replace the
+already published runtime version. From `0.5.0` onward, leave it enabled.
 
 Before entering an OTP, verify that the checkout is the exact remotely tested
 release commit, the Git worktree is clean, `npm whoami` names the expected scope
@@ -56,9 +68,10 @@ registry before publishing its dependent:
 npm view @0disoft/mensor-contract@0.1.0 version --json
 npm view @0disoft/mensor-compiler@0.1.0 version --json
 npm view @0disoft/mensor-cli@0.1.0 version --json
+npm view @0disoft/mensor-reference-runtime@0.4.0 version --json
 ```
 
-After all three packages are visible, run the configured
+After all four packages are visible, run the configured
 `mensor_registry_smoke` intent. It installs the exact workspace version from
 the official registry in a temporary consumer with lifecycle scripts disabled,
 then verifies the contract API and valid/invalid CLI behavior. This networked
@@ -72,7 +85,7 @@ consumer warning is needed.
 
 ## Trusted Publisher Setup
 
-After all three package identities exist, configure one trusted publisher for
+After all four package identities exist, configure one trusted publisher for
 each package in npm with these exact bindings:
 
 | Field | Value |
@@ -108,7 +121,7 @@ release path and must be scoped, short-lived, and rotated independently.
    lane.
 3. Manually dispatch `Stage npm release` with the exact version and `latest` or
    `next` dist-tag.
-4. Confirm the workflow ran from the intended commit and staged all three
+4. Confirm the workflow ran from the intended commit and staged all four
    package tarballs in dependency order.
 5. Use `npm stage list`, `npm stage view`, and `npm stage download` or the npm
    website to inspect every staged package and downloaded tarball.

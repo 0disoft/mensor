@@ -121,6 +121,24 @@ run an index producer or expose a plugin lifecycle.
 test infrastructure and may change with the fixture corpus without a public
 compatibility promise.
 
+## Current Reference Runtime Surface
+
+`@0disoft/mensor-reference-runtime` exports `createReferenceRuntime(options)`,
+`ReferenceRuntimeConfigurationError`, and immutable TypeScript contracts for
+the action guard, handler registry, request metadata, limits, validated handler
+context, and HTML or redirect results.
+
+The constructor validates and canonicalizes RuntimeManifest v1, requires exact
+handler ids and an action guard for action-bearing manifests, and returns a
+single `handle(request)` function. The package depends only on
+`@0disoft/mensor-contract`; source scanning and compiler APIs are forbidden.
+
+Request bodies are URL-encoded and bounded. Unknown fields, duplicate scalar
+fields, unsafe property names, decoder failures, and schema failures are
+rejected before handler invocation. Host policy, authentication, CSRF tokens,
+sessions, persistence, HTML escaping, and deployment are not public runtime
+services.
+
 ## Current CLI Surface
 
 `@0disoft/mensor-cli` exports `runCli(options)` for process-isolated testing and host
@@ -181,7 +199,7 @@ owned schemas or documentation only. Fixtures, benchmarks, private evaluation
 data, source maps containing absolute local paths, and repository operations
 documents are excluded unless a consumer contract explicitly requires them.
 
-The aggregate validation packs all three publishable packages and forces the
+The aggregate validation packs all four publishable packages and forces the
 local tarballs into an isolated consumer. Public third-party dependencies use
 normal package-manager resolution. The consumer must execute the installed
 `mensor` binary successfully for a valid fixture and return the documented

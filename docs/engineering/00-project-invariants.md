@@ -42,8 +42,10 @@ configuration, documentation, and release behavior.
     tested feature is not successful.
 16. Unsupported syntax fails explicitly rather than silently reducing analysis
     coverage.
-17. Runtime, manifest, IDE, and cloud surfaces remain deferred until a measured
-    use case justifies their maintenance cost.
+17. RuntimeManifest and its bounded reference consumer stay source-free and do
+    not absorb framework, authentication, persistence, or deployment ownership.
+    IDE and cloud surfaces remain deferred until a measured use case justifies
+    their maintenance cost.
 18. Agent-authored dogfood and contract learnability evidence precede
     additional agent attestation layers or public repair-rate work. External
     maintainer recruitment is not required or planned.

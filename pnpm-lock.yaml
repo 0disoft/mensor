@@ -73,6 +73,12 @@ importers:
         specifier: 3.3.1
         version: 3.3.1
 
+  packages/reference-runtime:
+    dependencies:
+      '@0disoft/mensor-contract':
+        specifier: workspace:*
+        version: link:../contract
+
 packages:
 
   '@types/node@22.20.1':

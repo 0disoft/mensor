@@ -4,7 +4,8 @@
 
 ## Owned Components
 
-Mensor owns five implementation boundaries for the current diagnostic and
+Mensor owns six implementation boundaries for the current diagnostic,
+runtime-consumer, and
 evaluation preview:
 
 - contract: serializable authoring contracts, normalized IR, diagnostics, and
@@ -12,6 +13,8 @@ evaluation preview:
 - compiler: discovery, source parsing, normalized facts, semantic linking, and
   pure rules;
 - CLI: arguments, config selection, output routing, and exit status; and
+- reference runtime: bounded RuntimeManifest dispatch, form decoding, schema
+  validation, and host-injected action guard and handler ports; and
 - fixture kit: deterministic fixtures, snapshots, security probes, and repair
   evaluation support that is never published as a runtime dependency; and
 - agent runner: private bounded process, owned Docker CLI sandbox adapter, and
@@ -65,9 +68,9 @@ in separate rules.
 ## Dependency Direction
 
 ```text
-@0disoft/mensor-contract <- @0disoft/mensor-compiler <- @0disoft/mensor-cli
-                           ^
-                           +-- internal/fixture-kit <- internal/agent-runner
+@0disoft/mensor-cli -> @0disoft/mensor-compiler -> @0disoft/mensor-contract
+internal/agent-runner -> internal/fixture-kit ------^          ^
+@0disoft/mensor-reference-runtime ------------------------------+
 ```
 
 The contract package has no filesystem or parser dependency. The compiler does
@@ -112,9 +115,11 @@ diagnostic report. It contains static GET page HTML, POST action routes, handler
 ids, and serializable input contracts. Source paths, parser objects, module
 exports, and executable handlers do not cross this boundary.
 
-There is still no production runtime. A reference consumer may use the manifest
-through a separately injected handler registry, but the compiler does not own
-HTTP serving, authentication, CSRF, sessions, persistence, or deployment.
+The bounded reference runtime consumes the manifest through an exact injected
+handler registry and mandatory action guard. It serves static GET pages and
+decodes validated URL-encoded POST input, but it is not a production framework.
+The compiler and reference runtime do not own authentication, CSRF policy,
+sessions, persistence, or deployment.
 
 ## Failure Model
 

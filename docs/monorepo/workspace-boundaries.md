@@ -10,6 +10,7 @@ packages/
   contract/
   compiler/
   cli/
+  reference-runtime/
 internal/
   fixture-kit/
   agent-runner/
@@ -21,7 +22,8 @@ examples/
   dogfood-tasks/
 ```
 
-The contract, compiler, CLI, fixture-kit, and agent-runner packages are current.
+The contract, compiler, CLI, reference-runtime, fixture-kit, and agent-runner
+packages are current.
 Each package was introduced with a complete vertical slice. Empty packages
 reserved for a possible runtime, adapter, SDK, or formatter are forbidden.
 
@@ -61,6 +63,18 @@ The current executable exposes only `mensor check [root] [--config <path>]
 [--json] [--report-version <1|2>]` and maps compiler results to the documented
 `0/1/2/3` exit statuses. Report revision selection stays in the CLI shell;
 inspection derivation remains compiler-owned.
+
+### `@0disoft/mensor-reference-runtime`
+
+Owns bounded RuntimeManifest v1 consumption through Web `Request` and
+`Response`. It serves embedded static GET pages and dispatches URL-encoded POST
+actions only after an injected action guard succeeds and input decodes and
+validates. It depends on the contract package, never the compiler, and does not
+discover or import handlers.
+
+Authentication, CSRF policy, sessions, cookies, persistence, HTML escaping,
+deployment, and telemetry remain host-owned. The package is a conformance
+consumer rather than a production application framework.
 
 ### `internal/fixture-kit`
 
@@ -120,6 +134,8 @@ code.
 
 ```text
 contract <- compiler <- cli
+    ^
+    +-- reference-runtime
                ^
                +-- fixture-kit <- agent-runner
 ```
@@ -147,6 +163,6 @@ schema, diagnostic meaning, or canonical output changes.
 
 ## Deferred Packages
 
-Reference runtime, framework adapters, SARIF formatter, language server, and
-benchmark packages are deferred. Add one only after an implemented consumer
-proves an ownership boundary that cannot remain internal.
+Framework adapters, SARIF formatter, language server, and benchmark packages
+are deferred. Add one only after an implemented consumer proves an ownership
+boundary that cannot remain internal.

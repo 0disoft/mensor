@@ -2,6 +2,30 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.4.0] - 2026-08-30
+
+### Added
+
+- Public `@0disoft/mensor-reference-runtime` package for exact static GET page
+  serving and bounded URL-encoded POST action dispatch from RuntimeManifest v1.
+- Host-supplied action guard and exact handler registry boundaries.
+- Runtime decoding and schema validation for text, integer, decimal, checkbox,
+  enum, and repeated scalar form contracts.
+
+### Security
+
+- Action bodies, fields, and values have explicit limits; unknown fields,
+  duplicate scalar values, unsafe property names, unsafe redirects, and
+  response-controlled transport headers fail closed.
+- Authentication, CSRF, sessions, cookies, persistence, and deployment remain
+  host responsibilities and no handler or guard error text reaches clients.
+
+### Compatibility
+
+- Existing compiler and CLI behavior is unchanged.
+- Upgrade the contract, compiler, CLI, and reference-runtime packages together
+  as a fixed version set.
+
 ## [0.3.0] - 2026-08-16
 
 ### Added

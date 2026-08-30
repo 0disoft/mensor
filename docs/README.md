@@ -8,6 +8,7 @@
 - MVP requirements and acceptance criteria: `docs/product/02-spec.md`
 - Component and trust boundaries: `docs/architecture/00-system-boundary.md`
 - Runtime manifest artifact: `docs/architecture/runtime-manifest-v1.md`
+- Reference runtime consumer: `docs/architecture/reference-runtime-v1.md`
 - Non-negotiable engineering rules: `docs/engineering/00-project-invariants.md`
 - Operational and release expectations: `docs/ops/00-operational-contract.md`
 - Package ownership and dependency direction: `docs/monorepo/workspace-boundaries.md`
@@ -26,6 +27,7 @@
 - Check Output v2 migration note: `releasing/0.2.0.md`
 - Package guide patch migration note: `releasing/0.2.1.md`
 - Form codec expansion migration note: `releasing/0.3.0.md`
+- Reference runtime migration note: `releasing/0.4.0.md`
 
 ## Research Notes
 
@@ -76,6 +78,10 @@
   `docs/adr/0033-route-index-is-source-bound-artifact.md`
 - Check Output v2 inspection decision:
   `docs/adr/0034-check-output-v2-declares-inspection-coverage.md`
+- RuntimeManifest clean-check decision:
+  `docs/adr/0035-runtime-manifest-is-a-clean-check-artifact.md`
+- Bounded reference runtime decision:
+  `docs/adr/0036-reference-runtime-is-a-bounded-manifest-consumer.md`
 
 Summary pages may link to these contracts but must not redefine them. When two
 documents disagree, update the owning source first and then synchronize its

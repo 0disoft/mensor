@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const modulePath = fileURLToPath(import.meta.url);
 
-export const releasePackageNames = ["contract", "compiler", "cli"];
+export const releasePackageNames = ["contract", "compiler", "cli", "reference-runtime"];
 
 export function releaseArtifactFileName(packageName, version) {
   if (!releasePackageNames.includes(packageName)) {

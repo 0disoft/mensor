@@ -45,14 +45,15 @@ stable `lint` slot. Neither is a semantic TypeScript linter. Adding one requires
 an explicit dependency and rule-policy decision rather than silently changing
 what the stable scaffold names mean.
 
-`package-smoke` builds and packs the contract, compiler, and CLI packages,
+`package-smoke` builds and packs the contract, compiler, CLI, and reference
+runtime packages,
 forces those local tarballs into an isolated consumer while allowing normal
 resolution of public third-party dependencies, and verifies the installed CLI
 against both a valid and an invalid fixture. Build output is cleaned first and
 must exactly match the current source graph before packaging.
 
 `registry-smoke` is a networked post-publication check. It installs the exact
-current workspace version of all three public packages from the official npm
+current workspace version of all four public packages from the official npm
 registry into a temporary consumer with lifecycle scripts disabled, verifies
 the public contract import and packaged licenses, and runs the installed CLI
 against valid and invalid fixtures. It is not part of aggregate `check` and

@@ -14,21 +14,20 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.3.0` is the current public preview. It adds typed form codecs for
-base-10 integers, finite decimals, checkboxes, enums, and repeated values while
-preserving existing text-codec diagnostics.
+Version `0.4.0` is the current public preview. It adds the bounded reference
+runtime that consumes RuntimeManifest v1 without rescanning or executing source.
 
 ## Registry Installation
 
 The supported CLI installation path is:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.3.0
+pnpm add --save-dev @0disoft/mensor-cli@0.4.0
 pnpm exec mensor check . --json
 ```
 
-See the [release runbook](docs/releasing/runbook.md), the [`0.3.0` migration
-note](docs/releasing/0.3.0.md), and the prior
+See the [release runbook](docs/releasing/runbook.md), the [`0.4.0` migration
+note](docs/releasing/0.4.0.md), and the prior
 [`0.2.0` release audit](docs/product/0.2.0-release-audit.md) for the publication
 process and compatibility boundary.
 
@@ -103,14 +102,16 @@ When `routeIndex` is omitted, Mensor does not inspect application route
 declarations and does not run the `route.missing` rule. A passing check means
 only that every configured static contract check passed; it never proves
 runtime application semantics.
-Dynamic template languages, runtime manifests, production HTTP handling,
-autofix, arbitrary plugins, cloud processing, and telemetry are deferred.
+RuntimeManifest v1 and a bounded Request/Response reference consumer are
+implemented. Dynamic template languages, production framework integration,
+autofix, arbitrary plugins, cloud processing, and telemetry remain deferred.
 
 ## Repository Shape
 
 - `packages/contract`: serializable contracts, diagnostics, and validation
 - `packages/compiler`: discovery, source facts, semantic linking, and rules
 - `packages/cli`: command parsing, output, and exit codes
+- `packages/reference-runtime`: bounded manifest dispatch and form decoding
 - `internal/fixture-kit`: deterministic fixture and repair-test support
 - `fixtures`: valid and intentionally broken example projects
 

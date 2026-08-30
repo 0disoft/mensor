@@ -24,6 +24,7 @@ const packageNames = [
   "@0disoft/mensor-contract",
   "@0disoft/mensor-compiler",
   "@0disoft/mensor-cli",
+  "@0disoft/mensor-reference-runtime",
 ];
 const packageManagerEntrypoint = process.env.npm_execpath;
 
@@ -81,6 +82,7 @@ try {
     `import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { parseCheckOutputV2, parseRouteIndex, serializeRouteIndex } from "@0disoft/mensor-contract";
+import { createReferenceRuntime } from "@0disoft/mensor-reference-runtime";
 
 const text = serializeRouteIndex({
   schemaVersion: 1,
@@ -127,6 +129,18 @@ const checkOutputSchema = JSON.parse(
   await readFile(new URL(checkOutputSchemaUrl), "utf8")
 );
 assert.equal(checkOutputSchema.$id, "check-output-v2.schema.json");
+const runtime = createReferenceRuntime({
+  manifest: {
+    manifestVersion: 1,
+    producer: { name: "registry-smoke", version: "${version}" },
+    pages: [{ id: "smoke.page", method: "GET", path: "/smoke", html: "ok\n" }],
+    actions: []
+  },
+  handlers: {}
+});
+const response = await runtime.handle(new Request("https://example.test/smoke"));
+assert.equal(response.status, 200);
+assert.equal(await response.text(), "ok\n");
 `,
     "utf8",
   );

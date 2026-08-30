@@ -15,6 +15,8 @@ compiler failures remain.
 The manifest contains no project root, source path, template path, export name,
 AST node, parser object, filesystem handle, timestamp, or random identifier.
 Handlers remain executable host values and are injected separately by id.
+The implemented reference consumer is specified in
+`docs/architecture/reference-runtime-v1.md`.
 
 ## Canonical Form
 

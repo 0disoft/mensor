@@ -14,6 +14,7 @@ const packages = [
   ["@0disoft/mensor-contract", "packages/contract/package.json"],
   ["@0disoft/mensor-compiler", "packages/compiler/package.json"],
   ["@0disoft/mensor-cli", "packages/cli/package.json"],
+  ["@0disoft/mensor-reference-runtime", "packages/reference-runtime/package.json"],
 ];
 const failures = [];
 

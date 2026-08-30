@@ -11,6 +11,7 @@
 - Architecture route: docs/architecture/00-system-boundary.md
 - Documentation update route: docs/README.md
 - Contract schema route: packages/contract/spec/README.md
+- Reference runtime route: packages/reference-runtime/, docs/architecture/reference-runtime-v1.md, docs/adr/0036-reference-runtime-is-a-bounded-manifest-consumer.md
 - Fixture route: fixtures/README.md
 - Monorepo route: .agents/skills/monorepo/SKILL.md
 - CLI tool route: .agents/skills/cli-tool/SKILL.md

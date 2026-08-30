@@ -15,6 +15,11 @@ on:
         options:
           - latest
           - next
+      stage_reference_runtime:
+        description: Stage the reference runtime (disable only for its one-time registry bootstrap)
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -59,3 +64,6 @@ jobs:
         run: npm stage publish "./dist/release/0disoft-mensor-compiler-${{ inputs.version }}.tgz" --tag "${{ inputs.dist_tag }}"
       - name: Stage CLI package
         run: npm stage publish "./dist/release/0disoft-mensor-cli-${{ inputs.version }}.tgz" --tag "${{ inputs.dist_tag }}"
+      - name: Stage reference runtime package
+        if: inputs.stage_reference_runtime
+        run: npm stage publish "./dist/release/0disoft-mensor-reference-runtime-${{ inputs.version }}.tgz" --tag "${{ inputs.dist_tag }}"

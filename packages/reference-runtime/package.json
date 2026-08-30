@@ -1,7 +1,7 @@
 {
-  "name": "@0disoft/mensor-compiler",
+  "name": "@0disoft/mensor-reference-runtime",
   "version": "0.4.0",
-  "description": "Deterministic source contract checker for Mensor projects.",
+  "description": "Bounded reference consumer for Mensor runtime manifests.",
   "license": "Apache-2.0",
   "publishConfig": {
     "access": "public",
@@ -11,19 +11,19 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/0disoft/mensor.git",
-    "directory": "packages/compiler"
+    "directory": "packages/reference-runtime"
   },
   "homepage": "https://github.com/0disoft/mensor#readme",
   "bugs": {
     "url": "https://github.com/0disoft/mensor/issues"
   },
-  "keywords": ["mensor", "static-analysis", "contracts", "html", "typescript"],
+  "keywords": ["mensor", "runtime", "html", "contracts", "developer-tools"],
   "type": "module",
   "sideEffects": false,
   "engines": {
     "node": ">=22"
   },
-  "files": ["LICENSE", "dist/src"],
+  "files": ["LICENSE", "README.md", "dist/src"],
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -31,9 +31,6 @@
     }
   },
   "dependencies": {
-    "@0disoft/mensor-contract": "workspace:*",
-    "@typescript/typescript6": "6.0.2",
-    "jsonc-parser": "3.3.1",
-    "parse5": "8.0.1"
+    "@0disoft/mensor-contract": "workspace:*"
   }
 }

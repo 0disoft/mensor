@@ -7,6 +7,7 @@ const projects = [
   "packages/contract",
   "packages/compiler",
   "packages/cli",
+  "packages/reference-runtime",
   "internal/fixture-kit",
   "internal/agent-runner",
 ];

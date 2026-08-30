@@ -17,7 +17,7 @@ const pnpmExecutable = path.extname(pnpmEntrypoint).toLowerCase() === ".exe";
 
 try {
   await mkdir(consumerRoot, { recursive: true });
-  const packageNames = ["contract", "compiler", "cli"];
+  const packageNames = ["contract", "compiler", "cli", "reference-runtime"];
   for (const packageName of packageNames) {
     await assertBuildOutputMatchesSource(packageName);
     await run(
@@ -60,6 +60,7 @@ try {
           "@0disoft/mensor-contract": tarballDependency(tarballs.contract),
           "@0disoft/mensor-compiler": tarballDependency(tarballs.compiler),
           "@0disoft/mensor-cli": tarballDependency(tarballs.cli),
+          "@0disoft/mensor-reference-runtime": tarballDependency(tarballs["reference-runtime"]),
         },
       },
       null,
@@ -76,6 +77,7 @@ try {
       `  "@0disoft/mensor-contract": "${tarballDependency(tarballs.contract)}"`,
       `  "@0disoft/mensor-compiler": "${tarballDependency(tarballs.compiler)}"`,
       `  "@0disoft/mensor-cli": "${tarballDependency(tarballs.cli)}"`,
+      `  "@0disoft/mensor-reference-runtime": "${tarballDependency(tarballs["reference-runtime"])}"`,
       "",
     ].join("\n"),
     "utf8",
@@ -87,6 +89,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { parseCheckOutputV2, parseRouteIndex, parseRuntimeManifest, serializeRouteIndex, serializeRuntimeManifest } from "@0disoft/mensor-contract";
 import { compileProject } from "@0disoft/mensor-compiler";
+import { createReferenceRuntime } from "@0disoft/mensor-reference-runtime";
 
 const text = serializeRouteIndex({
   schemaVersion: 1,
@@ -150,6 +153,24 @@ assert.equal(runtimeManifestSchema.$id, "runtime-manifest-v1.schema.json");
 const compiled = await compileProject({ root: path.resolve("valid") });
 assert.equal(compiled.ok, true);
 if (compiled.ok) assert.equal(compiled.manifest.actions.length, 1);
+if (compiled.ok) {
+  const runtime = createReferenceRuntime({
+    manifest: compiled.manifest,
+    actionGuard: () => ({ allowed: true }),
+    handlers: {
+      "tasks.create": ({ input }) => ({ kind: "html", body: String(input.title) })
+    }
+  });
+  const page = await runtime.handle(new Request("https://example.test/tasks"));
+  assert.equal(page.status, 200);
+  const action = await runtime.handle(new Request("https://example.test/tasks", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: "title=Package+smoke"
+  }));
+  assert.equal(action.status, 200);
+  assert.equal(await action.text(), "Package smoke");
+}
 `,
     "utf8",
   );
@@ -182,6 +203,11 @@ if (compiled.ok) assert.equal(compiled.manifest.actions.length, 1);
       "# @0disoft/mensor-cli",
       "pnpm exec mensor check . --json",
       "--report-version 2",
+    ],
+    "reference-runtime": [
+      "# @0disoft/mensor-reference-runtime",
+      "createReferenceRuntime",
+      "actionGuard",
     ],
   };
   for (const packageName of packageNames) {
