@@ -43,6 +43,23 @@ The default output is `.mensor/manifest.json`. Diagnostic, configuration, and
 write failures do not replace an existing manifest. Add `--json` to emit the
 same canonical manifest bytes to stdout after the file is written.
 
+## Produce A Hono RouteIndex
+
+Generate a canonical RouteIndex from explicitly selected Hono source files and
+receiver identifiers:
+
+```text
+pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app
+```
+
+Repeat `--source` and `--receiver` when needed. The default output is
+`mensor.route-index.json`; `--out` selects another root-relative path and
+`--json` emits the same canonical bytes after the atomic write. Mensor parses
+source without importing or executing it. Only direct or chained static
+`receiver.get()` and `receiver.post()` calls are supported. Dynamic paths,
+mounted routers, `on`, `all`, and optional chains fail closed rather than
+producing an incomplete index.
+
 ## Documentation
 
 - [Project and feature contract authoring](https://github.com/0disoft/mensor/blob/main/packages/contract/spec/README.md)

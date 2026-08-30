@@ -8,7 +8,14 @@ import {
   type CompilerFailure,
 } from "@0disoft/mensor-compiler";
 
-import { writeManifestAtomic } from "./manifest-output.js";
+import {
+  HonoRouteIndexError,
+  produceHonoRouteIndex,
+} from "./hono-route-index.js";
+import {
+  writeCanonicalArtifactAtomic,
+  writeManifestAtomic,
+} from "./manifest-output.js";
 import type {
   CliFailureEnvelope,
   RunCliOptions,
@@ -50,18 +57,21 @@ function readPackageVersion(): string {
   return value.version;
 }
 
-const helpText = `Usage: mensor <check|compile> [root] [options]
+const helpText = `Usage: mensor <check|compile|index-hono-routes> [root] [options]
 
 Commands:
-  check    Check project contracts against static source facts.
-  compile  Check contracts and atomically write a runtime manifest.
+  check              Check project contracts against static source facts.
+  compile            Check contracts and atomically write a runtime manifest.
+  index-hono-routes  Produce a source-bound RouteIndex from explicit Hono sources.
 
 Options:
-  --config <path>  Root-relative project contract path.
-  --json           Write one canonical JSON document to stdout.
-  --out <path>      Compile output path relative to root (default: .mensor/manifest.json).
-  --report-version Select check JSON output revision 1 or 2. Requires --json.
-  --help           Show this help.
+  --config <path>    Root-relative project contract path.
+  --json             Write one canonical JSON document to stdout.
+  --out <path>       Root-relative output path.
+  --source <path>    Hono source path; repeat for multiple files.
+  --receiver <name>  Hono receiver identifier; repeat for multiple receivers.
+  --report-version   Select check JSON output revision 1 or 2. Requires --json.
+  --help             Show this help.
 `;
 
 export async function runCli(options: RunCliOptions): Promise<number> {
@@ -76,7 +86,9 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         help: { type: "boolean", short: "h" },
         json: { type: "boolean" },
         out: { type: "string" },
+        receiver: { type: "string", multiple: true },
         "report-version": { type: "string" },
+        source: { type: "string", multiple: true },
       },
     });
   } catch (error) {
@@ -124,18 +136,22 @@ export async function runCli(options: RunCliOptions): Promise<number> {
   }
   const command = parsed.positionals[0];
   if (
-    (command !== "check" && command !== "compile") ||
+    (
+      command !== "check" &&
+      command !== "compile" &&
+      command !== "index-hono-routes"
+    ) ||
     parsed.positionals.length > 2
   ) {
     return writeUsageFailure(
       options,
-      "Expected command check or compile and at most one project root.",
+      "Expected command check, compile, or index-hono-routes and at most one project root.",
       json,
       reportVersion,
     );
   }
 
-  if (command === "compile" && reportVersionValue !== undefined) {
+  if (command !== "check" && reportVersionValue !== undefined) {
     return writeUsageFailure(
       options,
       "--report-version is available only for check.",
@@ -147,6 +163,25 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     return writeUsageFailure(
       options,
       "--out is available only for compile.",
+      json,
+      reportVersion,
+    );
+  }
+  if (command === "index-hono-routes" && parsed.values["config"] !== undefined) {
+    return writeUsageFailure(
+      options,
+      "--config is unavailable for index-hono-routes.",
+      json,
+      reportVersion,
+    );
+  }
+  if (
+    command !== "index-hono-routes" &&
+    (parsed.values["source"] !== undefined || parsed.values["receiver"] !== undefined)
+  ) {
+    return writeUsageFailure(
+      options,
+      "--source and --receiver are available only for index-hono-routes.",
       json,
       reportVersion,
     );
@@ -175,6 +210,68 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     typeof configValue === "string"
       ? configValue.replaceAll("\\", "/")
       : undefined;
+  if (command === "index-hono-routes") {
+    const sources = stringArray(parsed.values["source"]);
+    const receivers = stringArray(parsed.values["receiver"]);
+    if (sources === undefined || receivers === undefined) {
+      return writeUsageFailure(
+        options,
+        "--source and --receiver must each contain string values.",
+        json,
+        reportVersion,
+      );
+    }
+    const outputValue = parsed.values["out"];
+    const output = typeof outputValue === "string"
+      ? normalizeRelativeOutput(outputValue)
+      : "mensor.route-index.json";
+    if (output === undefined) {
+      return writeUsageFailure(
+        options,
+        "--out must be relative to the selected project root.",
+        json,
+        reportVersion,
+      );
+    }
+    try {
+      const produced = await produceHonoRouteIndex({
+        root,
+        sources,
+        receivers,
+        producerVersion: cliVersion,
+      });
+      await writeCanonicalArtifactAtomic(root, output, produced.text);
+      options.stdout(json ? produced.text : `Wrote Hono RouteIndex to ${output}.\n`);
+      return 0;
+    } catch (error) {
+      if (error instanceof HonoRouteIndexError) {
+        writeFailure(
+          options,
+          {
+            kind: "configuration",
+            code: error.code,
+            message: error.message,
+            ...(error.file === undefined ? {} : { file: error.file }),
+          },
+          json,
+          reportVersion,
+        );
+        return 2;
+      }
+      writeFailure(
+        options,
+        {
+          kind: "filesystem",
+          code: "route_indexer.output_write_failed",
+          message: "The Hono RouteIndex could not be written atomically.",
+          file: output,
+        },
+        json,
+        reportVersion,
+      );
+      return 3;
+    }
+  }
   const checkOptions = {
     root,
     producerVersion: cliVersion,
@@ -292,6 +389,16 @@ function normalizeRelativeOutput(value: string): string | undefined {
     return undefined;
   }
   return normalized;
+}
+
+function stringArray(value: unknown): readonly string[] | undefined {
+  if (value === undefined) {
+    return [];
+  }
+  if (!Array.isArray(value) || value.some((entry) => typeof entry !== "string")) {
+    return undefined;
+  }
+  return value;
 }
 
 function writeUsageFailure(

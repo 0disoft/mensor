@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-07-18
+- Amended by: ADR-0038 for one explicit out-of-process Hono producer
 
 ## Context
 
@@ -32,8 +33,9 @@ Mensor accepts an optional canonical serialized `RouteIndex v1` selected by
 - `@0disoft/mensor-contract` owns the parser, serializer, schema, and serializable
   types.
 - The compiler does not execute, discover, install, or load a producer.
-- No Hono extractor, Node extractor, arbitrary hook, or generic plugin API is
-  authorized.
+- This decision originally authorized no Hono extractor, Node extractor,
+  arbitrary hook, or generic plugin API. ADR-0038 later authorizes one explicit
+  out-of-process Hono CLI command while preserving the other prohibitions.
 
 The normative shape and failure model are recorded in
 `docs/architecture/route-index-v1.md`.

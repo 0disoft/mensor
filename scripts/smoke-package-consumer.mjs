@@ -179,6 +179,11 @@ if (compiled.ok) {
     recursive: true,
   });
   await cp(
+    path.join(repositoryRoot, "fixtures", "valid", "hono-static-tasks"),
+    path.join(consumerRoot, "valid-hono"),
+    { recursive: true },
+  );
+  await cp(
     path.join(repositoryRoot, "fixtures", "invalid", "form-field-missing"),
     path.join(consumerRoot, "invalid"),
     { recursive: true },
@@ -203,6 +208,7 @@ if (compiled.ok) {
       "# @0disoft/mensor-cli",
       "pnpm exec mensor check . --json",
       "pnpm exec mensor compile . --out .mensor/manifest.json",
+      "pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app",
       "--report-version 2",
     ],
     "reference-runtime": [
@@ -264,6 +270,15 @@ if (compiled.ok) {
   );
   assert.equal(compiledManifestText, compiledByCli.stdout);
   assert.equal(JSON.parse(compiledManifestText).manifestVersion, 1);
+
+  const honoIndex = await runMensorHonoIndex(consumerRoot);
+  assert.equal(honoIndex.code, 0, honoIndex.stderr);
+  const honoIndexValue = JSON.parse(honoIndex.stdout);
+  assert.equal(honoIndexValue.producer.name, "mensor-hono-route-indexer");
+  assert.deepEqual(
+    honoIndexValue.routes.map(({ method, path: routePath }) => [method, routePath]),
+    [["GET", "/tasks"], ["POST", "/tasks"]],
+  );
 
   const invalid = await runMensor(consumerRoot, "invalid");
   assert.equal(invalid.code, 1, invalid.stderr);
@@ -361,6 +376,25 @@ async function runMensorCompile(cwd, fixture) {
       fixture,
       "--out",
       ".mensor/manifest.json",
+      "--json",
+    ],
+    cwd,
+  );
+}
+
+async function runMensorHonoIndex(cwd) {
+  return capture(
+    pnpmExecutable ? pnpmEntrypoint : process.execPath,
+    [
+      ...(pnpmExecutable ? [] : [pnpmEntrypoint]),
+      "exec",
+      "mensor",
+      "index-hono-routes",
+      "valid-hono",
+      "--source",
+      "src/features/tasks/routes/tasks.mjs",
+      "--receiver",
+      "app",
       "--json",
     ],
     cwd,

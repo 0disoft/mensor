@@ -151,6 +151,11 @@ assert.equal(await response.text(), "ok\n");
     { recursive: true },
   );
   await cp(
+    path.join(repositoryRoot, "fixtures", "valid", "hono-static-tasks"),
+    path.join(consumerRoot, "valid-hono"),
+    { recursive: true },
+  );
+  await cp(
     path.join(repositoryRoot, "fixtures", "invalid", "form-field-missing"),
     path.join(consumerRoot, "invalid"),
     { recursive: true },
@@ -242,6 +247,23 @@ assert.equal(await response.text(), "ok\n");
   assert.equal(compiledManifestText, compiled.stdout);
   assert.equal(JSON.parse(compiledManifestText).manifestVersion, 1);
 
+  const honoIndex = await capture(
+    process.execPath,
+    [
+      cliEntrypoint,
+      "index-hono-routes",
+      "valid-hono",
+      "--source",
+      "src/features/tasks/routes/tasks.mjs",
+      "--receiver",
+      "app",
+      "--json",
+    ],
+    consumerRoot,
+  );
+  assert.equal(honoIndex.code, 0, honoIndex.stderr);
+  assert.equal(JSON.parse(honoIndex.stdout).producer.name, "mensor-hono-route-indexer");
+
   const invalid = await capture(
     process.execPath,
     [cliEntrypoint, "check", "invalid", "--json"],
@@ -274,6 +296,7 @@ assert.equal(await response.text(), "ok\n");
         packages,
         contractImport: "passed",
         compileArtifactStatus: "passed",
+        honoRouteIndexStatus: "passed",
         validProjectStatus: "passed",
         invalidProjectStatus: "failed",
         invalidDiagnosticCodes: ["form.field_missing"],

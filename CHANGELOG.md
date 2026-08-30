@@ -2,6 +2,28 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.6.0] - 2026-08-30
+
+### Added
+
+- `mensor index-hono-routes` for producing canonical, source-bound RouteIndex
+  v1 artifacts from explicit Hono source files and receiver identifiers.
+- Static direct and chained `get` and `post` extraction with package-consumer
+  coverage and no application-source execution.
+
+### Security
+
+- Source paths are root-relative, size-bounded, UTF-8, regular files with no
+  symbolic-link components. Source identity is checked around the read.
+- Dynamic paths, mounted or composed routers, `on`, `all`, optional chains,
+  syntax errors, invalid paths, and empty extraction fail before output
+  replacement.
+
+### Compatibility
+
+- Existing `check` and `compile` behavior is unchanged.
+- Upgrade all four public packages together as a fixed version set.
+
 ## [0.5.0] - 2026-08-30
 
 ### Added

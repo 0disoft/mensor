@@ -29,6 +29,8 @@
 - Form codec expansion migration note: `releasing/0.3.0.md`
 - Reference runtime migration note: `releasing/0.4.0.md`
 - Compile command migration note: `releasing/0.5.0.md`
+- Hono RouteIndex producer: `architecture/hono-route-index-producer-v1.md`
+- Hono producer migration note: `releasing/0.6.0.md`
 - Atomic manifest materialization decision:
   `adr/0037-cli-owns-atomic-manifest-materialization.md`
 
@@ -85,6 +87,7 @@
   `docs/adr/0035-runtime-manifest-is-a-clean-check-artifact.md`
 - Bounded reference runtime decision:
   `docs/adr/0036-reference-runtime-is-a-bounded-manifest-consumer.md`
+- Hono producer decision: `docs/adr/0038-cli-hosts-one-explicit-hono-route-producer.md`
 
 Summary pages may link to these contracts but must not redefine them. When two
 documents disagree, update the owning source first and then synchronize its

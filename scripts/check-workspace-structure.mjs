@@ -45,6 +45,12 @@ if (compiler.dependencies?.["@typescript/typescript6"] !== "6.0.2") {
 if (cli.dependencies?.["@0disoft/mensor-compiler"] !== "workspace:*") {
   failures.push("@0disoft/mensor-cli must use the public workspace compiler package.");
 }
+if (cli.dependencies?.["@0disoft/mensor-contract"] !== "workspace:*") {
+  failures.push("@0disoft/mensor-cli must declare its direct RouteIndex contract dependency.");
+}
+if (cli.dependencies?.["@typescript/typescript6"] !== "6.0.2") {
+  failures.push("@0disoft/mensor-cli must declare its direct Hono source parser dependency.");
+}
 if (referenceRuntime.dependencies?.["@0disoft/mensor-contract"] !== "workspace:*") {
   failures.push("@0disoft/mensor-reference-runtime must use the public workspace contract package.");
 }

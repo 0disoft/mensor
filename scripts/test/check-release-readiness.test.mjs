@@ -11,7 +11,7 @@ const script = path.join(repositoryRoot, "scripts", "check-release-readiness.mjs
 test("release check accepts the pnpm argument separator", () => {
   const result = spawnSync(
     process.execPath,
-    [script, "--", "--version", "0.5.0", "--tag", "latest"],
+    [script, "--", "--version", "0.6.0", "--tag", "latest"],
     {
       cwd: repositoryRoot,
       encoding: "utf8",
@@ -24,7 +24,7 @@ test("release check accepts the pnpm argument separator", () => {
 test("release check rejects a duplicate argument separator", () => {
   const result = spawnSync(
     process.execPath,
-    [script, "--", "--", "--version", "0.5.0", "--tag", "latest"],
+    [script, "--", "--", "--version", "0.6.0", "--tag", "latest"],
     {
       cwd: repositoryRoot,
       encoding: "utf8",
@@ -40,16 +40,16 @@ test("release README contract accepts synchronized consumer guidance", () => {
 
 ## Status
 
-Version \`0.5.0\` is the current public preview.
+Version \`0.6.0\` is the current public preview.
 
 ## Registry Installation
 
-\`pnpm add --save-dev @0disoft/mensor-cli@0.5.0\`
+\`pnpm add --save-dev @0disoft/mensor-cli@0.6.0\`
 
-See docs/releasing/0.5.0.md.
+See docs/releasing/0.6.0.md.
 `;
 
-  assert.deepEqual(validateReleaseReadme({ readme, version: "0.5.0" }), []);
+  assert.deepEqual(validateReleaseReadme({ readme, version: "0.6.0" }), []);
 });
 
 test("release README contract rejects stale status, install, and migration versions", () => {
@@ -66,9 +66,9 @@ Version \`0.3.0\` is the current public preview.
 See docs/releasing/0.3.0.md.
 `;
 
-  assert.deepEqual(validateReleaseReadme({ readme, version: "0.5.0" }), [
-    "README.md Status must identify 0.5.0 as the current public preview.",
-    'README.md Registry Installation must contain "pnpm add --save-dev @0disoft/mensor-cli@0.5.0".',
-    "README.md Registry Installation must link to docs/releasing/0.5.0.md.",
+  assert.deepEqual(validateReleaseReadme({ readme, version: "0.6.0" }), [
+    "README.md Status must identify 0.6.0 as the current public preview.",
+    'README.md Registry Installation must contain "pnpm add --save-dev @0disoft/mensor-cli@0.6.0".',
+    "README.md Registry Installation must link to docs/releasing/0.6.0.md.",
   ]);
 });

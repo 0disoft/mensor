@@ -14,21 +14,22 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.5.0` is the current public preview. It adds atomic RuntimeManifest
-output through the `mensor compile` command.
+Version `0.6.0` is the current public preview. It adds an explicit, source-bound
+Hono RouteIndex producer without executing application code.
 
 ## Registry Installation
 
 The supported CLI installation path is:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.5.0
+pnpm add --save-dev @0disoft/mensor-cli@0.6.0
 pnpm exec mensor check . --json
 pnpm exec mensor compile . --out .mensor/manifest.json
+pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app
 ```
 
-See the [release runbook](docs/releasing/runbook.md), the [`0.5.0` migration
-note](docs/releasing/0.5.0.md), and the prior
+See the [release runbook](docs/releasing/runbook.md), the [`0.6.0` migration
+note](docs/releasing/0.6.0.md), and the prior
 [`0.2.0` release audit](docs/product/0.2.0-release-audit.md) for the publication
 process and compatibility boundary.
 
@@ -62,6 +63,7 @@ pnpm build
 pnpm mensor check fixtures/valid/tiny-tasks --json
 pnpm mensor check fixtures/valid/tiny-tasks --json --report-version 2
 pnpm mensor compile fixtures/valid/tiny-tasks --out .mensor/manifest.json
+pnpm mensor index-hono-routes fixtures/valid/hono-static-tasks --source src/features/tasks/routes/tasks.mjs --receiver app
 ```
 
 Both check commands exit `0`. The first preserves DiagnosticReport v1; the
@@ -99,8 +101,11 @@ Livewire, or a server framework. It checks contracts around applications built
 with those kinds of tools.
 
 The MVP supports TypeScript or JavaScript projects with static `.html` files.
-An optional canonical RouteIndex lets an external producer supply static route
-facts without granting the compiler code-execution authority.
+An optional canonical RouteIndex lets an explicit producer supply static route
+facts without granting the compiler code-execution authority. The CLI includes
+one narrow Hono producer for explicitly listed source files and receiver names.
+It accepts only static direct or chained `get` and `post` calls; dynamic paths,
+mounted routers, `on`, `all`, and optional chaining fail closed.
 When `routeIndex` is omitted, Mensor does not inspect application route
 declarations and does not run the `route.missing` rule. A passing check means
 only that every configured static contract check passed; it never proves

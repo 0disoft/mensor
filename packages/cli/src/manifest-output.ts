@@ -11,7 +11,7 @@ import * as path from "node:path";
 
 let temporaryFileCounter = 0;
 
-export async function writeManifestAtomic(
+export async function writeCanonicalArtifactAtomic(
   root: string,
   relativeOutput: string,
   text: string,
@@ -47,6 +47,14 @@ export async function writeManifestAtomic(
     await handle?.close().catch(() => undefined);
     await unlink(temporaryPath).catch(() => undefined);
   }
+}
+
+export async function writeManifestAtomic(
+  root: string,
+  relativeOutput: string,
+  text: string,
+): Promise<void> {
+  await writeCanonicalArtifactAtomic(root, relativeOutput, text);
 }
 
 async function ensureSafeParent(root: string, parent: string): Promise<void> {

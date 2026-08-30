@@ -16,7 +16,10 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { cliVersion } from "@0disoft/mensor-cli";
-import { parseCheckOutputV2 } from "../../contract/dist/src/index.js";
+import {
+  parseCheckOutputV2,
+  parseRouteIndex,
+} from "../../contract/dist/src/index.js";
 
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const fixtureRoot = path.join(repositoryRoot, "fixtures");
@@ -301,10 +304,12 @@ test("uses the default compile path and reports it in human mode", async (contex
   );
 });
 
-test("lists check and compile in help without requiring a command", async () => {
+test("lists check, compile, and Hono route indexing without requiring a command", async () => {
   const result = await runCli(["--help"]);
   assert.equal(result.code, 0);
-  assert.match(result.stdout, /check\|compile/u);
+  assert.match(result.stdout, /check\|compile\|index-hono-routes/u);
+  assert.match(result.stdout, /--source/u);
+  assert.match(result.stdout, /--receiver/u);
   assert.match(result.stdout, /--out/u);
   assert.equal(result.stderr, "");
 });
@@ -324,6 +329,179 @@ test("keeps command-specific flags out of the other command", async () => {
   assert.match(JSON.parse(check.stdout).failure.message, /only for compile/u);
   assert.equal(compile.code, 2);
   assert.match(JSON.parse(compile.stdout).failure.message, /only for check/u);
+
+  const routeIndex = await runCli([
+    "index-hono-routes",
+    root,
+    "--config",
+    "mensor.project.jsonc",
+    "--source",
+    "src/routes.ts",
+    "--receiver",
+    "app",
+    "--json",
+  ]);
+  assert.equal(routeIndex.code, 2);
+  assert.match(JSON.parse(routeIndex.stdout).failure.message, /--config is unavailable/u);
+});
+
+test("produces a canonical source-bound RouteIndex from explicit Hono calls", async (context) => {
+  const root = await temporaryFixture(context, "valid/hono-static-tasks");
+  const result = await runCli([
+    "index-hono-routes",
+    root,
+    "--source",
+    "src/features/tasks/routes/tasks.mjs",
+    "--receiver",
+    "app",
+    "--json",
+  ]);
+
+  assert.equal(result.code, 0);
+  assert.equal(result.stderr, "");
+  assert.equal(
+    await readFile(path.join(root, "mensor.route-index.json"), "utf8"),
+    result.stdout,
+  );
+  const parsed = parseRouteIndex(result.stdout);
+  assert.equal(parsed.ok, true);
+  assert.deepEqual(
+    parsed.value.routes.map(({ method, path: routePath }) => [method, routePath]),
+    [["GET", "/tasks"], ["POST", "/tasks"]],
+  );
+  assert.equal(parsed.value.producer.name, "mensor-hono-route-indexer");
+
+  const check = await runCli(["check", root, "--json"]);
+  assert.equal(check.code, 0);
+  assert.equal(JSON.parse(check.stdout).status, "passed");
+});
+
+test("does not execute Hono source while producing its RouteIndex", async (context) => {
+  const root = await mkdtemp(path.join(repositoryRoot, ".tmp-cli-route-index-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  await writeFile(
+    path.join(root, "routes.ts"),
+    `throw new Error("must not execute");\napp.post("/tasks", handler);\n`,
+    "utf8",
+  );
+
+  const result = await runCli([
+    "index-hono-routes",
+    root,
+    "--source",
+    "routes.ts",
+    "--receiver",
+    "app",
+    "--json",
+  ]);
+
+  assert.equal(result.code, 0);
+  assert.equal(parseRouteIndex(result.stdout).ok, true);
+});
+
+test("fails closed on dynamic Hono paths and preserves prior output", async (context) => {
+  const root = await mkdtemp(path.join(repositoryRoot, ".tmp-cli-route-index-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  await writeFile(
+    path.join(root, "routes.ts"),
+    `const routePath = "/tasks";\napp.post(routePath, handler);\n`,
+    "utf8",
+  );
+  const output = path.join(root, "mensor.route-index.json");
+  await writeFile(output, "preserve-me\n", "utf8");
+
+  const result = await runCli([
+    "index-hono-routes",
+    root,
+    "--source",
+    "routes.ts",
+    "--receiver",
+    "app",
+    "--json",
+  ]);
+
+  assert.equal(result.code, 2);
+  assert.equal(result.stderr, "");
+  assert.equal(
+    JSON.parse(result.stdout).failure.code,
+    "route_indexer.dynamic_path_unsupported",
+  );
+  assert.equal(await readFile(output, "utf8"), "preserve-me\n");
+});
+
+test("indexes static get and post chains but rejects composed Hono routers", async (context) => {
+  const root = await mkdtemp(path.join(repositoryRoot, ".tmp-cli-route-index-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  await writeFile(
+    path.join(root, "routes.ts"),
+    `app.get("/tasks", getTasks).post("/tasks", createTask);\n`,
+    "utf8",
+  );
+  const chained = await runCli([
+    "index-hono-routes",
+    root,
+    "--source",
+    "routes.ts",
+    "--receiver",
+    "app",
+    "--json",
+  ]);
+  assert.equal(chained.code, 0);
+  assert.deepEqual(
+    JSON.parse(chained.stdout).routes.map(({ method, path: routePath }) => [method, routePath]),
+    [["GET", "/tasks"], ["POST", "/tasks"]],
+  );
+
+  await writeFile(
+    path.join(root, "routes.ts"),
+    `app.route("/admin", adminRoutes);\napp.get("/tasks", getTasks);\n`,
+    "utf8",
+  );
+  const composed = await runCli([
+    "index-hono-routes",
+    root,
+    "--source",
+    "routes.ts",
+    "--receiver",
+    "app",
+    "--json",
+  ]);
+  assert.equal(composed.code, 2);
+  assert.equal(
+    JSON.parse(composed.stdout).failure.code,
+    "route_indexer.composed_receiver_unsupported",
+  );
+});
+
+test("requires explicit sources and receiver identifiers", async () => {
+  const root = path.join(fixtureRoot, "valid/hono-static-tasks");
+  const missingSource = await runCli([
+    "index-hono-routes",
+    root,
+    "--receiver",
+    "app",
+    "--json",
+  ]);
+  const invalidReceiver = await runCli([
+    "index-hono-routes",
+    root,
+    "--source",
+    "src/features/tasks/routes/tasks.mjs",
+    "--receiver",
+    "app.routes",
+    "--json",
+  ]);
+
+  assert.equal(missingSource.code, 2);
+  assert.equal(
+    JSON.parse(missingSource.stdout).failure.code,
+    "route_indexer.source_required",
+  );
+  assert.equal(invalidReceiver.code, 2);
+  assert.equal(
+    JSON.parse(invalidReceiver.stdout).failure.code,
+    "route_indexer.receiver_invalid",
+  );
 });
 
 test("preserves an existing manifest when compile diagnostics fail", async (context) => {

@@ -16,6 +16,7 @@
 - Monorepo route: .agents/skills/monorepo/SKILL.md
 - CLI tool route: .agents/skills/cli-tool/SKILL.md
 - CLI compile route: packages/cli/, docs/cli/command-contract.md, docs/adr/0037-cli-owns-atomic-manifest-materialization.md
+- Hono RouteIndex producer route: packages/cli/src/hono-route-index.ts, docs/architecture/hono-route-index-producer-v1.md, docs/adr/0038-cli-hosts-one-explicit-hono-route-producer.md
 - Library package route: .agents/skills/library-package/SKILL.md
 - Feature route: .agents/skills/feature/SKILL.md
 - Bugfix route: .agents/skills/bugfix/SKILL.md

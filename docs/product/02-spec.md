@@ -332,6 +332,13 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     fails with a `route_index.*` configuration failure, while a fresh index
     missing an action's exact route emits `route.missing`. The compiler never
     executes or discovers an index producer.
+54. The explicit `mensor index-hono-routes` command may produce RouteIndex v1
+    from caller-selected source files and receiver identifiers without changing
+    the compiler boundary. It accepts only direct or chained static Hono `get`
+    and `post` calls. Dynamic paths, mounted/composed routers, `on`, `all`,
+    optional chains, invalid source, and empty extraction fail before atomic
+    output replacement. The command is never discovered or launched by
+    `check` or `compile`.
 
 ## Accepted Report Evolution
 
@@ -361,9 +368,11 @@ closure is complete: the fresh public registry-consumer smoke passed and the
 `v0.1.0` tag and GitHub release point to the remotely tested release commit, as
 recorded in `docs/product/0.1.0-release-candidate-audit.md`. Package settings
 may permit granular tokens, but the release workflow remains OIDC-only and
-receives no registry secret. The narrow RouteIndex slice returns to product
-validation only when a real consumer needs an index producer. External
-maintainer recruitment and another agent attestation layer remain out of scope.
+receives no registry secret. The later Hermes onboarding exposed omitted and
+hand-maintained RouteIndexes, opening the narrow explicit Hono producer in
+ADR-0038. This does not open Node request inference or a generic adapter
+lifecycle. External maintainer recruitment and another agent attestation layer
+remain out of scope.
 Future coding-agent trials must continue to use fresh briefs and evaluator-owned
 semantic oracles without access to existing fixtures.
 
@@ -416,8 +425,9 @@ compiler internals. They are not public exports or CLI inputs.
 
 ADR-0033 owns the public RouteIndex boundary. Unlike FormIndex, RouteIndex has a
 public schema, parser, serializer, and project-contract input. This accepts
-data, not executable adapter authority. Hono- and Node-specific extraction
-remain outside the compiler and are not implemented product claims.
+data, not executable adapter authority. ADR-0038 adds one explicitly invoked
+CLI Hono producer outside the compiler. Node request extraction, producer
+discovery, and generic adapters remain unimplemented product claims.
 
 `docs/product/multi-project-adoption-cost.md` owns the current authoring-cost
 and route-drift evidence. The project-contract fixed cost is measured separately

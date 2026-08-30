@@ -131,9 +131,11 @@ or defective producer can still emit incorrect facts about current source.
 Producer quality requires its own fixtures and semantic tests.
 
 The compiler never executes an index producer. There is no provider discovery,
-package loader, shell command, lifecycle callback, network access, or generic
-plugin interface. The maintained Hono and Node indexes are synthetic fixture
-artifacts, not framework support claims.
+package loader, lifecycle callback, network access, or generic plugin
+interface. ADR-0038 separately authorizes one explicit CLI Hono producer; it
+runs only when directly invoked and still hands the compiler this serialized
+artifact. The maintained Node index remains a synthetic fixture artifact, not
+a Node framework support claim.
 
 ## Limits
 

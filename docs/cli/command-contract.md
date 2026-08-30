@@ -16,6 +16,7 @@ evidence.
 ```text
 mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
 mensor compile [root] [--config <path>] [--out <path>] [--json]
+mensor index-hono-routes [root] --source <path> --receiver <name> [--out <path>] [--json]
 ```
 
 - `root` defaults to the current working directory.
@@ -24,14 +25,18 @@ mensor compile [root] [--config <path>] [--out <path>] [--json]
 - `--report-version` selects JSON revision `1` or `2` and is invalid without
   `--json`. The default is revision `1`. It is valid only for `check`.
 - `--out` selects the compile artifact path relative to `root` and defaults to
-  `.mensor/manifest.json`. It is valid only for `compile`.
+  `.mensor/manifest.json` for `compile` and `mensor.route-index.json` for
+  `index-hono-routes`.
+- `--source` and `--receiver` are repeatable and valid only for
+  `index-hono-routes`. Both require at least one value.
 - Paths supplied through flags must resolve inside `root`.
 - Environment variables do not alter contract or rule behavior in the MVP.
 - The CLI applies compiler defaults of 10,000 discovered files, 1 MiB per
   source file, 64 MiB across the discovered source tree, and 64 directory
   levels below `sourceRoot`.
 
-`fix`, `watch`, `init`, and plugin commands are not part of the current CLI.
+`fix`, `watch`, `init`, generic provider discovery, and plugin commands are not
+part of the current CLI.
 
 ## Output
 
@@ -76,6 +81,15 @@ invalid output paths, and write failures do not replace an existing artifact.
 The destination parent must resolve inside `root`; directory and symbolic-link
 targets are rejected.
 
+On a clean `index-hono-routes`, human mode names the root-relative RouteIndex
+path and JSON mode writes the canonical RouteIndex v1 bytes after the same
+bytes are committed to disk. The command reads only explicitly listed source
+files, matches only explicitly named receiver identifiers, and never imports
+application modules. Direct and chained static `get` and `post` calls are the
+entire supported syntax. Dynamic paths, mounted/composed routers, `on`, `all`,
+optional chains, invalid UTF-8, syntax errors, unsafe paths, and empty results
+are configuration failures and preserve existing output.
+
 ## Exit Status
 
 - `0`: checking or compilation completed with no error diagnostics
@@ -95,7 +109,7 @@ The failure envelope is:
   "schemaVersion": 1,
   "producer": {
     "name": "mensor",
-    "version": "0.5.0"
+    "version": "0.6.0"
   },
   "status": "error",
   "failure": {

@@ -48,6 +48,12 @@ importers:
       '@0disoft/mensor-compiler':
         specifier: workspace:*
         version: link:../compiler
+      '@0disoft/mensor-contract':
+        specifier: workspace:*
+        version: link:../contract
+      '@typescript/typescript6':
+        specifier: 6.0.2
+        version: 6.0.2
 
   packages/compiler:
     dependencies:
