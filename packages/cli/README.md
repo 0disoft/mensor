@@ -30,6 +30,15 @@ application route declarations are not inspected.
 
 Mensor does not execute project source or configuration while checking it.
 
+Emit SARIF 2.1.0 for code-scanning consumers:
+
+```text
+pnpm exec mensor check . --sarif
+```
+
+SARIF is available only for completed checks and cannot be combined with
+`--json` or `--report-version`.
+
 ## Compile A Runtime Manifest
 
 Compile only after all configured checks pass and atomically replace the

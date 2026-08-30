@@ -34,6 +34,8 @@
 - FormIndex v1 migration note: `releasing/0.7.0.md`
 - TypeScript tagged-template producer: `architecture/typescript-template-form-index-producer-v1.md`
 - TypeScript producer migration note: `releasing/0.8.0.md`
+- SARIF output contract: `architecture/sarif-output-v1.md`
+- SARIF migration note: `releasing/0.9.0.md`
 - Atomic manifest materialization decision:
   `adr/0037-cli-owns-atomic-manifest-materialization.md`
 
@@ -84,6 +86,8 @@
 - Public FormIndex input decision: `docs/adr/0039-form-index-v1-is-a-public-source-bound-input.md`
 - TypeScript template producer decision:
   `docs/adr/0040-cli-hosts-explicit-typescript-template-form-producer.md`
+- SARIF projection decision:
+  `docs/adr/0041-sarif-is-an-opt-in-diagnostic-projection.md`
 - Evaluator-owned semantic oracle decision: `docs/adr/0031-semantic-oracles-are-evaluator-owned.md`
 - Model response materialization decision: `docs/adr/0032-agent-projects-cross-the-model-boundary-as-data.md`
 - Source-bound route artifact decision:

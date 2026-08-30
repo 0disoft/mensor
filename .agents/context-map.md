@@ -19,6 +19,7 @@
 - Hono RouteIndex producer route: packages/cli/src/hono-route-index.ts, docs/architecture/hono-route-index-producer-v1.md, docs/adr/0038-cli-hosts-one-explicit-hono-route-producer.md
 - FormIndex route: packages/contract/src/form-index.ts, packages/compiler/src/form-index.ts, docs/architecture/form-index-v1.md, docs/adr/0039-form-index-v1-is-a-public-source-bound-input.md
 - TypeScript FormIndex producer route: packages/cli/src/typescript-template-form-index.ts, docs/architecture/typescript-template-form-index-producer-v1.md, docs/adr/0040-cli-hosts-explicit-typescript-template-form-producer.md
+- SARIF route: packages/cli/src/sarif.ts, docs/architecture/sarif-output-v1.md, docs/adr/0041-sarif-is-an-opt-in-diagnostic-projection.md
 - Library package route: .agents/skills/library-package/SKILL.md
 - Feature route: .agents/skills/feature/SKILL.md
 - Bugfix route: .agents/skills/bugfix/SKILL.md

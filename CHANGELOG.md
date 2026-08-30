@@ -2,6 +2,23 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.9.0] - 2026-08-30
+
+### Added
+
+- `mensor check --sarif` emits deterministic SARIF 2.1.0 Plus Errata 01 for
+  completed checks with stable rules, one-based source regions, related
+  locations, facts, and repair metadata.
+- `formatDiagnosticReportSarif` is exported by `@0disoft/mensor-cli` for
+  consumers that already hold a validated Mensor diagnostic report.
+
+### Compatibility
+
+- SARIF is opt-in and cannot be combined with `--json` or `--report-version`.
+  Existing human and canonical Mensor JSON outputs are unchanged.
+- Pre-report configuration and filesystem failures keep the existing stderr
+  failure behavior rather than fabricating a SARIF analysis result.
+
 ## [0.8.0] - 2026-08-30
 
 ### Added

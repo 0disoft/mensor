@@ -83,6 +83,7 @@ try {
     `import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { parseCheckOutputV2, parseRouteIndex, serializeRouteIndex } from "@0disoft/mensor-contract";
+import { formatDiagnosticReportSarif } from "@0disoft/mensor-cli";
 import { createReferenceRuntime } from "@0disoft/mensor-reference-runtime";
 
 const text = serializeRouteIndex({
@@ -118,6 +119,13 @@ assert.equal(parseCheckOutputV2(JSON.stringify({
   diagnostics: [],
   summary: { errorCount: 0, warningCount: 0 }
 })).ok, true);
+assert.equal(JSON.parse(formatDiagnosticReportSarif({
+  schemaVersion: 1,
+  producer: { name: "mensor", version: "${version}" },
+  status: "passed",
+  diagnostics: [],
+  summary: { errorCount: 0, warningCount: 0 }
+})).version, "2.1.0");
 const schemaUrl = import.meta.resolve(
   "@0disoft/mensor-contract/schemas/route-index-v1.schema.json"
 );
@@ -307,6 +315,16 @@ assert.equal(await response.text(), "ok\n");
     invalidReport.diagnostics.map((diagnostic) => diagnostic.code),
     ["form.field_missing"],
   );
+  const invalidSarif = await capture(
+    process.execPath,
+    [cliEntrypoint, "check", "invalid", "--sarif"],
+    consumerRoot,
+  );
+  assert.equal(invalidSarif.code, 1, invalidSarif.stderr);
+  assert.deepEqual(
+    JSON.parse(invalidSarif.stdout).runs[0].results.map((result) => result.ruleId),
+    ["form.field_missing"],
+  );
 
   const invalidV2 = await capture(
     process.execPath,
@@ -329,6 +347,7 @@ assert.equal(await response.text(), "ok\n");
         compileArtifactStatus: "passed",
         honoRouteIndexStatus: "passed",
         typescriptFormIndexStatus: "passed",
+        sarifStatus: "passed",
         validProjectStatus: "passed",
         invalidProjectStatus: "failed",
         invalidDiagnosticCodes: ["form.field_missing"],

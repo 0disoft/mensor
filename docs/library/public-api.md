@@ -91,6 +91,14 @@ filesystem, module loading, network, or source execution. Callers remain
 responsible for source binding, byte digests, and offsetting ranges when the
 HTML fragment is embedded in another language.
 
+## Current CLI Library Surface
+
+`@0disoft/mensor-cli` exports `runCli`, `cliVersion`, and
+`formatDiagnosticReportSarif(report)`. The formatter accepts DiagnosticReport
+v1 or DiagnosticReport v2 and returns deterministic SARIF 2.1.0 Plus Errata 01
+JSON. It performs no filesystem or environment access and adds no host path,
+time, source snippet, or process metadata.
+
 The compiler walks the configured source root in code-unit sorted order, skips
 symlinks, enforces file-count and file-byte limits, and never imports inspected
 source. It currently implements action-handler placement plus static HTML form

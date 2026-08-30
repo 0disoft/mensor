@@ -61,6 +61,10 @@ and TypeScript tagged-template FormIndex producers. It delegates all checking
 behavior to the compiler. Only the explicit producers parse caller-selected
 source; `check` and `compile` do not launch them.
 
+The CLI package also owns the pure SARIF projection and `check --sarif`
+selection. SARIF formatting consumes completed diagnostics and must not add
+compiler analysis, source reads, host metadata, or environment-dependent data.
+
 The current executable exposes `mensor check [root] [--config <path>] [--json]
 [--report-version <1|2>]`, `mensor compile [root] [--config <path>] [--out
 <path>] [--json]`, plus the narrow `mensor index-hono-routes` and
@@ -168,6 +172,8 @@ schema, diagnostic meaning, or canonical output changes.
 
 ## Deferred Packages
 
-Framework adapters, SARIF formatter, language server, and benchmark packages
-are deferred. Add one only after an implemented consumer proves an ownership
-boundary that cannot remain internal.
+Framework adapter, language server, and benchmark packages are deferred. The
+implemented SARIF formatter remains in the CLI package because it is a pure
+projection of CLI-owned diagnostic output, not an independent analysis or
+release boundary. Add another package only after an implemented consumer
+proves ownership that cannot remain internal.

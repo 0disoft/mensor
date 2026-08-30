@@ -14,7 +14,7 @@ evidence.
 ## Commands
 
 ```text
-mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
+mensor check [root] [--config <path>] [--json] [--report-version <1|2>] [--sarif]
 mensor compile [root] [--config <path>] [--out <path>] [--json]
 mensor index-hono-routes [root] --source <path> --receiver <name> [--out <path>] [--json]
 mensor index-ts-forms [root] --source <path> --tag <identifier> [--out <path>] [--json]
@@ -23,6 +23,8 @@ mensor index-ts-forms [root] --source <path> --tag <identifier> [--out <path>] [
 - `root` defaults to the current working directory.
 - `--config` defaults to `mensor.project.jsonc` inside `root`.
 - `--json` selects the canonical machine-readable report.
+- `--sarif` selects deterministic SARIF 2.1.0 output for a completed check. It
+  is mutually exclusive with `--json` and `--report-version`.
 - `--report-version` selects JSON revision `1` or `2` and is invalid without
   `--json`. The default is revision `1`. It is valid only for `check`.
 - `--out` selects the artifact path relative to `root` and defaults to
@@ -122,7 +124,7 @@ The failure envelope is:
   "schemaVersion": 1,
   "producer": {
     "name": "mensor",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "status": "error",
   "failure": {
@@ -144,6 +146,10 @@ facts. Revision 2 omits `file` when the rejected value is absolute,
 backslash-delimited, or root-escaping rather than copying a non-canonical path
 into the envelope. JSON failures go to stdout with one LF and no stderr output.
 Human-mode setup failures go to stderr.
+
+SARIF mode writes one SARIF 2.1.0 run for a completed report. Diagnostic
+errors still produce exit status 1. Failures before report construction use
+the normal human stderr path and do not fabricate a SARIF run.
 
 ## Failure Separation
 

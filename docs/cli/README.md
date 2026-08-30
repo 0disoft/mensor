@@ -18,6 +18,10 @@ JSON output defaults to revision 1 for compatibility. Version `0.2.0` adds the
 explicit `--report-version 2` path for consumers that need machine-readable
 inspection states; it does not change human output or exit statuses.
 
+Version `0.9.0` adds opt-in `check --sarif` interoperability output. SARIF is
+a deterministic projection of completed diagnostics, not a replacement for
+Mensor JSON or inspection coverage.
+
 The implementation lives in `packages/cli`. Its process entrypoint owns
 argument parsing, rendering, exit-status mapping, and atomic artifact writes.
 Project inspection and manifest construction are delegated to

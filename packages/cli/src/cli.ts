@@ -20,6 +20,7 @@ import {
   writeCanonicalArtifactAtomic,
   writeManifestAtomic,
 } from "./manifest-output.js";
+import { formatDiagnosticReportSarif } from "./sarif.js";
 import type {
   CliFailureEnvelope,
   RunCliOptions,
@@ -72,6 +73,7 @@ Commands:
 Options:
   --config <path>    Root-relative project contract path.
   --json             Write one canonical JSON document to stdout.
+  --sarif            Write SARIF 2.1.0 for a completed check to stdout.
   --out <path>       Root-relative output path.
   --source <path>    Hono source path; repeat for multiple files.
   --receiver <name>  Hono receiver identifier; repeat for multiple receivers.
@@ -94,6 +96,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         out: { type: "string" },
         receiver: { type: "string", multiple: true },
         "report-version": { type: "string" },
+        sarif: { type: "boolean" },
         source: { type: "string", multiple: true },
         tag: { type: "string", multiple: true },
       },
@@ -108,6 +111,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
   }
 
   const json = parsed.values["json"] === true;
+  const sarif = parsed.values["sarif"] === true;
   const rawReportVersion = parsed.values["report-version"];
   const reportVersionValue = typeof rawReportVersion === "string"
     ? rawReportVersion
@@ -129,10 +133,26 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       1,
     );
   }
-  if (reportVersionValue !== undefined && !json) {
+  if (reportVersionValue !== undefined && !json && !sarif) {
     return writeUsageFailure(
       options,
       "--report-version requires --json.",
+      false,
+      reportVersion,
+    );
+  }
+  if (sarif && json) {
+    return writeUsageFailure(
+      options,
+      "--sarif and --json cannot be combined.",
+      false,
+      reportVersion,
+    );
+  }
+  if (sarif && reportVersionValue !== undefined) {
+    return writeUsageFailure(
+      options,
+      "--sarif cannot be combined with --report-version.",
       false,
       reportVersion,
     );
@@ -164,6 +184,14 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       options,
       "--report-version is available only for check.",
       json,
+      reportVersion,
+    );
+  }
+  if (command !== "check" && sarif) {
+    return writeUsageFailure(
+      options,
+      "--sarif is available only for check.",
+      false,
       reportVersion,
     );
   }
@@ -423,7 +451,9 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     return exitCode;
   }
 
-  if (json) {
+  if (sarif) {
+    options.stdout(formatDiagnosticReportSarif(result.report));
+  } else if (json) {
     options.stdout(`${JSON.stringify(result.report, null, 2)}\n`);
   } else if (result.report.diagnostics.length === 0) {
     options.stdout("No contract violations found.\n");

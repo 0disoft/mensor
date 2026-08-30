@@ -16,7 +16,10 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { cliVersion } from "@0disoft/mensor-cli";
+import {
+  cliVersion,
+  formatDiagnosticReportSarif,
+} from "@0disoft/mensor-cli";
 import {
   parseCheckOutputV2,
   parseFormIndex,
@@ -88,6 +91,70 @@ test("writes canonical revision-2 inspection for a valid project", async () => {
   assert.equal(result.stderr, "");
   assert.equal(result.stdout, `${JSON.stringify(expected, null, 2)}\n`);
   assert.equal(parseCheckOutputV2(result.stdout).ok, true);
+});
+
+test("writes deterministic SARIF with stable rules and one-based locations", async () => {
+  const root = path.join(fixtureRoot, "invalid/form-field-missing");
+  const first = await runCli(["check", root, "--sarif"]);
+  const second = await runCli(["check", root, "--sarif"]);
+
+  assert.equal(first.code, 1);
+  assert.equal(first.stderr, "");
+  assert.equal(second.stdout, first.stdout);
+  assert.equal(first.stdout.includes(repositoryRoot), false);
+  assert.equal(first.stdout.includes("timestamp"), false);
+  const value = JSON.parse(first.stdout);
+  assert.equal(value.version, "2.1.0");
+  assert.equal(
+    value.$schema,
+    "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  );
+  assert.deepEqual(value.runs[0].tool.driver.rules.map((rule) => rule.id), [
+    "form.field_missing",
+  ]);
+  const result = value.runs[0].results[0];
+  assert.equal(result.ruleId, "form.field_missing");
+  assert.equal(result.ruleIndex, 0);
+  assert.equal(result.level, "error");
+  assert.equal(result.locations[0].physicalLocation.artifactLocation.uri.startsWith("src/"), true);
+  assert.equal(result.locations[0].physicalLocation.region.startLine >= 1, true);
+  assert.equal(result.locations[0].physicalLocation.region.startColumn >= 1, true);
+  assert.equal(result.relatedLocations[0].id, 1);
+  assert.equal(result.properties.repair.mustNot.length > 0, true);
+});
+
+test("formats an empty passing report as one SARIF run", async () => {
+  const report = JSON.parse(
+    await readFile(
+      path.join(fixtureRoot, "valid/tiny-tasks/expected-report.json"),
+      "utf8",
+    ),
+  );
+  report.producer.version = cliVersion;
+  const value = JSON.parse(formatDiagnosticReportSarif(report));
+
+  assert.deepEqual(value.runs[0].tool.driver.rules, []);
+  assert.deepEqual(value.runs[0].results, []);
+});
+
+test("rejects incompatible SARIF output options", async () => {
+  const root = path.join(fixtureRoot, "valid/tiny-tasks");
+  const withJson = await runCli(["check", root, "--sarif", "--json"]);
+  const withRevision = await runCli([
+    "check",
+    root,
+    "--sarif",
+    "--report-version",
+    "2",
+  ]);
+  const withCompile = await runCli(["compile", root, "--sarif"]);
+
+  assert.equal(withJson.code, 2);
+  assert.match(withJson.stderr, /cannot be combined/u);
+  assert.equal(withRevision.code, 2);
+  assert.match(withRevision.stderr, /cannot be combined/u);
+  assert.equal(withCompile.code, 2);
+  assert.match(withCompile.stderr, /available only for check/u);
 });
 
 test("exits one and keeps JSON stdout clean for contract diagnostics", async () => {

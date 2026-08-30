@@ -88,6 +88,7 @@ try {
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { parseCheckOutputV2, parseFormIndex, parseRouteIndex, parseRuntimeManifest, serializeFormIndex, serializeRouteIndex, serializeRuntimeManifest } from "@0disoft/mensor-contract";
+import { formatDiagnosticReportSarif } from "@0disoft/mensor-cli";
 import { compileProject } from "@0disoft/mensor-compiler";
 import { createReferenceRuntime } from "@0disoft/mensor-reference-runtime";
 
@@ -137,6 +138,15 @@ assert.equal(parseCheckOutputV2(JSON.stringify({
   diagnostics: [],
   summary: { errorCount: 0, warningCount: 0 }
 })).ok, true);
+const sarif = JSON.parse(formatDiagnosticReportSarif({
+  schemaVersion: 1,
+  producer: { name: "mensor", version: "0.0.0-smoke" },
+  status: "passed",
+  diagnostics: [],
+  summary: { errorCount: 0, warningCount: 0 }
+}));
+assert.equal(sarif.version, "2.1.0");
+assert.deepEqual(sarif.runs[0].results, []);
 const schemaUrl = import.meta.resolve(
   "@0disoft/mensor-contract/schemas/route-index-v1.schema.json"
 );
@@ -224,6 +234,7 @@ if (compiled.ok) {
     cli: [
       "# @0disoft/mensor-cli",
       "pnpm exec mensor check . --json",
+      "pnpm exec mensor check . --sarif",
       "pnpm exec mensor compile . --out .mensor/manifest.json",
       "pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app",
       "pnpm exec mensor index-ts-forms . --source src/views.ts --tag html",
@@ -316,6 +327,14 @@ if (compiled.ok) {
     invalidReport.diagnostics.map((diagnostic) => diagnostic.code),
     ["form.field_missing"],
   );
+  const invalidSarif = await runMensorSarif(consumerRoot, "invalid");
+  assert.equal(invalidSarif.code, 1, invalidSarif.stderr);
+  const invalidSarifValue = JSON.parse(invalidSarif.stdout);
+  assert.equal(invalidSarifValue.version, "2.1.0");
+  assert.deepEqual(
+    invalidSarifValue.runs[0].results.map((result) => result.ruleId),
+    ["form.field_missing"],
+  );
 
   const invalidV2 = await runMensor(consumerRoot, "invalid", [
     "--report-version=2",
@@ -388,6 +407,21 @@ async function runMensor(cwd, fixture, extraArgs = []) {
       fixture,
       "--json",
       ...extraArgs,
+    ],
+    cwd,
+  );
+}
+
+async function runMensorSarif(cwd, fixture) {
+  return capture(
+    pnpmExecutable ? pnpmEntrypoint : process.execPath,
+    [
+      ...(pnpmExecutable ? [] : [pnpmEntrypoint]),
+      "exec",
+      "mensor",
+      "check",
+      fixture,
+      "--sarif",
     ],
     cwd,
   );

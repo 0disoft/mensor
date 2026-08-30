@@ -346,6 +346,11 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     errors, unsafe source, missing selected templates, and invalid tags fail
     before atomic output replacement. The command never executes source and is
     never discovered or launched by `check` or `compile`.
+56. `mensor check --sarif` may project a completed diagnostic report into one
+    deterministic SARIF 2.1.0 run. Rules are sorted by diagnostic code; result
+    locations remain project-relative and become one-based. Facts and repair
+    metadata are preserved without absolute roots, timestamps, source snippets,
+    or process facts. SARIF is opt-in and does not replace Mensor JSON.
 
 ## Accepted Report Evolution
 
@@ -468,6 +473,7 @@ and cannot stand in for throughput evidence.
   implemented. One explicit syntax-bounded TypeScript tagged-template producer
   is implemented; framework transforms, interpolation evaluation, producer
   discovery, and generic adapter lifecycles remain deferred.
-- IDE, SARIF, watch mode, caching, and cloud services: post-MVP integrations.
+- IDE, watch mode, caching, and cloud services: post-MVP integrations. SARIF
+  output is implemented as a bounded projection only.
 - Public diagnostic compatibility: begins with the first published preview,
   not with private pre-implementation drafts.
