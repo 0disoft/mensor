@@ -24,3 +24,6 @@ tmp/
 
 # Project-owned exploratory outputs
 internal/agent-runner/trial-output/
+
+# Project-owned compiler output
+.mensor/

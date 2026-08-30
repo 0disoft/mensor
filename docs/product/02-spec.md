@@ -182,140 +182,143 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 13. `mensor check --json` writes one JSON document and one LF to stdout and
     maps clean, diagnostic, configuration, and internal outcomes to exit codes
     `0`, `1`, `2`, and `3` without stdout contamination.
-14. Named file inputs, named submitters, and submitter route overrides emit
+14. `mensor compile` emits RuntimeManifest v1 only after a clean check and
+    atomically replaces one root-relative output. Diagnostic, configuration,
+    and filesystem failures preserve existing output.
+15. Named file inputs, named submitters, and submitter route overrides emit
     `form.control_unsupported` instead of disappearing from analysis.
-15. A declared handler export missing from its source emits
+16. A declared handler export missing from its source emits
     `handler.export_missing` without importing or executing that module.
-16. Direct and transitive import boundaries emit exact
+17. Direct and transitive import boundaries emit exact
     `module.boundary_violation` diagnostics with a deterministic import chain.
     Direct checks parse only from-role roots. A transitive check traverses the
     reachable union once and reports the lexicographically first shortest
     witness when multiple roots reach the same forbidden edge.
-17. A boundary-reachable non-literal dynamic import emits one
+18. A boundary-reachable non-literal dynamic import emits one
     `module.dynamic_import_unsupported` per boundary and source range instead
     of reducing graph coverage or repeating the same diagnostic for every root.
-18. Test and i18n suffix rules emit `file.ownership_mismatch` for both a wrong
+19. Test and i18n suffix rules emit `file.ownership_mismatch` for both a wrong
     feature slot and a file outside every declared feature.
-19. An agent repair command receives the validated failing diagnostic report,
+20. An agent repair command receives the validated failing diagnostic report,
     including facts and repair constraints, through bounded stdin. Report/code
     drift, passing reports, malformed reports, and oversized input fail before
     command execution.
-20. Authoritative command-trial evidence derives the adapter, execution
+21. Authoritative command-trial evidence derives the adapter, execution
     descriptor, report, and fingerprint from one command configuration. Invalid
     execution configuration fails before mutation.
-21. Handler exports must exist in the runtime value namespace; type-only and
+22. Handler exports must exist in the runtime value namespace; type-only and
     ambient declarations do not satisfy executable handler contracts.
-22. Active boundaries analyze literal ESM and CommonJS module edges, reject
+23. Active boundaries analyze literal ESM and CommonJS module edges, reject
     computed runtime targets, and classify nested files against their longest
     declared feature root.
-23. Static form facts implement disabled-fieldset submission semantics and
+24. Static form facts implement disabled-fieldset submission semantics and
     reject repeated successful controls for scalar text bindings.
-24. Feature and diagnostic-report parsers reject cross-field contradictions in
+25. Feature and diagnostic-report parsers reject cross-field contradictions in
     action identity, schema required/property membership, string length bounds,
     binding ownership and coverage, summary counts, status, and source ranges.
     Project validation rejects duplicate feature ids and multiple feature
     contracts in one root while preserving longest-root nested ownership.
-25. Mutating evaluation APIs reject concurrent use of the same, ancestor, or
+26. Mutating evaluation APIs reject concurrent use of the same, ancestor, or
     descendant workspace, attribute agent changes before semantic evaluation,
     and revalidate the post-oracle final state.
-26. Repeated command-agent evaluation validates its complete case plan before
+27. Repeated command-agent evaluation validates its complete case plan before
     creating mutable state, uses one fresh workspace per attempt, disposes that
     workspace on every outcome, and merges only matching execution cohorts.
-27. Evaluation snapshots use same-handle streaming hashes, before/after and
+28. Evaluation snapshots use same-handle streaming hashes, before/after and
     path identity checks, and explicit file, byte, aggregate-byte, and depth
     limits; observed drift or an exceeded limit fails closed.
-28. Execution fingerprints commit to the validated executable, arguments,
+29. Execution fingerprints commit to the validated executable, arguments,
     environment, and process limits without serializing their raw values.
-29. Package validation starts from clean build output and rejects generated
+30. Package validation starts from clean build output and rejects generated
     files that do not map to the current source and schema graph.
-30. Controlled evaluation baselines are pinned by canonical workspace digest;
+31. Controlled evaluation baselines are pinned by canonical workspace digest;
     symlinks, special files, source drift, copy drift, and foreign cleanup paths
     fail closed.
-31. A runnable server-rendered dogfood application independently passes the
+32. A runnable server-rendered dogfood application independently passes the
     compiler, GET/POST semantic tests, malformed-form rejection, and HTML
     escaping, and contributes a dedicated mutation baseline.
-32. Local command evidence derives a canonical claim assessment that blocks
+33. Local command evidence derives a canonical claim assessment that blocks
     public repair-rate eligibility until filesystem, process, network, and
     credential enforcement are independently attested.
-33. The private container adapter starts from a canonical networkless Docker plan
+34. The private container adapter starts from a canonical networkless Docker plan
     with immutable images, non-root execution, one workspace mount, read-only
     root, dropped capabilities, and bounded CPU, memory, PID, I/O, and time.
-34. The private agent runner can bind one Docker sandbox plan to a canonical
+35. The private agent runner can bind one Docker sandbox plan to a canonical
     runtime attestation only when normalized engine, image, mount, security,
     credential, temporary-filesystem, and resource observations match that
     plan. This structure alone is not trusted execution evidence.
-35. Docker sandbox orchestration uses one fixed validate, create, inspect,
+36. Docker sandbox orchestration uses one fixed validate, create, inspect,
     attest, start, and cleanup workflow. It starts only after inspection passes,
     attempts bounded cleanup after every successful create, and does not treat
     static or fake-port evidence alone as executed sandbox evidence.
-36. Docker execution ports can be checked with one immutable probe across
+37. Docker execution ports can be checked with one immutable probe across
     success, timeout, output-limit, and nonzero-exit cases. The canonical report
     records digests and derived outcomes without claiming independent Docker
     daemon verification.
-37. Execution descriptor v2 binds the Docker plan, runtime attestation, and port
+38. Execution descriptor v2 binds the Docker plan, runtime attestation, and port
     conformance report into one fingerprinted cohort while explicitly retaining
     a port-conformance-only evidence level and no public repair-rate eligibility.
-38. Portable Docker plan commitments retain immutable execution and isolation
+39. Portable Docker plan commitments retain immutable execution and isolation
     facts while replacing the absolute host executable path and raw agent
     arguments with separate SHA-256 commitments. Any path or argument drift
     changes the plan digest without copying those values into evidence.
-39. Trial evidence v2 embeds one descriptor, publish-safe plan commitment,
+40. Trial evidence v2 embeds one descriptor, publish-safe plan commitment,
     runtime attestation, port-conformance report, and canonical trial report.
     Parsing rejects fingerprint, attested-limit, base-plan, case-plan, adapter,
     collector, or cohort drift without claiming the report was atomically
     produced by that sandbox.
-40. The authoritative sandbox trial runner validates static inputs before
+41. The authoritative sandbox trial runner validates static inputs before
     mutation, owns sandbox execution through final-state report and evidence
     construction, and returns either canonical evidence or a redacted staged
     failure. Cleanup and binding failures cannot produce partial evidence, and
     evidence success remains distinct from repair success.
-41. Sandbox evidence assessment validates every v2 artifact binding while
+42. Sandbox evidence assessment validates every v2 artifact binding while
     refusing to infer atomic-constructor provenance from portable JSON. It
     keeps public repair-rate eligibility false until constructor provenance,
     credential scope, Docker daemon fidelity, and runtime observations are
     independently attested.
-42. The private Docker CLI execution port creates containers with no implicit
+43. The private Docker CLI execution port creates containers with no implicit
     image pull, explicit isolation limits, and unpredictable ownership labels;
     validates normalized daemon inspection before start; rechecks ownership
     before deletion; and uses a bounded, abortable, explicit-environment process
     boundary. Fake-port and subprocess tests do not count as real-daemon
     evidence.
-43. A dedicated Docker integration gate explicitly preloads one digest-pinned
+44. A dedicated Docker integration gate explicitly preloads one digest-pinned
     public probe image, executes success, timeout, output-limit, and nonzero-exit
     paths against a real daemon, and independently requires zero Mensor-owned
     containers before and after every case. Passing this gate proves only the
     tested daemon path, not independent provenance or an LLM repair rate.
-44. The first agent-authored build harness validates pinned brief and document
+45. The first agent-authored build harness validates pinned brief and document
     inputs before creating a fresh workspace, protects supplied input, allows
     generation only under the project boundary, runs independent semantic and
     Mensor checks, records each port's stated isolation without upgrading it,
     and disposes the workspace on success and failure.
-45. Every agent-authored result records a canonical runner, provider, exact
+46. Every agent-authored result records a canonical runner, provider, exact
     model, reasoning effort, and cohort identity. The first Codex subagent
     cohort pins GLM 5.2, Kimi K2.7, MiniMax M3, and DeepSeek V4 Flash; an
     unavailable model is recorded without substitution and every model result
     remains separate.
-46. A host-native subagent result that lacks enforced workspace and repository
+47. A host-native subagent result that lacks enforced workspace and repository
     isolation can be retained only as an `exploratory-only` observation. Its
     schema fixes all isolation claims to not enforced and retains only baseline
     commit, model identity, brief digest, generated paths, semantic outcome,
     and Mensor diagnostic codes.
-47. Agent-authored tests cannot certify agent-authored behavior. The current
+48. Agent-authored tests cannot certify agent-authored behavior. The current
     guestbook trial copies a versioned semantic oracle into protected input,
     records its digest, and runs it against the required `src/app.mjs`
     Request/Response interface after generation.
-48. A model-generated project may cross the provider boundary as a bounded
+49. A model-generated project may cross the provider boundary as a bounded
     response artifact. The evaluator validates the complete JSON file map and
     materializes it into a real empty project root; model-authored filesystem
     operations are not the trusted write boundary.
-49. Exploratory response observations bind the application brief, semantic
+50. Exploratory response observations bind the application brief, semantic
     oracle, and output transport digests. They record artifact acceptance as a
     separate final-state gate and fix tool control to `not-enforced` when the
     host exposes tools despite a prompt-only prohibition.
-50. Replayable response observations bind the exact model response bytes. A
+51. Replayable response observations bind the exact model response bytes. A
     semantic-oracle revision is a behavior migration: old green results must be
     replayed or downgraded, not silently carried forward under the new oracle.
-51. The local adoption pilot separates project-level fixed contract cost from
+52. The local adoption pilot separates project-level fixed contract cost from
     feature-level marginal contract cost across the maintained Hono task and
     dependency-free Node RSVP applications. Both valid projects remain green,
     both static field mutations produce the expected diagnostics, and both
@@ -323,7 +326,7 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     blind spot opened the design gate for a serialized `RouteIndex`; it did not
     authorize framework execution, a generic plugin API, or a framework-specific
     extractor.
-52. The optional project `routeIndex` selects a canonical RouteIndex v1 artifact
+53. The optional project `routeIndex` selects a canonical RouteIndex v1 artifact
     containing static GET/POST paths, source files, SHA-256 digests, and UTF-16
     ranges. The compiler validates freshness before semantic rules. Stale input
     fails with a `route_index.*` configuration failure, while a fresh index

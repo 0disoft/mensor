@@ -1,6 +1,16 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import {
+  cp,
+  lstat,
+  mkdtemp,
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -259,6 +269,137 @@ test("defaults root and config to the current working directory", async () => {
   assert.equal(result.stderr, "");
   assert.equal(report.status, "passed");
 });
+
+test("compiles one canonical runtime manifest with an atomic output replacement", async (context) => {
+  const root = await temporaryFixture(context, "valid/tiny-tasks");
+  const output = path.join(root, ".mensor", "runtime.json");
+  await mkdir(path.dirname(output), { recursive: true });
+  await writeFile(output, "stale\n", "utf8");
+
+  const result = await runCli(["compile", root, "--out", ".mensor/runtime.json", "--json"]);
+
+  assert.equal(result.code, 0);
+  assert.equal(result.stderr, "");
+  assert.equal(await readFile(output, "utf8"), result.stdout);
+  assert.equal(JSON.parse(result.stdout).manifestVersion, 1);
+  assert.equal((await lstat(output)).isFile(), true);
+});
+
+test("uses the default compile path and reports it in human mode", async (context) => {
+  const root = await temporaryFixture(context, "valid/tiny-tasks");
+  const result = await runCli(["compile", root]);
+
+  assert.equal(result.code, 0);
+  assert.equal(result.stderr, "");
+  assert.equal(result.stdout, "Wrote runtime manifest to .mensor/manifest.json.\n");
+  const manifest = JSON.parse(
+    await readFile(path.join(root, ".mensor", "manifest.json"), "utf8"),
+  );
+  assert.equal(
+    manifest.manifestVersion,
+    1,
+  );
+});
+
+test("lists check and compile in help without requiring a command", async () => {
+  const result = await runCli(["--help"]);
+  assert.equal(result.code, 0);
+  assert.match(result.stdout, /check\|compile/u);
+  assert.match(result.stdout, /--out/u);
+  assert.equal(result.stderr, "");
+});
+
+test("keeps command-specific flags out of the other command", async () => {
+  const root = path.join(fixtureRoot, "valid/tiny-tasks");
+  const check = await runCli(["check", root, "--out", "manifest.json", "--json"]);
+  const compile = await runCli([
+    "compile",
+    root,
+    "--report-version",
+    "2",
+    "--json",
+  ]);
+
+  assert.equal(check.code, 2);
+  assert.match(JSON.parse(check.stdout).failure.message, /only for compile/u);
+  assert.equal(compile.code, 2);
+  assert.match(JSON.parse(compile.stdout).failure.message, /only for check/u);
+});
+
+test("preserves an existing manifest when compile diagnostics fail", async (context) => {
+  const root = await temporaryFixture(context, "invalid/form-field-missing");
+  const output = path.join(root, ".mensor", "manifest.json");
+  await mkdir(path.dirname(output), { recursive: true });
+  await writeFile(output, "preserve-me\n", "utf8");
+
+  const result = await runCli(["compile", root, "--json"]);
+
+  assert.equal(result.code, 1);
+  assert.equal(JSON.parse(result.stdout).status, "failed");
+  assert.equal(await readFile(output, "utf8"), "preserve-me\n");
+});
+
+test("rejects non-canonical and escaping compile outputs without writing", async () => {
+  for (const output of [
+    "../manifest.json",
+    "./manifest.json",
+    "nested//manifest.json",
+    "C:\\outside\\manifest.json",
+  ]) {
+    const result = await runCli([
+      "compile",
+      path.join(fixtureRoot, "valid/tiny-tasks"),
+      "--out",
+      output,
+      "--json",
+    ]);
+    const envelope = JSON.parse(result.stdout);
+    assert.equal(result.code, 2);
+    assert.equal(envelope.failure.code, "cli.usage_invalid");
+  }
+});
+
+test("rejects compile output through a symbolic-link parent when supported", async (context) => {
+  const root = await temporaryFixture(context, "valid/tiny-tasks");
+  const outside = await mkdtemp(path.join(path.dirname(root), "mensor-outside-"));
+  context.after(() => rm(outside, { recursive: true, force: true }));
+  try {
+    await symlink(outside, path.join(root, "linked"), "junction");
+  } catch {
+    context.skip("The host does not permit symbolic-link creation.");
+    return;
+  }
+
+  const result = await runCli([
+    "compile",
+    root,
+    "--out",
+    "linked/new/manifest.json",
+    "--json",
+  ]);
+  assert.equal(result.code, 3);
+  assert.equal(JSON.parse(result.stdout).failure.code, "cli.manifest_write_failed");
+  await assert.rejects(lstat(path.join(outside, "new")), { code: "ENOENT" });
+});
+
+test("leaves no temporary output when the destination is not a file", async (context) => {
+  const root = await temporaryFixture(context, "valid/tiny-tasks");
+  const outputParent = path.join(root, ".mensor");
+  await mkdir(path.join(outputParent, "manifest.json"), { recursive: true });
+
+  const result = await runCli(["compile", root, "--json"]);
+
+  assert.equal(result.code, 3);
+  assert.equal(JSON.parse(result.stdout).failure.code, "cli.manifest_write_failed");
+  assert.deepEqual(await readdir(outputParent), ["manifest.json"]);
+});
+
+async function temporaryFixture(context, relative) {
+  const root = await mkdtemp(path.join(repositoryRoot, ".tmp-cli-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  await cp(path.join(fixtureRoot, relative), root, { recursive: true });
+  return root;
+}
 
 async function runCli(args, cwd = repositoryRoot) {
   return new Promise((resolve, reject) => {

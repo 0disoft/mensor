@@ -202,6 +202,7 @@ if (compiled.ok) {
     cli: [
       "# @0disoft/mensor-cli",
       "pnpm exec mensor check . --json",
+      "pnpm exec mensor compile . --out .mensor/manifest.json",
       "--report-version 2",
     ],
     "reference-runtime": [
@@ -254,6 +255,15 @@ if (compiled.ok) {
   assert.equal(validV2Report.schemaVersion, 2);
   assert.equal(validV2Report.status, "passed");
   assert.equal(validV2Report.inspection.routes.state, "not-configured");
+
+  const compiledByCli = await runMensorCompile(consumerRoot, "valid");
+  assert.equal(compiledByCli.code, 0, compiledByCli.stderr);
+  const compiledManifestText = await readFile(
+    path.join(consumerRoot, "valid", ".mensor", "manifest.json"),
+    "utf8",
+  );
+  assert.equal(compiledManifestText, compiledByCli.stdout);
+  assert.equal(JSON.parse(compiledManifestText).manifestVersion, 1);
 
   const invalid = await runMensor(consumerRoot, "invalid");
   assert.equal(invalid.code, 1, invalid.stderr);
@@ -335,6 +345,23 @@ async function runMensor(cwd, fixture, extraArgs = []) {
       fixture,
       "--json",
       ...extraArgs,
+    ],
+    cwd,
+  );
+}
+
+async function runMensorCompile(cwd, fixture) {
+  return capture(
+    pnpmExecutable ? pnpmEntrypoint : process.execPath,
+    [
+      ...(pnpmExecutable ? [] : [pnpmEntrypoint]),
+      "exec",
+      "mensor",
+      "compile",
+      fixture,
+      "--out",
+      ".mensor/manifest.json",
+      "--json",
     ],
     cwd,
   );

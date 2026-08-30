@@ -15,6 +15,7 @@
 - Fixture route: fixtures/README.md
 - Monorepo route: .agents/skills/monorepo/SKILL.md
 - CLI tool route: .agents/skills/cli-tool/SKILL.md
+- CLI compile route: packages/cli/, docs/cli/command-contract.md, docs/adr/0037-cli-owns-atomic-manifest-materialization.md
 - Library package route: .agents/skills/library-package/SKILL.md
 - Feature route: .agents/skills/feature/SKILL.md
 - Bugfix route: .agents/skills/bugfix/SKILL.md

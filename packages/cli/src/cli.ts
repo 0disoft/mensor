@@ -2,8 +2,13 @@ import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
 
-import { checkProject, type CompilerFailure } from "@0disoft/mensor-compiler";
+import {
+  checkProject,
+  compileProject,
+  type CompilerFailure,
+} from "@0disoft/mensor-compiler";
 
+import { writeManifestAtomic } from "./manifest-output.js";
 import type {
   CliFailureEnvelope,
   RunCliOptions,
@@ -45,15 +50,17 @@ function readPackageVersion(): string {
   return value.version;
 }
 
-const helpText = `Usage: mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
+const helpText = `Usage: mensor <check|compile> [root] [options]
 
 Commands:
   check    Check project contracts against static source facts.
+  compile  Check contracts and atomically write a runtime manifest.
 
 Options:
   --config <path>  Root-relative project contract path.
   --json           Write one canonical JSON document to stdout.
-  --report-version Select JSON output revision 1 or 2. Requires --json.
+  --out <path>      Compile output path relative to root (default: .mensor/manifest.json).
+  --report-version Select check JSON output revision 1 or 2. Requires --json.
   --help           Show this help.
 `;
 
@@ -68,6 +75,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         config: { type: "string" },
         help: { type: "boolean", short: "h" },
         json: { type: "boolean" },
+        out: { type: "string" },
         "report-version": { type: "string" },
       },
     });
@@ -114,10 +122,31 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     options.stdout(helpText);
     return 0;
   }
-  if (parsed.positionals[0] !== "check" || parsed.positionals.length > 2) {
+  const command = parsed.positionals[0];
+  if (
+    (command !== "check" && command !== "compile") ||
+    parsed.positionals.length > 2
+  ) {
     return writeUsageFailure(
       options,
-      "Expected command check and at most one project root.",
+      "Expected command check or compile and at most one project root.",
+      json,
+      reportVersion,
+    );
+  }
+
+  if (command === "compile" && reportVersionValue !== undefined) {
+    return writeUsageFailure(
+      options,
+      "--report-version is available only for check.",
+      json,
+      reportVersion,
+    );
+  }
+  if (command === "check" && parsed.values["out"] !== undefined) {
+    return writeUsageFailure(
+      options,
+      "--out is available only for compile.",
       json,
       reportVersion,
     );
@@ -151,6 +180,49 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     producerVersion: cliVersion,
     ...(config === undefined ? {} : { configFile: config }),
   };
+  if (command === "compile") {
+    const outputValue = parsed.values["out"];
+    const output = typeof outputValue === "string"
+      ? normalizeRelativeOutput(outputValue)
+      : ".mensor/manifest.json";
+    if (output === undefined) {
+      return writeUsageFailure(
+        options,
+        "--out must be relative to the selected project root.",
+        json,
+        reportVersion,
+      );
+    }
+    const compiled = await compileProject(checkOptions);
+    if (!compiled.ok) {
+      if (compiled.kind === "diagnostics") {
+        writeReport(options, compiled.report, json);
+        return 1;
+      }
+      const exitCode = compiled.failure.kind === "configuration" ? 2 : 3;
+      writeFailure(options, compiled.failure, json, reportVersion);
+      return exitCode;
+    }
+    const manifestText = `${JSON.stringify(compiled.manifest, null, 2)}\n`;
+    try {
+      await writeManifestAtomic(root, output, manifestText);
+    } catch {
+      writeFailure(
+        options,
+        {
+          kind: "filesystem",
+          code: "cli.manifest_write_failed",
+          message: "The runtime manifest could not be written atomically.",
+          file: output,
+        },
+        json,
+        reportVersion,
+      );
+      return 3;
+    }
+    options.stdout(json ? manifestText : `Wrote runtime manifest to ${output}.\n`);
+    return 0;
+  }
   const result = reportVersion === 2
     ? await checkProject({ ...checkOptions, reportVersion: 2 })
     : await checkProject(checkOptions);
@@ -175,6 +247,51 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     }
   }
   return result.report.summary.errorCount === 0 ? 0 : 1;
+}
+
+function writeReport(
+  options: RunCliOptions,
+  report: {
+    readonly diagnostics: readonly {
+      readonly file: string;
+      readonly range: {
+        readonly start: { readonly line: number; readonly character: number };
+      };
+      readonly code: string;
+      readonly message: string;
+    }[];
+  },
+  json: boolean,
+): void {
+  if (json) {
+    options.stdout(`${JSON.stringify(report, null, 2)}\n`);
+    return;
+  }
+  for (const diagnostic of report.diagnostics) {
+    options.stdout(
+      `${diagnostic.file}:${diagnostic.range.start.line + 1}:${diagnostic.range.start.character + 1} ${diagnostic.code} ${diagnostic.message}\n`,
+    );
+  }
+}
+
+function normalizeRelativeOutput(value: string): string | undefined {
+  if (
+    value.length === 0 ||
+    path.isAbsolute(value) ||
+    path.win32.isAbsolute(value)
+  ) {
+    return undefined;
+  }
+  const normalized = value.replaceAll("\\", "/");
+  const segments = normalized.split("/");
+  if (
+    segments.some(
+      (segment) => segment === "" || segment === "." || segment === "..",
+    )
+  ) {
+    return undefined;
+  }
+  return normalized;
 }
 
 function writeUsageFailure(

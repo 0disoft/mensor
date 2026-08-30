@@ -28,6 +28,9 @@
 - Package guide patch migration note: `releasing/0.2.1.md`
 - Form codec expansion migration note: `releasing/0.3.0.md`
 - Reference runtime migration note: `releasing/0.4.0.md`
+- Compile command migration note: `releasing/0.5.0.md`
+- Atomic manifest materialization decision:
+  `adr/0037-cli-owns-atomic-manifest-materialization.md`
 
 ## Research Notes
 

@@ -56,13 +56,14 @@ feature slots.
 ### `@0disoft/mensor-cli`
 
 Owns argument parsing, config selection, stdout and stderr behavior, exit
-status, and future atomic artifact writes. It delegates all checking behavior
+status, and atomic RuntimeManifest writes. It delegates all checking behavior
 to the compiler and does not parse source directly.
 
-The current executable exposes only `mensor check [root] [--config <path>]
-[--json] [--report-version <1|2>]` and maps compiler results to the documented
-`0/1/2/3` exit statuses. Report revision selection stays in the CLI shell;
-inspection derivation remains compiler-owned.
+The current executable exposes `mensor check [root] [--config <path>] [--json]
+[--report-version <1|2>]` and `mensor compile [root] [--config <path>] [--out
+<path>] [--json]`. It maps compiler results to the documented `0/1/2/3` exit
+statuses. Report revision selection stays in the CLI shell; inspection and
+manifest derivation remain compiler-owned.
 
 ### `@0disoft/mensor-reference-runtime`
 

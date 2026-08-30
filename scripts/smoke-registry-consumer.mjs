@@ -229,6 +229,19 @@ assert.equal(await response.text(), "ok\n");
   assert.equal(validV2Report.schemaVersion, 2);
   assert.equal(validV2Report.inspection.routes.state, "not-configured");
 
+  const compiled = await capture(
+    process.execPath,
+    [cliEntrypoint, "compile", "valid", "--out", ".mensor/manifest.json", "--json"],
+    consumerRoot,
+  );
+  assert.equal(compiled.code, 0, compiled.stderr);
+  const compiledManifestText = await readFile(
+    path.join(consumerRoot, "valid", ".mensor", "manifest.json"),
+    "utf8",
+  );
+  assert.equal(compiledManifestText, compiled.stdout);
+  assert.equal(JSON.parse(compiledManifestText).manifestVersion, 1);
+
   const invalid = await capture(
     process.execPath,
     [cliEntrypoint, "check", "invalid", "--json"],
@@ -260,6 +273,7 @@ assert.equal(await response.text(), "ok\n");
         registry,
         packages,
         contractImport: "passed",
+        compileArtifactStatus: "passed",
         validProjectStatus: "passed",
         invalidProjectStatus: "failed",
         invalidDiagnosticCodes: ["form.field_missing"],

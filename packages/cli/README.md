@@ -1,6 +1,6 @@
 # @0disoft/mensor-cli
 
-Command-line interface for checking Mensor project contracts.
+Command-line interface for checking and compiling Mensor project contracts.
 
 ## Install
 
@@ -29,6 +29,19 @@ not prove runtime application behavior. When a project omits RouteIndex,
 application route declarations are not inspected.
 
 Mensor does not execute project source or configuration while checking it.
+
+## Compile A Runtime Manifest
+
+Compile only after all configured checks pass and atomically replace the
+root-relative output file:
+
+```text
+pnpm exec mensor compile . --out .mensor/manifest.json
+```
+
+The default output is `.mensor/manifest.json`. Diagnostic, configuration, and
+write failures do not replace an existing manifest. Add `--json` to emit the
+same canonical manifest bytes to stdout after the file is written.
 
 ## Documentation
 

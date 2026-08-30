@@ -2,6 +2,25 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.5.0] - 2026-08-30
+
+### Added
+
+- `mensor compile` with a root-relative `--out` option and canonical JSON
+  stdout mode for RuntimeManifest v1.
+- Atomic manifest replacement after a clean compiler result, with package and
+  registry consumer smoke coverage.
+
+### Security
+
+- Absolute, root-escaping, directory, and symbolic-link output targets fail
+  closed. Diagnostic and write failures preserve existing manifest bytes.
+
+### Compatibility
+
+- Existing `mensor check` output and exit status behavior is unchanged.
+- Upgrade all four public packages together as a fixed version set.
+
 ## [0.4.0] - 2026-08-30
 
 ### Added

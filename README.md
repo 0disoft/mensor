@@ -14,20 +14,21 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.4.0` is the current public preview. It adds the bounded reference
-runtime that consumes RuntimeManifest v1 without rescanning or executing source.
+Version `0.5.0` is the current public preview. It adds atomic RuntimeManifest
+output through the `mensor compile` command.
 
 ## Registry Installation
 
 The supported CLI installation path is:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.4.0
+pnpm add --save-dev @0disoft/mensor-cli@0.5.0
 pnpm exec mensor check . --json
+pnpm exec mensor compile . --out .mensor/manifest.json
 ```
 
-See the [release runbook](docs/releasing/runbook.md), the [`0.4.0` migration
-note](docs/releasing/0.4.0.md), and the prior
+See the [release runbook](docs/releasing/runbook.md), the [`0.5.0` migration
+note](docs/releasing/0.5.0.md), and the prior
 [`0.2.0` release audit](docs/product/0.2.0-release-audit.md) for the publication
 process and compatibility boundary.
 
@@ -60,6 +61,7 @@ pnpm install --frozen-lockfile
 pnpm build
 pnpm mensor check fixtures/valid/tiny-tasks --json
 pnpm mensor check fixtures/valid/tiny-tasks --json --report-version 2
+pnpm mensor compile fixtures/valid/tiny-tasks --out .mensor/manifest.json
 ```
 
 Both check commands exit `0`. The first preserves DiagnosticReport v1; the
@@ -84,8 +86,9 @@ The current proof:
 2. extracts static HTML forms and TypeScript/JavaScript source facts;
 3. detects form, route, handler, import-boundary, placement, and ownership
    violations;
-4. emits byte-stable diagnostics through `mensor check --json`; and
-5. rejects checker-clean repairs that weaken a protected contract or delete
+4. emits byte-stable diagnostics through `mensor check --json`;
+5. atomically writes RuntimeManifest v1 only after a clean compile; and
+6. rejects checker-clean repairs that weaken a protected contract or delete
    feature semantics.
 
 ## Product Boundary

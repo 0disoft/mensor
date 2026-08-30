@@ -16,9 +16,9 @@ Run from a clean release commit with Node 22 or newer and pnpm 11.11.0:
 
 ```text
 pnpm install --frozen-lockfile
-pnpm run release-check -- --version 0.4.0 --tag latest
+pnpm run release-check -- --version 0.5.0 --tag latest
 pnpm run check
-pnpm run release:pack -- --version 0.4.0
+pnpm run release:pack -- --version 0.5.0
 ```
 
 Review `dist/release/manifest.json`, the four tarballs, package names,

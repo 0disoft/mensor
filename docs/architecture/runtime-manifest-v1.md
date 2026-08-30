@@ -18,6 +18,11 @@ Handlers remain executable host values and are injected separately by id.
 The implemented reference consumer is specified in
 `docs/architecture/reference-runtime-v1.md`.
 
+`mensor compile [root]` writes this artifact to `.mensor/manifest.json` by
+default. `--out` selects another root-relative path. The CLI writes a temporary
+file in the destination directory, flushes it, and renames it only after a
+clean compile, so diagnostics and write failures preserve an existing artifact.
+
 ## Canonical Form
 
 Pages and actions are sorted by path and id. Object-schema properties,

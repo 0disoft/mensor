@@ -49,14 +49,16 @@ what the stable scaffold names mean.
 runtime packages,
 forces those local tarballs into an isolated consumer while allowing normal
 resolution of public third-party dependencies, and verifies the installed CLI
-against both a valid and an invalid fixture. Build output is cleaned first and
+against both a valid and an invalid fixture plus one canonical compile
+artifact. Build output is cleaned first and
 must exactly match the current source graph before packaging.
 
 `registry-smoke` is a networked post-publication check. It installs the exact
 current workspace version of all four public packages from the official npm
 registry into a temporary consumer with lifecycle scripts disabled, verifies
 the public contract import and packaged licenses, and runs the installed CLI
-against valid and invalid fixtures. It is not part of aggregate `check` and
+against valid and invalid fixtures plus one compile artifact. It is not part of
+aggregate `check` and
 must run only through the configured `mensor_registry_smoke` intent after
 explicit network approval.
 
