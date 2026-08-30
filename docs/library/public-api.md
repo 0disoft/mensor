@@ -64,6 +64,11 @@ export function checkProject(
 export function compileProject(
   options: CompileProjectOptions,
 ): Promise<CompileProjectResult>;
+
+export function extractStaticHtmlFormDocument(
+  file: string,
+  html: string,
+): FormIndexDocument;
 ```
 
 `CheckProjectResult` separates a completed check and its `DiagnosticReport` from
@@ -79,6 +84,12 @@ completed rule paths, not from an empty diagnostic list.
 `compileProject` reuses the same validated analysis and emits RuntimeManifest
 v1 only when the diagnostic report is clean. A diagnostic result, malformed
 configuration, or I/O failure cannot produce a partial manifest.
+
+`extractStaticHtmlFormDocument` is the pure extraction boundary shared by the
+built-in provider and explicit TypeScript template producer. It performs no
+filesystem, module loading, network, or source execution. Callers remain
+responsible for source binding, byte digests, and offsetting ranges when the
+HTML fragment is embedded in another language.
 
 The compiler walks the configured source root in code-unit sorted order, skips
 symlinks, enforces file-count and file-byte limits, and never imports inspected

@@ -14,22 +14,23 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.7.0` is the current public preview. It publishes FormIndex v1 and
-accepts source-bound template facts without executing a producer.
+Version `0.8.0` is the current public preview. It adds an explicit,
+non-executing producer for source-bound forms in tagged TypeScript templates.
 
 ## Registry Installation
 
 The supported CLI installation path is:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.7.0
+pnpm add --save-dev @0disoft/mensor-cli@0.8.0
 pnpm exec mensor check . --json
 pnpm exec mensor compile . --out .mensor/manifest.json
 pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app
+pnpm exec mensor index-ts-forms . --source src/views.ts --tag html
 ```
 
-See the [release runbook](docs/releasing/runbook.md), the [`0.7.0` migration
-note](docs/releasing/0.7.0.md), and the prior
+See the [release runbook](docs/releasing/runbook.md), the [`0.8.0` migration
+note](docs/releasing/0.8.0.md), and the prior
 [`0.2.0` release audit](docs/product/0.2.0-release-audit.md) for the publication
 process and compatibility boundary.
 
@@ -104,7 +105,10 @@ with those kinds of tools.
 The built-in provider supports TypeScript or JavaScript projects with static
 `.html` files. A public canonical FormIndex can instead supply source-bound
 facts for other template files; unresolved evidence fails closed and no
-producer is run by the compiler.
+producer is run by the compiler. The CLI can explicitly index caller-selected
+TypeScript or JavaScript files containing no-substitution templates tagged by
+caller-selected identifiers. Interpolation marks a document incomplete, and
+the producer never imports or executes the source.
 An optional canonical RouteIndex lets an explicit producer supply static route
 facts without granting the compiler code-execution authority. The CLI includes
 one narrow Hono producer for explicitly listed source files and receiver names.
@@ -115,7 +119,7 @@ declarations and does not run the `route.missing` rule. A passing check means
 only that every configured static contract check passed; it never proves
 runtime application semantics.
 RuntimeManifest v1 and a bounded Request/Response reference consumer are
-implemented. Dynamic template producers, production framework integration,
+implemented. General dynamic-template adapters, production framework integration,
 autofix, arbitrary plugins, cloud processing, and telemetry remain deferred.
 
 ## Repository Shape

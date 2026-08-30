@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -191,6 +191,10 @@ if (compiled.ok) {
   await cp(path.join(repositoryRoot, "fixtures", "valid", "tiny-tasks"), path.join(consumerRoot, "valid"), {
     recursive: true,
   });
+  await cp(path.join(repositoryRoot, "fixtures", "valid", "tiny-tasks"), path.join(consumerRoot, "valid-ts"), {
+    recursive: true,
+  });
+  await prepareTypeScriptFormFixture(path.join(consumerRoot, "valid-ts"));
   await cp(
     path.join(repositoryRoot, "fixtures", "valid", "hono-static-tasks"),
     path.join(consumerRoot, "valid-hono"),
@@ -222,6 +226,7 @@ if (compiled.ok) {
       "pnpm exec mensor check . --json",
       "pnpm exec mensor compile . --out .mensor/manifest.json",
       "pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app",
+      "pnpm exec mensor index-ts-forms . --source src/views.ts --tag html",
       "--report-version 2",
     ],
     "reference-runtime": [
@@ -292,6 +297,16 @@ if (compiled.ok) {
     honoIndexValue.routes.map(({ method, path: routePath }) => [method, routePath]),
     [["GET", "/tasks"], ["POST", "/tasks"]],
   );
+
+  const formIndex = await runMensorTypeScriptFormIndex(consumerRoot);
+  assert.equal(formIndex.code, 0, formIndex.stderr);
+  assert.equal(JSON.parse(formIndex.stdout).producer.name, "mensor-typescript-template-form-indexer");
+  const typedProject = await runMensor(consumerRoot, "valid-ts", [
+    "--report-version",
+    "2",
+  ]);
+  assert.equal(typedProject.code, 0, typedProject.stderr);
+  assert.equal(JSON.parse(typedProject.stdout).inspection.forms.basis, "form-index");
 
   const invalid = await runMensor(consumerRoot, "invalid");
   assert.equal(invalid.code, 1, invalid.stderr);
@@ -412,6 +427,41 @@ async function runMensorHonoIndex(cwd) {
     ],
     cwd,
   );
+}
+
+async function runMensorTypeScriptFormIndex(cwd) {
+  return capture(
+    pnpmExecutable ? pnpmEntrypoint : process.execPath,
+    [
+      ...(pnpmExecutable ? [] : [pnpmEntrypoint]),
+      "exec",
+      "mensor",
+      "index-ts-forms",
+      "valid-ts",
+      "--source",
+      "src/features/tasks/views/index.ts",
+      "--tag",
+      "html",
+      "--json",
+    ],
+    cwd,
+  );
+}
+
+async function prepareTypeScriptFormFixture(root) {
+  const projectPath = path.join(root, "mensor.project.jsonc");
+  const featurePath = path.join(root, "src", "features", "tasks", "feature.mensor.jsonc");
+  const htmlPath = path.join(root, "src", "features", "tasks", "views", "index.html");
+  const sourcePath = path.join(root, "src", "features", "tasks", "views", "index.ts");
+  const html = await readFile(htmlPath, "utf8");
+  await rename(htmlPath, sourcePath);
+  await writeFile(sourcePath, `export const view = html\`${html}\`;\n`, "utf8");
+  const project = JSON.parse(await readFile(projectPath, "utf8"));
+  project.formIndex = "mensor.form-index.json";
+  await writeFile(projectPath, `${JSON.stringify(project, null, 2)}\n`, "utf8");
+  const feature = JSON.parse(await readFile(featurePath, "utf8"));
+  feature.actions[0].form.template = "views/index.ts";
+  await writeFile(featurePath, `${JSON.stringify(feature, null, 2)}\n`, "utf8");
 }
 
 function tarballDependency(tarball) {

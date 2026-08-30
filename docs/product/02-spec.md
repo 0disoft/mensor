@@ -339,6 +339,13 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     optional chains, invalid source, and empty extraction fail before atomic
     output replacement. The command is never discovered or launched by
     `check` or `compile`.
+55. The explicit `mensor index-ts-forms` command may produce FormIndex v1 from
+    caller-selected TypeScript or JavaScript files and identifier tags. It
+    indexes no-substitution templates through the same pure HTML extractor as
+    the built-in provider. Interpolation records incomplete evidence; syntax
+    errors, unsafe source, missing selected templates, and invalid tags fail
+    before atomic output replacement. The command never executes source and is
+    never discovered or launched by `check` or `compile`.
 
 ## Accepted Report Evolution
 
@@ -412,18 +419,19 @@ The bounded candidate search recorded in
 that met the current native static HTML and TypeScript server-handler boundary.
 External recruitment is not planned. Do not substitute frontend-only forms,
 usage demos, dynamic framework templates, multipart forms, or client-mediated
-JSON requests as product adoption evidence. ADR-0030 selects a serialized `FormIndex` as the template-fact
-boundary while retaining static HTML as the only implemented provider. The
-byte-preserving internal refactor is complete: the built-in provider
+JSON requests as product adoption evidence. ADR-0030 selects a serialized
+`FormIndex` as the template-fact boundary. The byte-preserving internal
+refactor is complete: the built-in static HTML provider
 serializes, validates, source-binds, and hands index facts to semantic rules
-without changing the maintained diagnostic reports. This does not claim
-dynamic template compatibility or authorize an external extractor.
+without changing the maintained diagnostic reports. ADR-0040 adds one explicit
+TypeScript tagged-template producer; this does not claim general dynamic
+template or framework compatibility.
 
 FormIndex v1 is now a public contract-package surface and optional source-bound
 project input. The compiler verifies discovered paths, digests, UTF-8 source,
 ranges, and linked documents before semantic rules run. The built-in static
 HTML provider remains the default when `formIndex` is omitted. Producer
-execution, discovery, and generic plugins remain unavailable.
+execution by the compiler, discovery, and generic plugins remain unavailable.
 
 ADR-0033 owns the public RouteIndex boundary. Unlike FormIndex, RouteIndex has a
 public schema, parser, serializer, and project-contract input. This accepts
@@ -457,8 +465,9 @@ and cannot stand in for throughput evidence.
   consumer are implemented. Authentication, CSRF policy, sessions,
   persistence, and deployment remain host-owned.
 - Dynamic template adapters: the public FormIndex ingestion boundary is
-  implemented, but explicit dynamic-template producers remain separate,
-  syntax-bounded work.
+  implemented. One explicit syntax-bounded TypeScript tagged-template producer
+  is implemented; framework transforms, interpolation evaluation, producer
+  discovery, and generic adapter lifecycles remain deferred.
 - IDE, SARIF, watch mode, caching, and cloud services: post-MVP integrations.
 - Public diagnostic compatibility: begins with the first published preview,
   not with private pre-implementation drafts.

@@ -60,6 +60,22 @@ source without importing or executing it. Only direct or chained static
 mounted routers, `on`, `all`, and optional chains fail closed rather than
 producing an incomplete index.
 
+## Produce A TypeScript FormIndex
+
+Generate a canonical FormIndex from explicitly selected TypeScript or
+JavaScript files and tagged-template identifiers:
+
+```text
+pnpm exec mensor index-ts-forms . --source src/views.ts --tag html
+```
+
+Repeat `--source` and `--tag` when needed. The default output is
+`mensor.form-index.json`; `--out` selects another root-relative path and
+`--json` emits the same canonical bytes after the atomic write. Mensor parses
+without importing or executing source. Only exact identifier tags with
+no-substitution templates yield static form facts. Interpolation is retained
+as incomplete evidence, and a source with no selected template fails closed.
+
 ## Documentation
 
 - [Project and feature contract authoring](https://github.com/0disoft/mensor/blob/main/packages/contract/spec/README.md)

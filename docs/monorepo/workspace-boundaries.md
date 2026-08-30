@@ -57,12 +57,14 @@ feature slots.
 
 Owns argument parsing, config selection, stdout and stderr behavior, exit
 status, atomic artifact writes, and the explicitly invoked Hono RouteIndex
-producer. It delegates all checking behavior to the compiler. Only the Hono
-producer parses caller-selected source; `check` and `compile` do not.
+and TypeScript tagged-template FormIndex producers. It delegates all checking
+behavior to the compiler. Only the explicit producers parse caller-selected
+source; `check` and `compile` do not launch them.
 
 The current executable exposes `mensor check [root] [--config <path>] [--json]
 [--report-version <1|2>]`, `mensor compile [root] [--config <path>] [--out
-<path>] [--json]`, and the narrow `mensor index-hono-routes` producer. It maps
+<path>] [--json]`, plus the narrow `mensor index-hono-routes` and
+`mensor index-ts-forms` producers. It maps
 results to the documented `0/1/2/3` exit statuses. Report revision selection
 stays in the CLI shell; inspection and manifest derivation remain
 compiler-owned.

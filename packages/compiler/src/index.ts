@@ -1,4 +1,5 @@
 export { checkProject, compileProject } from "./check-project.js";
+export { extractStaticHtmlFormDocument } from "./html-forms.js";
 export type {
   CheckProjectFailure,
   CheckProjectBaseOptions,

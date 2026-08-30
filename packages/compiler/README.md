@@ -39,6 +39,12 @@ The compiler emits a manifest only after every configured diagnostic passes.
 The artifact contains static GET page HTML, POST routes, handler ids, and form
 decode contracts; it contains no source path, AST node, or executable handler.
 
+Template producers may reuse the pure `extractStaticHtmlFormDocument(file,
+html)` export to obtain the same serializable HTML facts as the built-in
+provider. The helper does not read files or execute source; producers still
+own source binding, digests, embedded-fragment range offsets, and FormIndex
+serialization.
+
 The default result contains DiagnosticReport v1. Select Check Output v2
 explicitly when inspection coverage is required:
 

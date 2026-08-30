@@ -7,6 +7,7 @@ import {
   mkdtemp,
   readFile,
   realpath,
+  rename,
   rm,
   writeFile,
 } from "node:fs/promises";
@@ -151,6 +152,12 @@ assert.equal(await response.text(), "ok\n");
     { recursive: true },
   );
   await cp(
+    path.join(repositoryRoot, "fixtures", "valid", "tiny-tasks"),
+    path.join(consumerRoot, "valid-ts"),
+    { recursive: true },
+  );
+  await prepareTypeScriptFormFixture(path.join(consumerRoot, "valid-ts"));
+  await cp(
     path.join(repositoryRoot, "fixtures", "valid", "hono-static-tasks"),
     path.join(consumerRoot, "valid-hono"),
     { recursive: true },
@@ -264,6 +271,30 @@ assert.equal(await response.text(), "ok\n");
   assert.equal(honoIndex.code, 0, honoIndex.stderr);
   assert.equal(JSON.parse(honoIndex.stdout).producer.name, "mensor-hono-route-indexer");
 
+  const formIndex = await capture(
+    process.execPath,
+    [
+      cliEntrypoint,
+      "index-ts-forms",
+      "valid-ts",
+      "--source",
+      "src/features/tasks/views/index.ts",
+      "--tag",
+      "html",
+      "--json",
+    ],
+    consumerRoot,
+  );
+  assert.equal(formIndex.code, 0, formIndex.stderr);
+  assert.equal(JSON.parse(formIndex.stdout).producer.name, "mensor-typescript-template-form-indexer");
+  const typedProject = await capture(
+    process.execPath,
+    [cliEntrypoint, "check", "valid-ts", "--json", "--report-version", "2"],
+    consumerRoot,
+  );
+  assert.equal(typedProject.code, 0, typedProject.stderr);
+  assert.equal(JSON.parse(typedProject.stdout).inspection.forms.basis, "form-index");
+
   const invalid = await capture(
     process.execPath,
     [cliEntrypoint, "check", "invalid", "--json"],
@@ -297,6 +328,7 @@ assert.equal(await response.text(), "ok\n");
         contractImport: "passed",
         compileArtifactStatus: "passed",
         honoRouteIndexStatus: "passed",
+        typescriptFormIndexStatus: "passed",
         validProjectStatus: "passed",
         invalidProjectStatus: "failed",
         invalidDiagnosticCodes: ["form.field_missing"],
@@ -307,6 +339,22 @@ assert.equal(await response.text(), "ok\n");
   );
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });
+}
+
+async function prepareTypeScriptFormFixture(root) {
+  const projectPath = path.join(root, "mensor.project.jsonc");
+  const featurePath = path.join(root, "src", "features", "tasks", "feature.mensor.jsonc");
+  const htmlPath = path.join(root, "src", "features", "tasks", "views", "index.html");
+  const sourcePath = path.join(root, "src", "features", "tasks", "views", "index.ts");
+  const html = await readFile(htmlPath, "utf8");
+  await rename(htmlPath, sourcePath);
+  await writeFile(sourcePath, `export const view = html\`${html}\`;\n`, "utf8");
+  const project = JSON.parse(await readFile(projectPath, "utf8"));
+  project.formIndex = "mensor.form-index.json";
+  await writeFile(projectPath, `${JSON.stringify(project, null, 2)}\n`, "utf8");
+  const feature = JSON.parse(await readFile(featurePath, "utf8"));
+  feature.actions[0].form.template = "views/index.ts";
+  await writeFile(featurePath, `${JSON.stringify(feature, null, 2)}\n`, "utf8");
 }
 
 function isWithin(parent, candidate) {

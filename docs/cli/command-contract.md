@@ -17,6 +17,7 @@ evidence.
 mensor check [root] [--config <path>] [--json] [--report-version <1|2>]
 mensor compile [root] [--config <path>] [--out <path>] [--json]
 mensor index-hono-routes [root] --source <path> --receiver <name> [--out <path>] [--json]
+mensor index-ts-forms [root] --source <path> --tag <identifier> [--out <path>] [--json]
 ```
 
 - `root` defaults to the current working directory.
@@ -24,11 +25,12 @@ mensor index-hono-routes [root] --source <path> --receiver <name> [--out <path>]
 - `--json` selects the canonical machine-readable report.
 - `--report-version` selects JSON revision `1` or `2` and is invalid without
   `--json`. The default is revision `1`. It is valid only for `check`.
-- `--out` selects the compile artifact path relative to `root` and defaults to
-  `.mensor/manifest.json` for `compile` and `mensor.route-index.json` for
-  `index-hono-routes`.
-- `--source` and `--receiver` are repeatable and valid only for
-  `index-hono-routes`. Both require at least one value.
+- `--out` selects the artifact path relative to `root` and defaults to
+  `.mensor/manifest.json` for `compile`, `mensor.route-index.json` for
+  `index-hono-routes`, and `mensor.form-index.json` for `index-ts-forms`.
+- `--source` is repeatable for either index command. `--receiver` is
+  repeatable only for `index-hono-routes`; `--tag` is repeatable only for
+  `index-ts-forms`. Each command requires all of its named inputs.
 - Paths supplied through flags must resolve inside `root`.
 - Environment variables do not alter contract or rule behavior in the MVP.
 - The CLI applies compiler defaults of 10,000 discovered files, 1 MiB per
@@ -90,6 +92,17 @@ entire supported syntax. Dynamic paths, mounted/composed routers, `on`, `all`,
 optional chains, invalid UTF-8, syntax errors, unsafe paths, and empty results
 are configuration failures and preserve existing output.
 
+On a clean `index-ts-forms`, human mode names the root-relative FormIndex path
+and JSON mode writes the canonical FormIndex v1 bytes after the same bytes are
+committed to disk. The command reads only explicitly listed TypeScript or
+JavaScript files and matches only explicitly named identifier tags. Static
+no-substitution tagged templates use the compiler's pure HTML extractor.
+Interpolation marks the source document incomplete rather than executing or
+guessing the expression. Syntax errors, invalid UTF-8, unsafe paths, missing
+tags, and any explicit source with no selected template are configuration
+failures and preserve existing output. Tag matching is syntactic and does not
+resolve aliases or shadowed bindings.
+
 ## Exit Status
 
 - `0`: checking or compilation completed with no error diagnostics
@@ -109,7 +122,7 @@ The failure envelope is:
   "schemaVersion": 1,
   "producer": {
     "name": "mensor",
-    "version": "0.7.0"
+    "version": "0.8.0"
   },
   "status": "error",
   "failure": {

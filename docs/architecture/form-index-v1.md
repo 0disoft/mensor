@@ -38,3 +38,9 @@ documents are allowed. A producer version or name never bypasses these checks.
 When `formIndex` is omitted, the compiler constructs the same revision in
 memory through its built-in static HTML provider and continues to reject
 non-`.html` template paths. The compiler never runs a producer.
+
+Version 0.8.0 adds one separate explicit producer, `mensor index-ts-forms`, for
+caller-selected TypeScript or JavaScript tagged templates. It emits this same
+artifact and receives no compiler hook or discovery authority. See
+`typescript-template-form-index-producer-v1.md` for its deliberately narrow
+syntax and incomplete-interpolation behavior.

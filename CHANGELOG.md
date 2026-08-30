@@ -2,6 +2,29 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.8.0] - 2026-08-30
+
+### Added
+
+- `mensor index-ts-forms` for producing canonical FormIndex v1 artifacts from
+  explicitly selected TypeScript or JavaScript tagged HTML templates.
+- Public compiler extraction helper used by the bounded producer and package
+  consumer coverage for generated FormIndex ingestion.
+
+### Security
+
+- The producer reads bounded UTF-8 regular files without symbolic-link
+  components, verifies source identity around the read, and never imports or
+  executes application source.
+- Interpolated templates remain explicit incomplete evidence. Invalid syntax,
+  unsafe paths, missing tags, and empty per-source extraction fail before
+  atomic output replacement.
+
+### Compatibility
+
+- `check`, `compile`, the static HTML provider, and Hono indexing retain their
+  existing behavior. Upgrade all four public packages together.
+
 ## [0.7.0] - 2026-08-30
 
 ### Added

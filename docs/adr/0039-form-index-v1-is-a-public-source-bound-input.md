@@ -38,3 +38,6 @@ configuration change and retain their previous diagnostic bytes.
 This decision publishes the artifact and its ingestion boundary. It does not
 claim compatibility with a template language until a separate explicit
 producer exists and its supported syntax is documented.
+
+ADR-0040 adds the first such bounded producer for caller-selected TypeScript
+tagged templates without changing this compiler authority boundary.

@@ -7,6 +7,7 @@ import {
   mkdir,
   readFile,
   readdir,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -18,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { cliVersion } from "@0disoft/mensor-cli";
 import {
   parseCheckOutputV2,
+  parseFormIndex,
   parseRouteIndex,
 } from "../../contract/dist/src/index.js";
 
@@ -304,12 +306,13 @@ test("uses the default compile path and reports it in human mode", async (contex
   );
 });
 
-test("lists check, compile, and Hono route indexing without requiring a command", async () => {
+test("lists check, compile, and explicit indexers without requiring a command", async () => {
   const result = await runCli(["--help"]);
   assert.equal(result.code, 0);
-  assert.match(result.stdout, /check\|compile\|index-hono-routes/u);
+  assert.match(result.stdout, /check\|compile\|index-hono-routes\|index-ts-forms/u);
   assert.match(result.stdout, /--source/u);
   assert.match(result.stdout, /--receiver/u);
+  assert.match(result.stdout, /--tag/u);
   assert.match(result.stdout, /--out/u);
   assert.equal(result.stderr, "");
 });
@@ -502,6 +505,137 @@ test("requires explicit sources and receiver identifiers", async () => {
     JSON.parse(invalidReceiver.stdout).failure.code,
     "route_indexer.receiver_invalid",
   );
+});
+
+test("produces and consumes a source-bound FormIndex from tagged TypeScript", async (context) => {
+  const root = await temporaryFixture(context, "valid/tiny-tasks");
+  const projectFile = path.join(root, "mensor.project.jsonc");
+  const featureFile = path.join(root, "src/features/tasks/feature.mensor.jsonc");
+  const htmlFile = path.join(root, "src/features/tasks/views/index.html");
+  const sourceFile = path.join(root, "src/features/tasks/views/index.ts");
+  const html = await readFile(htmlFile, "utf8");
+  await rename(htmlFile, sourceFile);
+  await writeFile(sourceFile, `export const view = html\`${html}\`;\n`, "utf8");
+
+  const project = JSON.parse(await readFile(projectFile, "utf8"));
+  project.formIndex = "mensor.form-index.json";
+  await writeFile(projectFile, `${JSON.stringify(project, null, 2)}\n`, "utf8");
+  const feature = JSON.parse(await readFile(featureFile, "utf8"));
+  feature.actions[0].form.template = "views/index.ts";
+  await writeFile(featureFile, `${JSON.stringify(feature, null, 2)}\n`, "utf8");
+
+  const produced = await runCli([
+    "index-ts-forms",
+    root,
+    "--source",
+    "src/features/tasks/views/index.ts",
+    "--tag",
+    "html",
+    "--json",
+  ]);
+  assert.equal(produced.code, 0);
+  assert.equal(produced.stderr, "");
+  assert.equal(
+    await readFile(path.join(root, "mensor.form-index.json"), "utf8"),
+    produced.stdout,
+  );
+  const parsed = parseFormIndex(produced.stdout);
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    assert.equal(parsed.value.documents[0]?.inspection.state, "complete");
+    assert.equal(parsed.value.documents[0]?.forms[0]?.identity.state, "known");
+    assert.equal(parsed.value.documents[0]?.forms[0]?.identity.value, "create-task");
+  }
+
+  const checked = await runCli(["check", root, "--json", "--report-version", "2"]);
+  assert.equal(checked.code, 0);
+  assert.deepEqual(JSON.parse(checked.stdout).inspection.forms, {
+    state: "checked",
+    basis: "form-index",
+  });
+});
+
+test("preserves interpolation as incomplete evidence without executing source", async (context) => {
+  const root = await mkdtemp(path.join(repositoryRoot, ".tmp-cli-form-index-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  await writeFile(
+    path.join(root, "view.ts"),
+    `throw new Error("must not execute");\nconst view = html\`<form id="${"${formId}"}"></form>\`;\n`,
+    "utf8",
+  );
+  const result = await runCli([
+    "index-ts-forms",
+    root,
+    "--source",
+    "view.ts",
+    "--tag",
+    "html",
+    "--json",
+  ]);
+
+  assert.equal(result.code, 0);
+  const parsed = parseFormIndex(result.stdout);
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    assert.deepEqual(parsed.value.documents[0]?.inspection, {
+      state: "incomplete",
+      reason: "dynamic-interpolation",
+      range: {
+        start: { line: 1, character: 17 },
+        end: { line: 1, character: 47 },
+      },
+    });
+    assert.deepEqual(parsed.value.documents[0]?.forms, []);
+  }
+});
+
+test("requires explicit TypeScript sources and tag identifiers", async () => {
+  const root = path.join(fixtureRoot, "valid/tiny-tasks");
+  const missingSource = await runCli([
+    "index-ts-forms",
+    root,
+    "--tag",
+    "html",
+    "--json",
+  ]);
+  const invalidTag = await runCli([
+    "index-ts-forms",
+    root,
+    "--source",
+    "src/features/tasks/views/index.html",
+    "--tag",
+    "renderer.html",
+    "--json",
+  ]);
+
+  assert.equal(missingSource.code, 2);
+  assert.equal(JSON.parse(missingSource.stdout).failure.code, "form_indexer.source_required");
+  assert.equal(invalidTag.code, 2);
+  assert.equal(JSON.parse(invalidTag.stdout).failure.code, "form_indexer.tag_invalid");
+});
+
+test("rejects every explicit source that has no selected tagged template", async (context) => {
+  const root = await mkdtemp(path.join(repositoryRoot, ".tmp-cli-form-index-empty-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  await writeFile(path.join(root, "view.ts"), "export const view = '<form></form>';\n", "utf8");
+
+  const result = await runCli([
+    "index-ts-forms",
+    root,
+    "--source",
+    "view.ts",
+    "--tag",
+    "html",
+    "--json",
+  ]);
+
+  assert.equal(result.code, 2);
+  assert.deepEqual(JSON.parse(result.stdout).failure, {
+    kind: "configuration",
+    code: "form_indexer.no_templates",
+    message: "No selected tagged template was found in the explicit source file.",
+    file: "view.ts",
+  });
 });
 
 test("preserves an existing manifest when compile diagnostics fail", async (context) => {

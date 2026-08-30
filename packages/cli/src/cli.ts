@@ -13,6 +13,10 @@ import {
   produceHonoRouteIndex,
 } from "./hono-route-index.js";
 import {
+  produceTypeScriptTemplateFormIndex,
+  TypeScriptTemplateFormIndexError,
+} from "./typescript-template-form-index.js";
+import {
   writeCanonicalArtifactAtomic,
   writeManifestAtomic,
 } from "./manifest-output.js";
@@ -57,12 +61,13 @@ function readPackageVersion(): string {
   return value.version;
 }
 
-const helpText = `Usage: mensor <check|compile|index-hono-routes> [root] [options]
+const helpText = `Usage: mensor <check|compile|index-hono-routes|index-ts-forms> [root] [options]
 
 Commands:
   check              Check project contracts against static source facts.
   compile            Check contracts and atomically write a runtime manifest.
   index-hono-routes  Produce a source-bound RouteIndex from explicit Hono sources.
+  index-ts-forms     Produce a FormIndex from explicit tagged HTML templates.
 
 Options:
   --config <path>    Root-relative project contract path.
@@ -70,6 +75,7 @@ Options:
   --out <path>       Root-relative output path.
   --source <path>    Hono source path; repeat for multiple files.
   --receiver <name>  Hono receiver identifier; repeat for multiple receivers.
+  --tag <name>       Tagged-template identifier; repeat for multiple tags.
   --report-version   Select check JSON output revision 1 or 2. Requires --json.
   --help             Show this help.
 `;
@@ -89,6 +95,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         receiver: { type: "string", multiple: true },
         "report-version": { type: "string" },
         source: { type: "string", multiple: true },
+        tag: { type: "string", multiple: true },
       },
     });
   } catch (error) {
@@ -139,13 +146,14 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     (
       command !== "check" &&
       command !== "compile" &&
-      command !== "index-hono-routes"
+      command !== "index-hono-routes" &&
+      command !== "index-ts-forms"
     ) ||
     parsed.positionals.length > 2
   ) {
     return writeUsageFailure(
       options,
-      "Expected command check, compile, or index-hono-routes and at most one project root.",
+      "Expected command check, compile, index-hono-routes, or index-ts-forms and at most one project root.",
       json,
       reportVersion,
     );
@@ -162,26 +170,33 @@ export async function runCli(options: RunCliOptions): Promise<number> {
   if (command === "check" && parsed.values["out"] !== undefined) {
     return writeUsageFailure(
       options,
-      "--out is available only for compile.",
-      json,
-      reportVersion,
-    );
-  }
-  if (command === "index-hono-routes" && parsed.values["config"] !== undefined) {
-    return writeUsageFailure(
-      options,
-      "--config is unavailable for index-hono-routes.",
+      "--out is available only for compile and index commands.",
       json,
       reportVersion,
     );
   }
   if (
-    command !== "index-hono-routes" &&
-    (parsed.values["source"] !== undefined || parsed.values["receiver"] !== undefined)
+    (command === "index-hono-routes" || command === "index-ts-forms")
+    && parsed.values["config"] !== undefined
   ) {
     return writeUsageFailure(
       options,
-      "--source and --receiver are available only for index-hono-routes.",
+      "--config is unavailable for index commands.",
+      json,
+      reportVersion,
+    );
+  }
+  if (
+    command !== "index-hono-routes" && command !== "index-ts-forms" &&
+    (
+      parsed.values["source"] !== undefined
+      || parsed.values["receiver"] !== undefined
+      || parsed.values["tag"] !== undefined
+    )
+  ) {
+    return writeUsageFailure(
+      options,
+      "--source, --receiver, and --tag are available only for index commands.",
       json,
       reportVersion,
     );
@@ -205,6 +220,22 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       reportVersion,
     );
     return 2;
+  }
+  if (command !== "index-hono-routes" && parsed.values["receiver"] !== undefined) {
+    return writeUsageFailure(
+      options,
+      "--receiver is available only for index-hono-routes.",
+      json,
+      reportVersion,
+    );
+  }
+  if (command !== "index-ts-forms" && parsed.values["tag"] !== undefined) {
+    return writeUsageFailure(
+      options,
+      "--tag is available only for index-ts-forms.",
+      json,
+      reportVersion,
+    );
   }
   const config =
     typeof configValue === "string"
@@ -264,6 +295,68 @@ export async function runCli(options: RunCliOptions): Promise<number> {
           kind: "filesystem",
           code: "route_indexer.output_write_failed",
           message: "The Hono RouteIndex could not be written atomically.",
+          file: output,
+        },
+        json,
+        reportVersion,
+      );
+      return 3;
+    }
+  }
+  if (command === "index-ts-forms") {
+    const sources = stringArray(parsed.values["source"]);
+    const tags = stringArray(parsed.values["tag"]);
+    if (sources === undefined || tags === undefined) {
+      return writeUsageFailure(
+        options,
+        "--source and --tag must each contain string values.",
+        json,
+        reportVersion,
+      );
+    }
+    const outputValue = parsed.values["out"];
+    const output = typeof outputValue === "string"
+      ? normalizeRelativeOutput(outputValue)
+      : "mensor.form-index.json";
+    if (output === undefined) {
+      return writeUsageFailure(
+        options,
+        "--out must be relative to the selected project root.",
+        json,
+        reportVersion,
+      );
+    }
+    try {
+      const produced = await produceTypeScriptTemplateFormIndex({
+        root,
+        sources,
+        tags,
+        producerVersion: cliVersion,
+      });
+      await writeCanonicalArtifactAtomic(root, output, produced.text);
+      options.stdout(json ? produced.text : `Wrote TypeScript FormIndex to ${output}.\n`);
+      return 0;
+    } catch (error) {
+      if (error instanceof TypeScriptTemplateFormIndexError) {
+        writeFailure(
+          options,
+          {
+            kind: "configuration",
+            code: error.code,
+            message: error.message,
+            ...(error.file === undefined ? {} : { file: error.file }),
+          },
+          json,
+          reportVersion,
+        );
+        return 2;
+      }
+      writeFailure(
+        options,
+        {
+          kind: "filesystem",
+          code: "form_indexer.output_write_failed",
+          message: "The TypeScript FormIndex could not be written atomically.",
           file: output,
         },
         json,

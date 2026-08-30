@@ -8,7 +8,8 @@ compiler. The separately invoked Hono RouteIndex producer owns only its narrow
 source syntax and does not add rule logic to the CLI.
 
 The CLI exposes `mensor check`, the clean-check artifact command
-`mensor compile`, and the explicit `mensor index-hono-routes` producer.
+`mensor compile`, and explicit `mensor index-hono-routes` and
+`mensor index-ts-forms` producers.
 Additional commands require a concrete workflow that cannot be expressed
 through those outputs. See
 `command-contract.md` for exact arguments, output, and exit status.
@@ -20,5 +21,5 @@ inspection states; it does not change human output or exit statuses.
 The implementation lives in `packages/cli`. Its process entrypoint owns
 argument parsing, rendering, exit-status mapping, and atomic artifact writes.
 Project inspection and manifest construction are delegated to
-`@0disoft/mensor-compiler`; the Hono producer reads only explicitly supplied
-sources and writes only serialized RouteIndex facts.
+`@0disoft/mensor-compiler`; both producers read only explicitly supplied
+sources and write only serialized RouteIndex or FormIndex facts.
