@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "generatorVersion": "0.6.12",
   "version": "0.6.12",
-  "generatedAt": "2026-08-30T13:14:09.201Z",
+  "generatedAt": "2026-08-30T13:30:49.223Z",
   "scope": "general",
   "profile": "monorepo",
   "addons": [
@@ -334,13 +334,13 @@
     },
     {
       "path": "docs/README.md",
-      "checksum": "sha256:7fe7e060dae18720ec82ab6ab7a17cad6377cd9a5fbf1ab34e1e5974489a754a",
+      "checksum": "sha256:01a15c4c90239cfb084bf9e3464ff9784f5f7ba1601877b31271006de36f163b",
       "kind": "document",
       "ownership": "seeded",
       "presence": "optional",
       "status": "active",
       "initialChecksum": "sha256:f380bbc1cfcbf142a5b1522f48a45e4b0ffd2e528f0aa2fe3e06584bda8f32a7",
-      "acceptedChecksum": "sha256:7fe7e060dae18720ec82ab6ab7a17cad6377cd9a5fbf1ab34e1e5974489a754a",
+      "acceptedChecksum": "sha256:01a15c4c90239cfb084bf9e3464ff9784f5f7ba1601877b31271006de36f163b",
       "generatedChecksum": "sha256:f380bbc1cfcbf142a5b1522f48a45e4b0ffd2e528f0aa2fe3e06584bda8f32a7"
     },
     {

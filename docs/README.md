@@ -36,6 +36,8 @@
 - TypeScript producer migration note: `releasing/0.8.0.md`
 - SARIF output contract: `architecture/sarif-output-v1.md`
 - SARIF migration note: `releasing/0.9.0.md`
+- Current 0.9.0 implementation audit:
+  `product/0.9.0-implementation-audit.md`
 - Atomic manifest materialization decision:
   `adr/0037-cli-owns-atomic-manifest-materialization.md`
 
