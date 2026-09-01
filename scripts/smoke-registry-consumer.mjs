@@ -142,14 +142,14 @@ const runtime = createReferenceRuntime({
   manifest: {
     manifestVersion: 1,
     producer: { name: "registry-smoke", version: "${version}" },
-    pages: [{ id: "smoke.page", method: "GET", path: "/smoke", html: "ok\n" }],
+    pages: [{ id: "smoke.page", method: "GET", path: "/smoke", html: "ok\\n" }],
     actions: []
   },
   handlers: {}
 });
 const response = await runtime.handle(new Request("https://example.test/smoke"));
 assert.equal(response.status, 200);
-assert.equal(await response.text(), "ok\n");
+assert.equal(await response.text(), "ok\\n");
 `,
     "utf8",
   );
