@@ -29,14 +29,14 @@ const rawRoot = path.join(
   repositoryRoot,
   "dist",
   "agent-onboarding",
-  "published-v1",
+  "published-v2",
   "raw",
 );
 const stagingRoot = path.join(
   repositoryRoot,
   "dist",
   "agent-onboarding",
-  "published-v1",
+  "published-v2",
   "observations",
 );
 const outputRoot = path.join(
@@ -44,21 +44,21 @@ const outputRoot = path.join(
   "internal",
   "agent-runner",
   "observations",
-  "codex-subagents-published-onboarding-v1",
+  "codex-subagents-published-onboarding-v2",
 );
 const cohortFile = path.join(
   repositoryRoot,
   "internal",
   "agent-runner",
   "cohorts",
-  "codex-subagents-published-onboarding-v1.json",
+  "codex-subagents-published-onboarding-v2.json",
 );
 const briefFile = path.join(
   repositoryRoot,
   "internal",
   "agent-runner",
   "briefs",
-  "published-rsvp-onboarding-v1.md",
+  "published-rsvp-onboarding-v2.md",
 );
 const transportFile = path.join(
   repositoryRoot,
@@ -72,9 +72,19 @@ const oracleFile = path.join(
   "internal",
   "agent-runner",
   "oracles",
-  "published-rsvp-onboarding-v1.test.mjs",
+  "published-rsvp-onboarding-v2.test.mjs",
 );
 const registry = "https://registry.npmjs.org/";
+const packageVersion = "0.9.0";
+const packageNames = [
+  "@0disoft/mensor-cli",
+  "@0disoft/mensor-compiler",
+  "@0disoft/mensor-contract",
+  "@0disoft/mensor-reference-runtime",
+];
+const expectedDevDependencies = Object.fromEntries(
+  packageNames.map((name) => [name, packageVersion]),
+);
 const packageManagerEntrypoint = process.env.npm_execpath;
 
 if (
@@ -85,11 +95,11 @@ if (
 }
 
 const cohort = JSON.parse(await readFile(cohortFile, "utf8"));
-assert.equal(cohort.cohortId, "codex-subagents-published-onboarding-v1");
-assert.equal(cohort.trialsPerModel, 1);
-assert.equal(cohort.publishedPackage.name, "@0disoft/mensor-cli");
-assert.equal(cohort.publishedPackage.version, "0.1.0");
-assert.equal(cohort.publishedPackage.registry, registry);
+assert.equal(cohort.cohortId, "codex-subagents-published-onboarding-v2");
+assert.equal(cohort.trialsPerModel, 3);
+assert.equal(cohort.publishedPackages.version, packageVersion);
+assert.equal(cohort.publishedPackages.registry, registry);
+assert.deepEqual(cohort.publishedPackages.names, packageNames);
 assert.match(cohort.baselineCommit, /^[a-f0-9]{40}$/u);
 
 await prepareOutputTarget(outputRoot);
@@ -104,25 +114,28 @@ const summaries = [];
 
 try {
   for (const model of cohort.models) {
-    const slug = model.modelId.split("/").at(-1);
-    assert.match(model.responseFile, /^[a-z0-9][a-z0-9.-]*\.txt$/u);
-    const rawFile = path.join(rawRoot, model.responseFile);
-    const rawResponse = await readOptionalFile(rawFile);
-    const result = await evaluateModel({
-      model,
-      slug,
-      rawResponse,
-      briefSha256,
-      transportSha256,
-      oracleSha256,
-    });
-    const outputFile = path.join(stagingRoot, `${slug}.json`);
-    await writeFile(
-      outputFile,
-      serializeAgentAuthoredBuildExploratoryObservation(result.observation),
-      "utf8",
-    );
-    summaries.push(result.summary);
+    assert.match(model.responseFilePrefix, /^[a-z0-9][a-z0-9.-]*$/u);
+    for (let trialId = 1; trialId <= cohort.trialsPerModel; trialId += 1) {
+      const slug = `${model.responseFilePrefix}-trial-${trialId}`;
+      const rawFile = path.join(rawRoot, `${slug}.txt`);
+      const rawResponse = await readOptionalFile(rawFile);
+      const result = await evaluateModel({
+        model,
+        slug,
+        trialId,
+        rawResponse,
+        briefSha256,
+        transportSha256,
+        oracleSha256,
+      });
+      const outputFile = path.join(stagingRoot, `${slug}.json`);
+      await writeFile(
+        outputFile,
+        serializeAgentAuthoredBuildExploratoryObservation(result.observation),
+        "utf8",
+      );
+      summaries.push(result.summary);
+    }
   }
   await rename(stagingRoot, outputRoot);
 } finally {
@@ -133,13 +146,14 @@ process.stdout.write(`${JSON.stringify({
   schemaVersion: 1,
   kind: "published-onboarding-evaluation",
   cohortId: cohort.cohortId,
-  package: cohort.publishedPackage,
+  packages: cohort.publishedPackages,
   results: summaries,
 }, null, 2)}\n`);
 
 async function evaluateModel({
   model,
   slug,
+  trialId,
   rawResponse,
   briefSha256,
   transportSha256,
@@ -195,7 +209,7 @@ async function evaluateModel({
           120_000,
         );
         if (install.code === 0) {
-          await verifyInstalledCli(projectRoot, temporaryRoot);
+          await verifyInstalledPackages(projectRoot, temporaryRoot);
           const semantic = await capture(
             process.execPath,
             ["--test", oracleFile],
@@ -218,8 +232,8 @@ async function evaluateModel({
   }
 
   const observation = createAgentAuthoredBuildExploratoryObservation({
-    observationId: `published-onboarding.${slug}.1`,
-    producerVersion: "0.1.0",
+    observationId: `published-onboarding-v2.${slug}`,
+    producerVersion: packageVersion,
     baselineCommit: cohort.baselineCommit,
     identity: {
       runnerId: cohort.runnerId,
@@ -254,6 +268,7 @@ async function evaluateModel({
     observation,
     summary: {
       modelId: model.modelId,
+      trialId,
       artifactCompleted: completed,
       artifactAccepted: artifact !== null,
       packageContractPassed,
@@ -278,8 +293,8 @@ async function validatePackageContract(projectRoot) {
     packageJson.private !== true
     || packageJson.type !== "module"
     || packageJson.packageManager !== "pnpm@11.11.0"
-    || JSON.stringify(packageJson.devDependencies)
-      !== JSON.stringify({ "@0disoft/mensor-cli": "0.1.0" })
+    || JSON.stringify(Object.entries(packageJson.devDependencies ?? {}).sort())
+      !== JSON.stringify(Object.entries(expectedDevDependencies).sort())
     || Object.hasOwn(packageJson, "dependencies")
     || Object.hasOwn(packageJson, "workspaces")
     || Object.hasOwn(packageJson, "pnpm")
@@ -291,20 +306,21 @@ async function validatePackageContract(projectRoot) {
   );
 }
 
-async function verifyInstalledCli(projectRoot, temporaryRoot) {
-  const packageRoot = path.join(
-    projectRoot,
-    "node_modules",
-    "@0disoft",
-    "mensor-cli",
-  );
-  const installedRealPath = await realpath(packageRoot);
-  assert.equal(isWithin(temporaryRoot, installedRealPath), true);
-  const metadata = JSON.parse(
-    await readFile(path.join(packageRoot, "package.json"), "utf8"),
-  );
-  assert.equal(metadata.name, "@0disoft/mensor-cli");
-  assert.equal(metadata.version, "0.1.0");
+async function verifyInstalledPackages(projectRoot, temporaryRoot) {
+  for (const packageName of packageNames) {
+    const packageRoot = path.join(
+      projectRoot,
+      "node_modules",
+      ...packageName.split("/"),
+    );
+    const installedRealPath = await realpath(packageRoot);
+    assert.equal(isWithin(temporaryRoot, installedRealPath), true);
+    const metadata = JSON.parse(
+      await readFile(path.join(packageRoot, "package.json"), "utf8"),
+    );
+    assert.equal(metadata.name, packageName);
+    assert.equal(metadata.version, packageVersion);
+  }
 }
 
 async function runMensorCheck(projectRoot) {

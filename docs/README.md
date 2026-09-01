@@ -16,6 +16,7 @@
 - CLI behavior: `docs/cli/command-contract.md`
 - Library exports and compatibility: `docs/library/public-api.md`
 - Machine-readable contract schemas: `packages/contract/spec/README.md`
+- Canonical form-backed authoring example: `authoring/canonical-rsvp-contracts.md`
 - Executable behavior examples: `fixtures/README.md`
 - Validation names and reporting: `VALIDATION.md`
 - Contribution and DCO policy: `../CONTRIBUTING.md` and `../DCO.txt`

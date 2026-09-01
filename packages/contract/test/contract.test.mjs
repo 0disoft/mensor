@@ -22,6 +22,7 @@ import {
 
 const fixtureRoot = new URL("../../../fixtures/", import.meta.url);
 const contractFixtureRoot = new URL("./fixtures/", import.meta.url);
+const authoringRoot = new URL("../../../docs/authoring/rsvp/", import.meta.url);
 
 test("orders canonical text by code unit instead of process locale", () => {
   assert.deepEqual(["ä", "a", "z"].sort(compareText), ["a", "z", "ä"]);
@@ -52,6 +53,59 @@ test("parses the valid project, feature, and report fixtures", async () => {
   assert.equal(project.ok, true);
   assert.equal(feature.ok, true);
   assert.equal(report.ok, true);
+});
+
+test("parses the maintained canonical RSVP authoring contracts", async () => {
+  const project = parseProjectContract(
+    await readFile(new URL("mensor.project.jsonc", authoringRoot), "utf8"),
+  );
+  const feature = parseFeatureContract(
+    await readFile(new URL("feature.mensor.jsonc", authoringRoot), "utf8"),
+  );
+
+  assert.equal(project.ok, true);
+  assert.equal(feature.ok, true);
+});
+
+test("rejects documented near-miss feature contract shapes", async () => {
+  const source = parseJsonc(
+    await readFile(new URL("feature.mensor.jsonc", authoringRoot), "utf8"),
+  );
+  assert.equal(source.ok, true);
+  if (!source.ok) return;
+
+  const wrongFeature = structuredClone(source.value);
+  delete wrongFeature.feature;
+  wrongFeature.id = "rsvp";
+
+  const wrongRoute = structuredClone(source.value);
+  const action = wrongRoute.actions[0];
+  action.method = action.route.method;
+  action.path = action.route.path;
+  delete action.route;
+
+  const wrongSchemaVocabulary = structuredClone(source.value);
+  wrongSchemaVocabulary.actions[0].input.schema = {
+    type: "object",
+    properties: {},
+    required: [],
+  };
+
+  const wrongBindings = structuredClone(source.value);
+  wrongBindings.actions[0].input.formCodec.bindings = { name: "name" };
+
+  for (const value of [
+    wrongFeature,
+    wrongRoute,
+    wrongSchemaVocabulary,
+    wrongBindings,
+  ]) {
+    const result = parseFeatureContract(JSON.stringify(value));
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.ok(result.issues.every((issue) => issue.code === "schema.violation"));
+    }
+  }
 });
 
 test("accepts comments but rejects trailing commas", () => {

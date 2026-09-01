@@ -6,6 +6,10 @@ All notable changes to Mensor are documented in this file.
 
 ### Added
 
+- Maintained canonical RSVP project and feature contract examples, documented
+  common malformed contract shapes, and pinned the published onboarding
+  evaluator to all four exact 0.9.0 packages and twelve independent model
+  trials.
 - `mensor check --sarif` emits deterministic SARIF 2.1.0 Plus Errata 01 for
   completed checks with stable rules, one-based source regions, related
   locations, facts, and repair metadata.

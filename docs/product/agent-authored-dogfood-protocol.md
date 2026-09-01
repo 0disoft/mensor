@@ -18,10 +18,10 @@
 - Current RSVP response run:
   `docs/product/agent-authored-rsvp-response-run-2026-07-18.md`
 - Current published onboarding brief:
-  `internal/agent-runner/briefs/published-rsvp-onboarding-v1.md`
+  `internal/agent-runner/briefs/published-rsvp-onboarding-v2.md`
 - Current published onboarding cohort:
-  `internal/agent-runner/cohorts/codex-subagents-published-onboarding-v1.json`
-- Current published onboarding run:
+  `internal/agent-runner/cohorts/codex-subagents-published-onboarding-v2.json`
+- Historical published onboarding run:
   `docs/product/agent-authored-published-onboarding-run-2026-07-21.md`
 - Hermes desktop onboarding brief:
   `internal/agent-runner/briefs/hermes-maintenance-board-v1.md`

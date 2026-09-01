@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "cohortId": "codex-subagents-published-onboarding-v2",
+  "runnerId": "codex-subagent",
+  "baselineCommit": "faa772a594fab879874192e3def822421d2507f8",
+  "evaluationMode": "fresh-response-artifact-public-registry",
+  "applicationBrief": {
+    "id": "published-rsvp-onboarding",
+    "revision": "v2"
+  },
+  "outputTransport": {
+    "id": "response-artifact",
+    "revision": "v1"
+  },
+  "semanticOracle": {
+    "id": "published-rsvp-onboarding-oracle",
+    "revision": "v2"
+  },
+  "publishedPackages": {
+    "version": "0.9.0",
+    "registry": "https://registry.npmjs.org/",
+    "names": [
+      "@0disoft/mensor-cli",
+      "@0disoft/mensor-compiler",
+      "@0disoft/mensor-contract",
+      "@0disoft/mensor-reference-runtime"
+    ]
+  },
+  "contextPolicy": "fresh-agent-no-inherited-conversation",
+  "toolPolicy": "instruct-no-tools-not-host-enforced",
+  "availabilityPolicy": "record-unavailable-without-substitution",
+  "aggregationPolicy": "report-each-trial-and-model-separately",
+  "trialsPerModel": 3,
+  "models": [
+    {
+      "providerId": "google-antigravity",
+      "modelId": "google-antigravity/gemini-3.7-flash",
+      "reasoningEffort": "high",
+      "responseFilePrefix": "gemini-3.7-flash"
+    },
+    {
+      "providerId": "commandcode",
+      "modelId": "commandcode/meta-muse-spark-1.2-contributor",
+      "reasoningEffort": "high",
+      "responseFilePrefix": "muse-spark-1.2-contributor"
+    },
+    {
+      "providerId": "openai",
+      "modelId": "gpt-5.6-terra",
+      "reasoningEffort": "high",
+      "responseFilePrefix": "gpt-5.6-terra"
+    },
+    {
+      "providerId": "opencode-go",
+      "modelId": "opencode-go/deepseek-v4-flash",
+      "reasoningEffort": "high",
+      "responseFilePrefix": "deepseek-v4-flash"
+    }
+  ]
+}

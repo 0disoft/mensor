@@ -42,6 +42,14 @@ const publishedOnboardingCohortFile = fileURLToPath(new URL(
   "../cohorts/codex-subagents-published-onboarding-v1.json",
   import.meta.url,
 ));
+const publishedOnboardingV2BriefFile = fileURLToPath(new URL(
+  "../briefs/published-rsvp-onboarding-v2.md",
+  import.meta.url,
+));
+const publishedOnboardingV2CohortFile = fileURLToPath(new URL(
+  "../cohorts/codex-subagents-published-onboarding-v2.json",
+  import.meta.url,
+));
 
 test("canonicalizes and materializes one bounded response artifact", async () => {
   const artifact = validateAgentAuthoredProjectArtifact({
@@ -232,4 +240,51 @@ test("pins the published onboarding cohort to the requested models and package",
     cohort.models.some(({ modelId }) => modelId.includes("minimax")),
     false,
   );
+});
+
+test("pins published onboarding v2 to four exact 0.9.0 packages and twelve trials", async () => {
+  const brief = await readFile(publishedOnboardingV2BriefFile, "utf8");
+  for (const packageName of [
+    "mensor-cli",
+    "mensor-compiler",
+    "mensor-contract",
+    "mensor-reference-runtime",
+  ]) {
+    assert.match(brief, new RegExp(`"@0disoft/${packageName}": "0\\.9\\.0"`, "u"));
+  }
+  assert.match(brief, /static contract checking/u);
+  assert.match(brief, /does not\s+execute the application/u);
+
+  const cohort = JSON.parse(
+    await readFile(publishedOnboardingV2CohortFile, "utf8"),
+  );
+  assert.equal(cohort.cohortId, "codex-subagents-published-onboarding-v2");
+  assert.equal(cohort.trialsPerModel, 3);
+  assert.deepEqual(cohort.publishedPackages, {
+    version: "0.9.0",
+    registry: "https://registry.npmjs.org/",
+    names: [
+      "@0disoft/mensor-cli",
+      "@0disoft/mensor-compiler",
+      "@0disoft/mensor-contract",
+      "@0disoft/mensor-reference-runtime",
+    ],
+  });
+  assert.deepEqual(
+    cohort.models.map(({ modelId }) => modelId),
+    [
+      "google-antigravity/gemini-3.7-flash",
+      "commandcode/meta-muse-spark-1.2-contributor",
+      "gpt-5.6-terra",
+      "opencode-go/deepseek-v4-flash",
+    ],
+  );
+  const responseFiles = cohort.models.flatMap(({ responseFilePrefix }) =>
+    Array.from(
+      { length: cohort.trialsPerModel },
+      (_, index) => `${responseFilePrefix}-trial-${index + 1}.txt`,
+    )
+  );
+  assert.equal(responseFiles.length, 12);
+  assert.equal(new Set(responseFiles).size, 12);
 });
