@@ -211,6 +211,37 @@ test("supports a page-only manifest without an action guard", async () => {
   assert.equal((await runtime.handle(new Request("https://example.test/tasks"))).status, 200);
 });
 
+test("rejects redirects that URL parsing could turn into another origin", async () => {
+  for (const location of ["/\\evil.test", "/\t/evil.test", "//evil.test", "/ok\r\nlocation: x"]) {
+    const runtime = createReferenceRuntime({
+      manifest: manifest(),
+      actionGuard: () => ({ allowed: true }),
+      handlers: { "tasks.create": () => ({ kind: "redirect", location }) },
+    });
+    const response = await runtime.handle(request(
+      "title=Ship&count=2&ratio=0.5&priority=low&tag=x&_csrf=token",
+    ));
+    assert.equal(response.status, 500, JSON.stringify(location));
+    assert.equal(response.headers.get("location"), null);
+  }
+});
+
+test("keeps local redirect paths, queries, and fragments intact", async () => {
+  for (const location of ["/", "/tasks?next=%2Fsettings#done", "/tasks/../settings", "/%2Fexternal"]) {
+    const runtime = createReferenceRuntime({
+      manifest: manifest(),
+      actionGuard: () => ({ allowed: true }),
+      handlers: { "tasks.create": () => ({ kind: "redirect", location }) },
+    });
+    const response = await runtime.handle(request(
+      "title=Ship&count=2&ratio=0.5&priority=low&tag=x&_csrf=token",
+    ));
+    assert.equal(response.status, 303);
+    assert.equal(response.headers.get("location"), location);
+    assert.equal(new URL(location, "https://example.test").origin, "https://example.test");
+  }
+});
+
 test("keeps guard, handler, redirect, and header failures generic", async () => {
   const denied = createReferenceRuntime({
     manifest: manifest(),

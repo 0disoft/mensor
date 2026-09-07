@@ -231,7 +231,14 @@ function grouped(entries: Iterable<readonly [string, string]>): Readonly<Record<
 }
 
 function isSafeRedirect(location: string): boolean {
-  return location.startsWith("/") && !location.startsWith("//") && !/[\r\n]/u.test(location);
+  if (!location.startsWith("/") || location.startsWith("//") || /[\u0000-\u001f\u007f\\]/u.test(location)) {
+    return false;
+  }
+  try {
+    return new URL(location, "https://mensor.invalid").origin === "https://mensor.invalid";
+  } catch {
+    return false;
+  }
 }
 
 function response(
