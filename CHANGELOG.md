@@ -8,7 +8,9 @@ All notable changes to Mensor are documented in this file.
 
 - Reject root-relative redirects containing backslashes or control characters
   and verify their resolved origin before returning a Location header.
-- Update the workspace fast-uri override to 3.1.6.
+- Update the workspace fast-uri override to ^3.1.7 and Hono to ^4.13.7.
+- Update pnpm to 11.26.0 and CI actions within v6; contributor tooling requires
+  Node >=22.13 while public packages retain their existing runtime support.
 
 ### Performance
 

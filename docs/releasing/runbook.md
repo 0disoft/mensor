@@ -12,7 +12,7 @@ relationship.
 
 ## Common Gate
 
-Run from a clean release commit with Node 22 or newer and pnpm 11.11.0:
+Run from a clean release commit with Node 22.13 or newer and pnpm 11.26.0:
 
 ```text
 pnpm install --frozen-lockfile
@@ -141,3 +141,37 @@ Enable GitHub private vulnerability reporting for `0disoft/mensor`, submit a
 harmless test report, and verify the maintainer notification path before the
 first public release. Do not put vulnerability details in a public issue when
 the private reporting UI is unavailable.
+
+## Dependency Update Checklist
+
+The 0.9.1 dependency pass covers the same-major entries in
+[Dependency Dashboard #4](https://github.com/0disoft/mensor/issues/4).
+
+- `fast-uri` 3.1.6 -> 3.1.7 is an AJV transitive dependency. The
+  [upstream security release](https://github.com/fastify/fast-uri/releases/tag/v3.1.7)
+  fixes authority serialization and IP-literal parsing. Validate contract parsers
+  and packaged consumers; the workspace override does not update consumer locks.
+- Hono 4.12.34 -> 4.13.7 is a fixture/development dependency. The
+  [upstream fix](https://github.com/honojs/hono/releases/tag/v4.13.7) concerns JSX
+  boundary escaping; the maintained static HTML fixture does not use that path.
+  Validate Hono route extraction and fixture behavior without claiming exploitability.
+- pnpm 11.11.0 -> 11.26.0 stays on major 11, requires Node >=22.13, and changes
+  installation and lockfile handling. Review the generated graph and run the
+  aggregate gate. Public package runtime floors remain unchanged.
+- [checkout v6.1.0](https://github.com/actions/checkout/releases/tag/v6.1.0),
+  [setup-node v6.5.0](https://github.com/actions/setup-node/releases/tag/v6.5.0),
+  and [pnpm action-setup v6.1.0](https://github.com/pnpm/action-setup/releases/tag/v6.1.0)
+  are pinned to the release commit SHAs. Checkout changes unsafe
+  `pull_request_target` defaults; these workflows use `pull_request`, `push`, or
+  `workflow_dispatch`, with no unsafe opt-in. Permissions and triggers are unchanged.
+- Same-major Hono and fast-uri updates are permitted by caret ranges, with exact
+  graph resolution in the lockfile. Tool and action pins remain reviewable by
+  Renovate rather than floating at execution time.
+- Node 24 adoption, Node types 26, fast-uri 4, Actions 7, and pnpm 12 remain
+  separate compatibility decisions. Do not approve all dashboard entries at once.
+
+Before publication, run hosted CI on the exact commit; local checks do not
+execute GitHub Actions. Rollback restores this dependency commit's manifests,
+lockfile, and workflow revisions together, followed by a frozen install. Do not
+mark the remote dashboard resolved until the changes are pushed and Renovate
+has observed them.
