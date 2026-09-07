@@ -39,7 +39,7 @@ test("reads through one bounded handle and verifies the post-read identity", asy
   };
 
   assert.equal(
-    await readProjectFile("C:/project", "src/deep/source.ts", 5, operations),
+    await readProjectFile("C:/project", "src/deep/source.ts", 1_048_576, operations),
     "hello",
   );
   assert.deepEqual(calls.map(([name]) => name), [
@@ -53,6 +53,33 @@ test("reads through one bounded handle and verifies the post-read identity", asy
     "lstat",
     "close",
   ]);
+  assert.deepEqual(calls.filter(([name]) => name === "read").map((call) => call[2]), [6, 1]);
+});
+
+test("rejects growth or truncation even when metadata remains unchanged", async () => {
+  for (const contents of ["abc", "abcde"]) {
+    const stable = fileStat({ size: 4n });
+    let closed = false;
+    const operations = {
+      async lstat() { return stable; },
+      async open() {
+        return {
+          async stat() { return stable; },
+          async read(buffer, offset, length, position) {
+            const bytes = Buffer.from(contents).subarray(position, position + length);
+            buffer.set(bytes, offset);
+            return { bytesRead: bytes.length };
+          },
+          async close() { closed = true; },
+        };
+      },
+    };
+    await assert.rejects(
+      readProjectSnapshotFile("C:/project", "source.ts", 1_048_576, stable, operations),
+      (error) => error?.code === "file.changed_during_read",
+    );
+    assert.equal(closed, true);
+  }
 });
 
 test("rejects a file that changes while the open handle is read", async () => {

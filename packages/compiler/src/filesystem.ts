@@ -122,7 +122,7 @@ async function readOpenedProjectFile(
       );
     }
     assertFileSize(before.size, safePath, maxFileBytes);
-    const bytes = await readBounded(handle, maxFileBytes);
+    const bytes = await readBounded(handle, Number(before.size));
     const after = await handle.stat();
     if (expected === undefined) {
       const pathAfter = await operations.lstat(absolutePath);
@@ -136,6 +136,14 @@ async function readOpenedProjectFile(
       );
     }
     assertFileSize(BigInt(bytes.length), safePath, maxFileBytes);
+    if (BigInt(bytes.length) !== before.size) {
+      throw new InputFailure(
+        "filesystem",
+        "file.changed_during_read",
+        `Project file ${JSON.stringify(safePath)} changed while it was being read.`,
+        safePath,
+      );
+    }
     try {
       return new TextDecoder("utf-8", {
         fatal: true,
@@ -180,9 +188,10 @@ async function readOpenedProjectFile(
 
 async function readBounded(
   handle: ProjectFileHandle,
-  maxFileBytes: number,
+  expectedBytes: number,
 ): Promise<Buffer> {
-  const bytes = Buffer.alloc(maxFileBytes + 1);
+  // One extra byte detects growth without reserving the configured maximum.
+  const bytes = Buffer.alloc(expectedBytes + 1);
   let offset = 0;
   while (offset < bytes.length) {
     const { bytesRead } = await handle.read(
