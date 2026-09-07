@@ -17,11 +17,17 @@ test("representative projects cover multiple forms and import chains and detect 
       assert.equal(baseline.result.ok, true);
       assert.deepEqual(baseline.result.report.diagnostics, []);
       assert.equal(baseline.metrics.templateDocumentCount, 4);
+      for (const concurrency of [4, 8]) {
+        assert.deepEqual((await checkProjectWithMetrics({ root }, concurrency)).result, baseline.result);
+      }
       const file = path.join(root, metadata.firstTemplate);
       await writeFile(file, (await readFile(file, "utf8")).replace('name="title"', 'name="subject"'));
       const drift = await checkProjectWithMetrics({ root }, 1);
       assert.equal(drift.result.ok, true);
       assert.deepEqual(drift.result.report.diagnostics.map(diagnostic => diagnostic.code).sort(), ["form.field_missing", "form.field_unexpected"]);
+      for (const concurrency of [4, 8]) {
+        assert.deepEqual((await checkProjectWithMetrics({ root }, concurrency)).result, drift.result);
+      }
     }
   } finally {
     await rm(temporary, { recursive: true, force: true });

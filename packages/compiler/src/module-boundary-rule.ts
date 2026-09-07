@@ -28,6 +28,7 @@ interface LoadedProjectModule extends ProjectModule {
 interface ProjectModuleGraph {
   readonly modules: ReadonlyMap<string, ProjectModule>;
   readonly load: (file: string) => Promise<LoadedProjectModule>;
+  readonly prefetch: (files: readonly string[]) => Promise<void>;
 }
 
 interface TraversalNode {
@@ -85,7 +86,12 @@ export async function checkImportBoundaries(options: {
       .filter((module) => boundary.from.includes(module.role))
       .sort((left, right) => compareText(left.file, right.file));
     if (boundary.mode === "direct") {
-      for (const root of roots) {
+      for (let index = 0; index < roots.length; index += 1) {
+        if (index % 8 === 0) {
+          await graph.prefetch(roots.slice(index, index + 8).map((root) => root.file));
+        }
+        const root = roots[index];
+        if (root === undefined) continue;
         diagnostics.push(
           ...(await checkDirectBoundary(
             root,
@@ -119,6 +125,7 @@ function createProjectModuleGraph(
   const loaded = new Map<string, Promise<LoadedProjectModule>>();
   return {
     modules,
+    prefetch: (files) => sourceFacts.prefetch?.(files) ?? Promise.resolve(),
     load(file) {
       let module = loaded.get(file);
       if (module === undefined) {
@@ -200,6 +207,9 @@ async function checkTransitiveBoundary(
   }> = roots.map((root) => ({ file: root.file, root }));
   const visited = new Set<string>();
   for (let index = 0; index < queue.length; index += 1) {
+    if (index % 8 === 0) {
+      await graph.prefetch(queue.slice(index, index + 8).map((entry) => entry.file));
+    }
     const current = queue[index];
     if (current === undefined || visited.has(current.file)) {
       continue;

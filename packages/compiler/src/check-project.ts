@@ -112,16 +112,19 @@ export interface MeasuredCheckProjectV2Result {
 
 export async function checkProjectWithMetrics(
   options: CheckProjectV2Options,
+  readConcurrency?: number,
 ): Promise<MeasuredCheckProjectV2Result>;
 export async function checkProjectWithMetrics(
   options: CheckProjectOptions,
+  readConcurrency?: number,
 ): Promise<MeasuredCheckProjectResult>;
 export async function checkProjectWithMetrics(
   options: CheckProjectOptions | CheckProjectV2Options,
+  readConcurrency = 8,
 ): Promise<MeasuredCheckProjectResult | MeasuredCheckProjectV2Result> {
   const timing = new CompilerTiming();
   const startedAt = performance.now();
-  const result = publicCheckResult(await checkProjectInternal(options, timing));
+  const result = publicCheckResult(await checkProjectInternal(options, timing, readConcurrency));
   const metrics = timing.snapshot(performance.now() - startedAt);
   return options.reportVersion === 2
     ? { result: result as CheckProjectV2Result, metrics }
@@ -174,6 +177,7 @@ export async function compileProject(
 async function checkProjectInternal(
   options: CheckProjectOptions | CheckProjectV2Options,
   timing?: CompilerTiming,
+  readConcurrency = 8,
 ): Promise<ProjectAnalysisResult> {
   try {
     const reportVersion = options.reportVersion ?? 1;
@@ -265,6 +269,7 @@ async function checkProjectInternal(
     const sourceFacts = createSourceFactIndex(
       readSource,
       timing,
+      readConcurrency,
     );
     const formIndexProvider = createStaticHtmlFormIndexProvider({
       producerVersion,

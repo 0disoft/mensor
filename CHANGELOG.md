@@ -16,6 +16,8 @@ All notable changes to Mensor are documented in this file.
   byte, preserving byte limits and detecting growth, truncation, and identity drift.
 - Reuse one clean, type-checked build throughout the aggregate validation gate.
   Standalone validation commands still build their own prerequisites.
+- Prefetch module-boundary source reads in bounded batches of eight while
+  preserving ordered diagnostics and file mutation checks.
 
 ## [0.9.0] - 2026-08-30
 

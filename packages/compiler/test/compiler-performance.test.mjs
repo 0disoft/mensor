@@ -7,6 +7,18 @@ import { checkProjectWithMetrics } from "../dist/src/check-project.js";
 
 const fixtureRoot = fileURLToPath(new URL("../../../fixtures/", import.meta.url));
 
+test("read concurrency preserves reports and exclusive timing accounting", async () => {
+  const options = { root: path.join(fixtureRoot, "valid/layered-tasks"), producerVersion: "0.0.0-performance-test" };
+  const serial = await checkProjectWithMetrics(options, 1);
+  assert.equal(serial.result.ok, true);
+  for (const concurrency of [4, 8]) {
+    const measured = await checkProjectWithMetrics(options, concurrency);
+    assert.deepEqual(measured.result, serial.result);
+    const total = Object.values(measured.metrics.phaseDurationMs).reduce((sum, value) => sum + value, 0);
+    assert.ok(Math.abs(total - measured.metrics.totalDurationMs) < 0.001);
+  }
+});
+
 test("separates FormIndex costs from rule evaluation without changing results", async () => {
   const measured = await checkProjectWithMetrics({
     root: path.join(fixtureRoot, "valid/tiny-tasks"),
