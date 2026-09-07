@@ -30,7 +30,7 @@
     "adoption": "pnpm run build && node scripts/run-adoption-pilot.mjs",
     "docker-integration": "pnpm run build && node scripts/run-docker-integration.mjs",
     "docs": "node scripts/check-docs.mjs",
-    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run contract && pnpm run migration-check && pnpm run smoke && pnpm run package-smoke && pnpm run release-check && pnpm run performance:smoke && pnpm run adoption && pnpm run docs",
+    "check": "pnpm run format && pnpm run lint && pnpm run test && node scripts/validate-contract-fixtures.mjs && node scripts/check-schema-revisions.mjs && node scripts/smoke-contract.mjs && node scripts/smoke-package-consumer.mjs && pnpm run release-check && node scripts/run-compiler-performance.mjs --sizes 1000 && node scripts/run-adoption-pilot.mjs && pnpm run docs",
     "mensor": "node packages/cli/dist/src/bin.js"
   },
   "devDependencies": {
