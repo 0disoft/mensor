@@ -17,6 +17,10 @@ JSON that a person, CI job, or coding agent can act on.
 Version `0.9.0` is the current public preview. It adds deterministic SARIF
 2.1.0 output for completed checks.
 
+Version `0.9.1` is the current release candidate. It hardens runtime redirects
+and reduces compiler allocation and repeated validation builds. It has not
+been published to npm.
+
 ## Registry Installation
 
 The supported CLI installation path is:
@@ -34,6 +38,10 @@ See the [release runbook](docs/releasing/runbook.md), the [`0.9.0` migration
 note](docs/releasing/0.9.0.md), and the prior
 [`0.2.0` release audit](docs/product/0.2.0-release-audit.md) for the publication
 process and compatibility boundary.
+
+After publication, install the candidate with
+`pnpm add --save-dev @0disoft/mensor-cli@0.9.1`. Its changes and compatibility
+notes are in [the 0.9.1 release notes](docs/releasing/0.9.1.md).
 
 ## Contract Path Bases
 

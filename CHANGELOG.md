@@ -2,6 +2,21 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.9.1] - Unreleased
+
+### Fixed
+
+- Reject root-relative redirects containing backslashes or control characters
+  and verify their resolved origin before returning a Location header.
+- Update the workspace fast-uri override to 3.1.6.
+
+### Performance
+
+- Allocate source-read buffers from the observed file size plus one sentinel
+  byte, preserving byte limits and detecting growth, truncation, and identity drift.
+- Reuse one clean, type-checked build throughout the aggregate validation gate.
+  Standalone validation commands still build their own prerequisites.
+
 ## [0.9.0] - 2026-08-30
 
 ### Added

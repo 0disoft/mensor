@@ -5,8 +5,11 @@ export function validateReleaseReadme({ readme, version }) {
 
   if (status === undefined) {
     failures.push("README.md must contain a Status section.");
-  } else if (!status.includes(`Version \`${version}\` is the current public preview.`)) {
-    failures.push(`README.md Status must identify ${version} as the current public preview.`);
+  } else if (
+    !status.includes(`Version \`${version}\` is the current public preview.`)
+    && !status.includes(`Version \`${version}\` is the current release candidate.`)
+  ) {
+    failures.push(`README.md Status must identify ${version} as the current public preview or release candidate.`);
   }
 
   const installCommand = `pnpm add --save-dev @0disoft/mensor-cli@${version}`;

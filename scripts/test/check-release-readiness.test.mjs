@@ -11,7 +11,7 @@ const script = path.join(repositoryRoot, "scripts", "check-release-readiness.mjs
 test("release check accepts the pnpm argument separator", () => {
   const result = spawnSync(
     process.execPath,
-    [script, "--", "--version", "0.9.0", "--tag", "latest"],
+    [script, "--", "--version", "0.9.1", "--tag", "latest"],
     {
       cwd: repositoryRoot,
       encoding: "utf8",
@@ -24,7 +24,7 @@ test("release check accepts the pnpm argument separator", () => {
 test("release check rejects a duplicate argument separator", () => {
   const result = spawnSync(
     process.execPath,
-    [script, "--", "--", "--version", "0.9.0", "--tag", "latest"],
+    [script, "--", "--", "--version", "0.9.1", "--tag", "latest"],
     {
       cwd: repositoryRoot,
       encoding: "utf8",
@@ -52,6 +52,22 @@ See docs/releasing/0.9.0.md.
   assert.deepEqual(validateReleaseReadme({ readme, version: "0.9.0" }), []);
 });
 
+test("release README contract accepts an explicitly unpublished candidate", () => {
+  const readme = `# Mensor
+
+## Status
+
+Version \`0.9.1\` is the current release candidate. It has not been published.
+
+## Registry Installation
+
+After publication: \`pnpm add --save-dev @0disoft/mensor-cli@0.9.1\`.
+See docs/releasing/0.9.1.md.
+`;
+  assert.deepEqual(validateReleaseReadme({ readme, version: "0.9.1" }), []);
+  assert.notDeepEqual(validateReleaseReadme({ readme, version: "0.9.2" }), []);
+});
+
 test("release README contract rejects stale status, install, and migration versions", () => {
   const readme = `# Mensor
 
@@ -67,7 +83,7 @@ See docs/releasing/0.3.0.md.
 `;
 
   assert.deepEqual(validateReleaseReadme({ readme, version: "0.9.0" }), [
-    "README.md Status must identify 0.9.0 as the current public preview.",
+    "README.md Status must identify 0.9.0 as the current public preview or release candidate.",
     'README.md Registry Installation must contain "pnpm add --save-dev @0disoft/mensor-cli@0.9.0".',
     "README.md Registry Installation must link to docs/releasing/0.9.0.md.",
   ]);
