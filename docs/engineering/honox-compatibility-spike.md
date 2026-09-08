@@ -1,7 +1,7 @@
 # HonoX Compatibility Spike
 
-- Status: Static HTML pilot complete; HonoX trial brief/oracle prepared; JSX extraction deferred
-- Evidence date: 2026-07-15
+- Status: Static HTML pilot and local HonoX capability trial complete; JSX extraction deferred
+- Evidence date: 2026-09-08
 - Decision: Support framework-neutral static HTML integration; defer HonoX JSX extraction
 
 ## Question
@@ -122,9 +122,13 @@ it does not satisfy the separate HonoX opt-in gate below.
   and [protected semantic oracle](../../internal/agent-runner/oracles/honox-rsvp-v1.test.mjs)
   define one original server-rendered application with current-document form
   submission, strict URL-encoded input, escaping, and per-instance state.
-- **Research next:** select and lock a HonoX build toolchain, then execute one
-  fresh agent-authored trial under a separately configured bounded runner.
-  Do not copy framework example code or expose existing fixtures to that agent.
+- **Executed:** one local, prompt-isolated HonoX RSVP capability trial using
+  an isolated locked toolchain. The original candidate passed three of four
+  semantic tests; after one unknown-field validation repair, all four passed.
+- **Research next:** define synthetic supported/unsupported JSX fixtures and
+  canonical source-range expectations using the observed shape below. The
+  stronger provenance and cross-root gates remain open; a local capability
+  result does not waive them.
 
 ## Prepared Trial Evidence
 
@@ -160,3 +164,23 @@ Implementation may start only when all of the following exist:
 - canonical output and cross-root determinism expectations; and
 - a package and dependency plan that does not introduce HonoX, Vite, Babel, or
   a renderer runtime into the compiler.
+
+## Local HonoX Capability Result
+
+The [private trial](../../internal/agent-runner/trials/honox-rsvp-v1/README.md)
+uses Hono 4.13.7, HonoX 0.1.61 and Vite 7.3.6 with Node 24.18.0 on Windows x64.
+Its actual HonoX file routes and Hono JSX renderer build and execute through the
+protected HTTP oracle without a development server. The repaired candidate
+passes all four semantic tests; the first failure and source hashes are retained
+in the [evidence record](../../internal/agent-runner/trials/honox-rsvp-v1/evidence.json).
+
+Five inputs and one submit button use literal attributes inside the form,
+including boolean `required`, labels and a fieldset/legend. Dynamic list
+rendering is outside the form. The recorded inventory includes zero-based UTF-16
+source ranges, not a fabricated FormIndex or a claim that JSX inspection ships.
+
+The author received a fresh context without existing fixture or oracle content.
+Tool use was forbidden by prompt, but no OS-level filesystem-access attestation
+or exact inherited model identifier was available. This is local capability
+evidence, not satisfaction of the stronger independent-generation gate above.
+No public dependency, compiler behavior, runtime API or release version changed.

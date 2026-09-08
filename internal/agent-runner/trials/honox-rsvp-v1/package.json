@@ -1,0 +1,12 @@
+{
+  "name": "mensor-honox-rsvp-trial",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "hono": "^4.13.7",
+    "honox": "^0.1.61"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}

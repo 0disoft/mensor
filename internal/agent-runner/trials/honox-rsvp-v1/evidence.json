@@ -1,0 +1,304 @@
+{
+  "schemaVersion": "mensor.honox-exploration/v1",
+  "node": "v24.18.0",
+  "platform": "win32",
+  "arch": "x64",
+  "versions": {
+    "hono": "4.13.7",
+    "honox": "0.1.61",
+    "vite": "7.3.6"
+  },
+  "hashes": {
+    "package.json": "bda01315bc47431b414d5b7be77e853526689f3d5ccd4a2172dfa1dad02d4d9b",
+    "package-lock.json": "d38401ff20e243828494c449e063262ad13e132f4ffd2251186894a0adc6268e",
+    "tsconfig.json": "f908ef7d6b9b24f8bec9bc39c06fb4352cda3e62f423a17b81f01833333b3fd5",
+    "vite.config.ts": "50fd4e5137f3ebc6f21ae55e8f7a3731485119048bca925b1e7c15fa46c5e65b",
+    "app/server.ts": "32ceee8c9943321f724a303be318a388d0617da3e18d1924374885fe16cbc5c5",
+    "app/routes/_renderer.tsx": "3398cbb8520f0d45fa0b27208dede3f5f51aa796772109ed07bc775df0e1cdc3",
+    "app/routes/rsvp.tsx": "bdc18c3e949fa140bf19c4a039449a277b33c8baea1ca4978ee67692406035bb",
+    "src/app.mjs": "002fc85939315f0c9c7ac082284a13ce6ff9c07bb7327e5db7d276db1fbd02f6",
+    "original-response.json": "7bc0ca5213f9990d1421e6475494e5767bc6e4d10f498d59c209f28d85950c46",
+    "oracle": "187f36f2e041881982201deed17b5df0486a264a01bac15e84cd064c73766a1f",
+    "brief": "995eec4449fa12580a0dd2126b4db0135ff12e024f2e608a88899881f74d05a7",
+    "evaluator": "4768617cc948a6db651b22bf500665bb7cf44142e1e496bdb3fc2572e9560e8d"
+  },
+  "artifacts": {
+    "dist/server.js": "c959af5923ccf7aae3236dafaac432f8c558271395f3e88b3ab1272e2b6f2e5f"
+  },
+  "jsxInventory": [
+    {
+      "tag": "form",
+      "start": 805,
+      "end": 844,
+      "attributes": [
+        {
+          "name": "id",
+          "kind": "literal",
+          "value": "rsvp-response"
+        },
+        {
+          "name": "method",
+          "kind": "literal",
+          "value": "post"
+        }
+      ]
+    },
+    {
+      "tag": "label",
+      "start": 853,
+      "end": 860,
+      "attributes": []
+    },
+    {
+      "tag": "input",
+      "start": 886,
+      "end": 928,
+      "attributes": [
+        {
+          "name": "type",
+          "kind": "literal",
+          "value": "text"
+        },
+        {
+          "name": "name",
+          "kind": "literal",
+          "value": "name"
+        },
+        {
+          "name": "required",
+          "kind": "boolean"
+        }
+      ]
+    },
+    {
+      "tag": "label",
+      "start": 954,
+      "end": 961,
+      "attributes": []
+    },
+    {
+      "tag": "input",
+      "start": 988,
+      "end": 1032,
+      "attributes": [
+        {
+          "name": "type",
+          "kind": "literal",
+          "value": "email"
+        },
+        {
+          "name": "name",
+          "kind": "literal",
+          "value": "email"
+        },
+        {
+          "name": "required",
+          "kind": "boolean"
+        }
+      ]
+    },
+    {
+      "tag": "fieldset",
+      "start": 1058,
+      "end": 1068,
+      "attributes": []
+    },
+    {
+      "tag": "legend",
+      "start": 1079,
+      "end": 1087,
+      "attributes": []
+    },
+    {
+      "tag": "label",
+      "start": 1117,
+      "end": 1124,
+      "attributes": []
+    },
+    {
+      "tag": "input",
+      "start": 1137,
+      "end": 1198,
+      "attributes": [
+        {
+          "name": "type",
+          "kind": "literal",
+          "value": "radio"
+        },
+        {
+          "name": "name",
+          "kind": "literal",
+          "value": "attendance"
+        },
+        {
+          "name": "value",
+          "kind": "literal",
+          "value": "yes"
+        },
+        {
+          "name": "required",
+          "kind": "boolean"
+        }
+      ]
+    },
+    {
+      "tag": "label",
+      "start": 1244,
+      "end": 1251,
+      "attributes": []
+    },
+    {
+      "tag": "input",
+      "start": 1264,
+      "end": 1324,
+      "attributes": [
+        {
+          "name": "type",
+          "kind": "literal",
+          "value": "radio"
+        },
+        {
+          "name": "name",
+          "kind": "literal",
+          "value": "attendance"
+        },
+        {
+          "name": "value",
+          "kind": "literal",
+          "value": "no"
+        },
+        {
+          "name": "required",
+          "kind": "boolean"
+        }
+      ]
+    },
+    {
+      "tag": "label",
+      "start": 1369,
+      "end": 1376,
+      "attributes": []
+    },
+    {
+      "tag": "input",
+      "start": 1389,
+      "end": 1452,
+      "attributes": [
+        {
+          "name": "type",
+          "kind": "literal",
+          "value": "radio"
+        },
+        {
+          "name": "name",
+          "kind": "literal",
+          "value": "attendance"
+        },
+        {
+          "name": "value",
+          "kind": "literal",
+          "value": "maybe"
+        },
+        {
+          "name": "required",
+          "kind": "boolean"
+        }
+      ]
+    },
+    {
+      "tag": "button",
+      "start": 1518,
+      "end": 1540,
+      "attributes": [
+        {
+          "name": "type",
+          "kind": "literal",
+          "value": "submit"
+        }
+      ]
+    },
+    {
+      "expression": true,
+      "inForm": false,
+      "start": 1636,
+      "end": 1849
+    },
+    {
+      "expression": true,
+      "inForm": false,
+      "start": 1691,
+      "end": 1698
+    },
+    {
+      "expression": true,
+      "inForm": false,
+      "start": 1720,
+      "end": 1732
+    },
+    {
+      "expression": true,
+      "inForm": false,
+      "start": 1746,
+      "end": 1759
+    },
+    {
+      "expression": true,
+      "inForm": false,
+      "start": 1766,
+      "end": 1771
+    },
+    {
+      "expression": true,
+      "inForm": false,
+      "start": 1792,
+      "end": 1810
+    }
+  ],
+  "buildStatus": 0,
+  "semanticStatus": 0,
+  "attempts": [
+    {
+      "hashes": {
+        "package.json": "bda01315bc47431b414d5b7be77e853526689f3d5ccd4a2172dfa1dad02d4d9b",
+        "package-lock.json": "d38401ff20e243828494c449e063262ad13e132f4ffd2251186894a0adc6268e",
+        "vite.config.ts": "50fd4e5137f3ebc6f21ae55e8f7a3731485119048bca925b1e7c15fa46c5e65b",
+        "app/server.ts": "32ceee8c9943321f724a303be318a388d0617da3e18d1924374885fe16cbc5c5",
+        "app/routes/_renderer.tsx": "3398cbb8520f0d45fa0b27208dede3f5f51aa796772109ed07bc775df0e1cdc3",
+        "app/routes/rsvp.tsx": "6a60107fcb0b5e3bcb3b230fbb00c522a64997ad435d30586f2c00740251dbd6",
+        "src/app.mjs": "002fc85939315f0c9c7ac082284a13ce6ff9c07bb7327e5db7d276db1fbd02f6",
+        "original-response.json": "7bc0ca5213f9990d1421e6475494e5767bc6e4d10f498d59c209f28d85950c46",
+        "oracle": "187f36f2e041881982201deed17b5df0486a264a01bac15e84cd064c73766a1f",
+        "brief": "995eec4449fa12580a0dd2126b4db0135ff12e024f2e608a88899881f74d05a7"
+      },
+      "artifacts": {
+        "dist/server.js": "836a1092828152290ecad38b2eca206f6ab8013906fb445be9d2887dd472ec1a"
+      },
+      "buildStatus": 0,
+      "semanticStatus": 1
+    },
+    {
+      "hashes": {
+        "package.json": "bda01315bc47431b414d5b7be77e853526689f3d5ccd4a2172dfa1dad02d4d9b",
+        "package-lock.json": "d38401ff20e243828494c449e063262ad13e132f4ffd2251186894a0adc6268e",
+        "tsconfig.json": "f908ef7d6b9b24f8bec9bc39c06fb4352cda3e62f423a17b81f01833333b3fd5",
+        "vite.config.ts": "50fd4e5137f3ebc6f21ae55e8f7a3731485119048bca925b1e7c15fa46c5e65b",
+        "app/server.ts": "32ceee8c9943321f724a303be318a388d0617da3e18d1924374885fe16cbc5c5",
+        "app/routes/_renderer.tsx": "3398cbb8520f0d45fa0b27208dede3f5f51aa796772109ed07bc775df0e1cdc3",
+        "app/routes/rsvp.tsx": "bdc18c3e949fa140bf19c4a039449a277b33c8baea1ca4978ee67692406035bb",
+        "src/app.mjs": "002fc85939315f0c9c7ac082284a13ce6ff9c07bb7327e5db7d276db1fbd02f6",
+        "original-response.json": "7bc0ca5213f9990d1421e6475494e5767bc6e4d10f498d59c209f28d85950c46",
+        "oracle": "187f36f2e041881982201deed17b5df0486a264a01bac15e84cd064c73766a1f",
+        "brief": "995eec4449fa12580a0dd2126b4db0135ff12e024f2e608a88899881f74d05a7",
+        "evaluator": "4768617cc948a6db651b22bf500665bb7cf44142e1e496bdb3fc2572e9560e8d"
+      },
+      "artifacts": {
+        "dist/server.js": "c959af5923ccf7aae3236dafaac432f8c558271395f3e88b3ab1272e2b6f2e5f"
+      },
+      "buildStatus": 0,
+      "semanticStatus": 0
+    }
+  ],
+  "isolation": "Host process, minimal inherited Mustflow environment; no OS sandbox or network enforcement",
+  "provenance": "Fresh non-forked author agent; tool use forbidden by prompt, not OS-enforced; evaluator-owned toolchain",
+  "coverage": "HTTP oracle and reviewed source only; no JSX FormIndex or generalized framework support"
+}
