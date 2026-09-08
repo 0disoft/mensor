@@ -144,7 +144,7 @@ the private reporting UI is unavailable.
 
 ## Dependency Update Checklist
 
-The 0.9.1 dependency pass covers the same-major entries in
+The 0.9.1 dependency pass covers reviewed entries in
 [Dependency Dashboard #4](https://github.com/0disoft/mensor/issues/4).
 
 - `fast-uri` 3.1.6 -> 3.1.7 is an AJV transitive dependency. The
@@ -158,16 +158,19 @@ The 0.9.1 dependency pass covers the same-major entries in
 - pnpm 11.11.0 -> 11.26.0 stays on major 11, requires Node >=22.13, and changes
   installation and lockfile handling. Review the generated graph and run the
   aggregate gate. Public package runtime floors remain unchanged.
-- [checkout v6.1.0](https://github.com/actions/checkout/releases/tag/v6.1.0),
-  [setup-node v6.5.0](https://github.com/actions/setup-node/releases/tag/v6.5.0),
+- [checkout v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1),
+  [setup-node v7.0.0](https://github.com/actions/setup-node/releases/tag/v7.0.0),
   and [pnpm action-setup v6.1.0](https://github.com/pnpm/action-setup/releases/tag/v6.1.0)
-  are pinned to the release commit SHAs. Checkout changes unsafe
+  are pinned to the release commit SHAs. The v7 actions run on the runner's
+  Node 24 runtime independently of the application's Node matrix; keep GitHub-hosted
+  runners current and verify Node 24 action support before using self-hosted runners.
+  Existing checkout and cache inputs remain supported. Checkout rejects unsafe
   `pull_request_target` defaults; these workflows use `pull_request`, `push`, or
   `workflow_dispatch`, with no unsafe opt-in. Permissions and triggers are unchanged.
 - Same-major Hono and fast-uri updates are permitted by caret ranges, with exact
   graph resolution in the lockfile. Tool and action pins remain reviewable by
   Renovate rather than floating at execution time.
-- Node 24 adoption, Node types 26, fast-uri 4, Actions 7, and pnpm 12 remain
+- Node 24 adoption, Node types 26, fast-uri 4, and pnpm 12 remain
   separate compatibility decisions. Do not approve all dashboard entries at once.
 
 Before publication, run hosted CI on the exact commit; local checks do not
