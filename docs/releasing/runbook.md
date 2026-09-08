@@ -12,7 +12,8 @@ relationship.
 
 ## Common Gate
 
-Run from a clean release commit with Node 22.13 or newer and pnpm 11.26.0:
+Run from a clean release commit with Node 24 and pnpm 12.3.4. The contributor
+minimum remains Node 22.13; the Node 22 CI lane protects public runtime support:
 
 ```text
 pnpm install --frozen-lockfile
@@ -147,17 +148,28 @@ the private reporting UI is unavailable.
 The 0.9.1 dependency pass covers reviewed entries in
 [Dependency Dashboard #4](https://github.com/0disoft/mensor/issues/4).
 
-- `fast-uri` 3.1.6 -> 3.1.7 is an AJV transitive dependency. The
-  [upstream security release](https://github.com/fastify/fast-uri/releases/tag/v3.1.7)
-  fixes authority serialization and IP-literal parsing. Validate contract parsers
-  and packaged consumers; the workspace override does not update consumer locks.
+- `fast-uri` 3.1.7 -> 4.1.4 is an AJV transitive override across a major boundary.
+  [Version 4](https://github.com/fastify/fast-uri/releases/tag/v4.0.0) removes
+  deprecated type names and changes escaping. Validate AJV schema references,
+  contract parsers, declarations with library checks enabled, and packaged
+  consumers. The workspace override does not update consumer locks.
 - Hono 4.12.34 -> 4.13.7 is a fixture/development dependency. The
   [upstream fix](https://github.com/honojs/hono/releases/tag/v4.13.7) concerns JSX
   boundary escaping; the maintained static HTML fixture does not use that path.
   Validate Hono route extraction and fixture behavior without claiming exploitability.
-- pnpm 11.11.0 -> 11.26.0 stays on major 11, requires Node >=22.13, and changes
-  installation and lockfile handling. Review the generated graph and run the
-  aggregate gate. Public package runtime floors remain unchanged.
+- pnpm 11.26.0 -> 12.3.4 uses a platform-native executable. The
+  [major migration](https://github.com/pnpm/pnpm/releases/tag/v12.0.0) tightens
+  workspace-setting validation and changes peer-cycle resolution and hosted Git
+  dependency transport. This workspace has no Git dependencies or custom settings;
+  review the regenerated graph without deleting the lockfile. The package-manager
+  installer provisions its platform binary; do not disable supply-chain checks.
+- Node types 22.20.1 -> 26.5.0 affect development declarations, not the application's
+  runtime. Their undici-types dependency also changes major. Keep strict type
+  checking and the Node 22 runtime lane; do not add Node 26-only runtime calls.
+  TypeScript remains on its 6.x JavaScript compiler API compatibility package.
+  pnpm records a release-age exception for the explicitly reviewed 26.5.0 package
+  only: its official registry metadata supplies integrity and signatures and no
+  installation scripts. No wildcard exception or global age reduction is added.
 - [checkout v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1),
   [setup-node v7.0.0](https://github.com/actions/setup-node/releases/tag/v7.0.0),
   and [pnpm action-setup v6.1.0](https://github.com/pnpm/action-setup/releases/tag/v6.1.0)
@@ -170,11 +182,20 @@ The 0.9.1 dependency pass covers reviewed entries in
 - Same-major Hono and fast-uri updates are permitted by caret ranges, with exact
   graph resolution in the lockfile. Tool and action pins remain reviewable by
   Renovate rather than floating at execution time.
-- Node 24 adoption, Node types 26, fast-uri 4, and pnpm 12 remain
-  separate compatibility decisions. Do not approve all dashboard entries at once.
+- Node 24 is primary on Linux, Windows, Docker integration, and release jobs;
+  Node 22 remains a Linux compatibility lane. This is not a public Node support
+  removal. New major updates require another compatibility review; do not approve
+  every future dashboard entry at once.
 
 Before publication, run hosted CI on the exact commit; local checks do not
 execute GitHub Actions. Rollback restores this dependency commit's manifests,
 lockfile, and workflow revisions together, followed by a frozen install. Do not
 mark the remote dashboard resolved until the changes are pushed and Renovate
 has observed them.
+
+During the local Windows migration, pnpm 12 stopped while removing the old
+modules layout, leaving `node_modules/hono` linked to an already removed 4.13.7
+store entry. Only that verified dangling link was unlinked before reinstalling;
+no running process or source directory was removed. The new lockfile includes
+a separate YAML document for pnpm's platform packages. Preserve both documents
+when reviewing or processing the lockfile.

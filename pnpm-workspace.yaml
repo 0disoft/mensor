@@ -2,5 +2,8 @@ packages:
   - "packages/*"
   - "internal/*"
 
+minimumReleaseAgeExclude:
+  - '@types/node@26.5.0'
+
 overrides:
-  fast-uri: ^3.1.7
+  fast-uri: ^4.1.4
