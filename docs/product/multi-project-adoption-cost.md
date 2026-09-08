@@ -38,9 +38,11 @@ RSVP project comes from a larger application, not a smaller contract. The
 second pilot therefore does not justify calling authoring low friction.
 
 Each maintained index is 45 non-empty lines for two routes. That is acceptable
-as generated evidence but expensive as manual authoring. No external producer
-exists yet, so current support is an artifact-consumption contract rather than
-an ergonomic adapter workflow.
+as generated evidence but expensive as manual authoring. Since this pilot, the
+explicit `index-hono-routes` command has implemented bounded Hono extraction.
+General Node request extraction remains unavailable; the Node fixture still
+uses maintained source-bound evidence. This historical cost measurement does
+not establish the ergonomics of the later producer.
 
 The main repeated authoring cost remains the explicit action schema, form
 codec bindings, handler reference, and form-to-route linkage. A convenience

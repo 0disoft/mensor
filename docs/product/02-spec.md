@@ -23,9 +23,10 @@ request within the documented resource limits.
 The compiler must not import source modules, execute configuration, spawn a
 framework CLI, install packages, or access the network.
 
-An action form template must end in `.html`. Contract validation rejects other
-source kinds before HTML extraction so TypeScript template strings cannot be
-misclassified as static documents.
+Without an external `formIndex`, an action form template must end in `.html`.
+Other source kinds require a canonical source-bound FormIndex and are never
+implicitly parsed as HTML. The explicit tagged-template producer supplies one
+bounded non-HTML input path; it does not add JSX extraction.
 
 ## Contract Authoring Rule
 
@@ -438,8 +439,8 @@ ranges, and linked documents before semantic rules run. The built-in static
 HTML provider remains the default when `formIndex` is omitted. Producer
 execution by the compiler, discovery, and generic plugins remain unavailable.
 
-ADR-0033 owns the public RouteIndex boundary. Unlike FormIndex, RouteIndex has a
-public schema, parser, serializer, and project-contract input. This accepts
+ADR-0033 owns the public RouteIndex boundary. RouteIndex and FormIndex both have
+public schemas, parsers, serializers, and project-contract inputs. They accept
 data, not executable adapter authority. ADR-0038 adds one explicitly invoked
 CLI Hono producer outside the compiler. Node request extraction, producer
 discovery, and generic adapters remain unimplemented product claims.
@@ -450,8 +451,10 @@ from each feature contract. Two valid maintained projects have zero observed
 diagnostics, but that count is not a false-positive rate or external adoption
 claim.
 
-Compiler performance claims remain local engineering baselines until the
-agent-authored corpus includes representative project shapes. Performance
+The [representative performance probe](../performance/representative.md) now
+adds forms-heavy, module-graph, and mixed synthetic application shapes.
+These are local engineering baselines, not agent-authored adoption evidence or
+cross-platform performance budgets. Performance
 reports must distinguish first and repeated process runs, file and byte counts,
 parse time, and peak RSS. The mutation benchmark remains a detection benchmark
 and cannot stand in for throughput evidence.

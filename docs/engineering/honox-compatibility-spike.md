@@ -1,6 +1,6 @@
 # HonoX Compatibility Spike
 
-- Status: Static HTML pilot complete; JSX extraction deferred
+- Status: Static HTML pilot complete; HonoX trial brief/oracle prepared; JSX extraction deferred
 - Evidence date: 2026-07-15
 - Decision: Support framework-neutral static HTML integration; defer HonoX JSX extraction
 
@@ -35,7 +35,7 @@ runtime owns the source semantics.
 | `POST` export | Compatible | A named value export can already become a handler export fact. |
 | import boundaries | Compatible | Literal TypeScript imports already become normalized module edges. |
 | intrinsic form markup | Unsupported | Form extraction currently accepts parsed `.html` documents only. |
-| omitted form action | Model gap | The current empty string loses the HTML meaning of submitting to the current document URL. |
+| omitted form action | Core support implemented | The current-document fact resolves through explicit documentPath evidence; JSX extraction is still missing. |
 | file-based route path | Unsupported | Mensor does not interpret HonoX route filenames or configuration. |
 | middleware schema | Intentionally unsupported | Type arguments are not runtime validation, and external schema semantics do not own the Mensor contract. |
 | custom JSX components | Unsupported | Their rendered controls cannot be proven without component analysis or execution. |
@@ -90,8 +90,8 @@ action route. The Hono JSX extractor remains deferred.
 
 ## Runnable Hono Static HTML Pilot
 
-`fixtures/valid/hono-static-tasks` is a runnable Hono `4.12.30` application,
-not a HonoX or JSX extractor fixture. Hono owns request routing and response
+At the original pilot date, `fixtures/valid/hono-static-tasks` used Hono `4.12.30`.
+It is not a HonoX or JSX extractor fixture. Hono owns request routing and response
 delivery while a static HTML file owns the form markup. The compiler checks the
 project without importing Hono or executing application modules. The fixture's
 semantic tests separately execute Hono's in-process request API and prove GET,
@@ -118,9 +118,36 @@ it does not satisfy the separate HonoX opt-in gate below.
 - **Reject:** generic TSX traversal, BYOR support, HonoX config execution, Vite
   plugin loading, schema inference from TypeScript generics, and component
   rendering inside the compiler.
-- **Research next:** define one synthetic HonoX application brief with a
-  progressively enhanced URL-encoded form and an independent semantic test.
-  Do not copy the framework documentation example into the generated project.
+- **Prepared:** the versioned [HonoX RSVP brief](../../internal/agent-runner/briefs/honox-rsvp-v1.md)
+  and [protected semantic oracle](../../internal/agent-runner/oracles/honox-rsvp-v1.test.mjs)
+  define one original server-rendered application with current-document form
+  submission, strict URL-encoded input, escaping, and per-instance state.
+- **Research next:** select and lock a HonoX build toolchain, then execute one
+  fresh agent-authored trial under a separately configured bounded runner.
+  Do not copy framework example code or expose existing fixtures to that agent.
+
+## Prepared Trial Evidence
+
+The oracle imports the candidate's `src/app.mjs` adapter only after a reviewed
+one-shot build. The adapter must exercise real HonoX routes; source review must
+reject a second test-only application or a plain Node/Hono replacement. The
+HTTP tests and basic markup assertions cannot prove JSX provenance, actual
+HonoX use, full HTML structure, or absence of browser-JavaScript dependencies.
+Those are separate source and build-inspection gates.
+
+The maintained oracle self-test uses the existing Node RSVP fixture, not HonoX,
+and rejects shared state, incorrect redirects, permissive media-type matching,
+and mutation on rejected input. This proves oracle sensitivity only. No HonoX
+dependency installation, build, model run, or extractor implementation is
+claimed by this preparation.
+
+Before running the trial, record exact dependency/build versions, input and
+oracle digests, candidate source/artifact digests, model identity, and actual
+isolation limits. Record semantic results separately from Mensor coverage.
+Current JSX form checking is unavailable; do not create fake FormIndex evidence
+or use this exploratory result as an ordinary all-gates-passing build trial.
+The next decision consumes the actual intrinsic elements, literal attributes,
+dynamic constructs, and source ranges found in the candidate.
 
 ## Implementation Gate
 
