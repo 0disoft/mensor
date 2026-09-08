@@ -1,0 +1,985 @@
+{
+  "schemaVersion": "mensor.hono-jsx-fixtures/v1",
+  "cases": [
+    {
+      "id": "literal-wrappers",
+      "expected": {
+        "inspection": {
+          "state": "complete"
+        },
+        "forms": [
+          {
+            "identity": {
+              "state": "known",
+              "value": "signup",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 8
+                },
+                "end": {
+                  "line": 2,
+                  "character": 19
+                }
+              }
+            },
+            "method": {
+              "state": "known",
+              "value": "post",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 20
+                },
+                "end": {
+                  "line": 2,
+                  "character": 33
+                }
+              }
+            },
+            "action": {
+              "state": "known",
+              "value": "/join",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 34
+                },
+                "end": {
+                  "line": 2,
+                  "character": 48
+                }
+              }
+            },
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 2
+              },
+              "end": {
+                "line": 2,
+                "character": 49
+              }
+            },
+            "controls": [
+              {
+                "name": {
+                  "state": "known",
+                  "value": "name",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 63
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 74
+                    }
+                  }
+                },
+                "controlKind": {
+                  "state": "known",
+                  "value": "input",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 56
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 98
+                    }
+                  }
+                },
+                "inputType": {
+                  "state": "known",
+                  "value": "text",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 75
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 86
+                    }
+                  }
+                },
+                "multiple": {
+                  "state": "known",
+                  "value": false,
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 56
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 98
+                    }
+                  }
+                },
+                "multiplicity": {
+                  "state": "known",
+                  "value": "scalar",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 56
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 98
+                    }
+                  }
+                },
+                "successful": {
+                  "state": "known",
+                  "value": true,
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 56
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 98
+                    }
+                  }
+                },
+                "range": {
+                  "start": {
+                    "line": 2,
+                    "character": 56
+                  },
+                  "end": {
+                    "line": 2,
+                    "character": 98
+                  }
+                }
+              },
+              {
+                "name": {
+                  "state": "absent"
+                },
+                "controlKind": {
+                  "state": "known",
+                  "value": "button",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 106
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 128
+                    }
+                  }
+                },
+                "inputType": {
+                  "state": "known",
+                  "value": "submit",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 114
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 127
+                    }
+                  }
+                },
+                "multiple": {
+                  "state": "known",
+                  "value": false,
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 106
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 128
+                    }
+                  }
+                },
+                "multiplicity": {
+                  "state": "known",
+                  "value": "scalar",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 106
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 128
+                    }
+                  }
+                },
+                "successful": {
+                  "state": "known",
+                  "value": false,
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 106
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 128
+                    }
+                  }
+                },
+                "range": {
+                  "start": {
+                    "line": 2,
+                    "character": 106
+                  },
+                  "end": {
+                    "line": 2,
+                    "character": 128
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "fields": [
+        "name"
+      ]
+    },
+    {
+      "id": "current-document-static-controls",
+      "expected": {
+        "inspection": {
+          "state": "complete"
+        },
+        "forms": [
+          {
+            "identity": {
+              "state": "known",
+              "value": "signup",
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 8
+                },
+                "end": {
+                  "line": 3,
+                  "character": 19
+                }
+              }
+            },
+            "method": {
+              "state": "known",
+              "value": "post",
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 20
+                },
+                "end": {
+                  "line": 3,
+                  "character": 33
+                }
+              }
+            },
+            "action": {
+              "state": "current-document",
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 2
+                },
+                "end": {
+                  "line": 3,
+                  "character": 34
+                }
+              }
+            },
+            "range": {
+              "start": {
+                "line": 3,
+                "character": 2
+              },
+              "end": {
+                "line": 3,
+                "character": 34
+              }
+            },
+            "controls": [
+              {
+                "name": {
+                  "state": "known",
+                  "value": "attendance",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 78
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 95
+                    }
+                  }
+                },
+                "controlKind": {
+                  "state": "known",
+                  "value": "input",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 71
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 123
+                    }
+                  }
+                },
+                "inputType": {
+                  "state": "known",
+                  "value": "radio",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 96
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 108
+                    }
+                  }
+                },
+                "multiple": {
+                  "state": "known",
+                  "value": false,
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 71
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 123
+                    }
+                  }
+                },
+                "multiplicity": {
+                  "state": "known",
+                  "value": "mutually-exclusive",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 71
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 123
+                    }
+                  }
+                },
+                "successful": {
+                  "state": "known",
+                  "value": true,
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 71
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 123
+                    }
+                  }
+                },
+                "range": {
+                  "start": {
+                    "line": 3,
+                    "character": 71
+                  },
+                  "end": {
+                    "line": 3,
+                    "character": 123
+                  }
+                }
+              },
+              {
+                "name": {
+                  "state": "known",
+                  "value": "attendance",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 130
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 147
+                    }
+                  }
+                },
+                "controlKind": {
+                  "state": "known",
+                  "value": "input",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 123
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 174
+                    }
+                  }
+                },
+                "inputType": {
+                  "state": "known",
+                  "value": "radio",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 148
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 160
+                    }
+                  }
+                },
+                "multiple": {
+                  "state": "known",
+                  "value": false,
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 123
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 174
+                    }
+                  }
+                },
+                "multiplicity": {
+                  "state": "known",
+                  "value": "mutually-exclusive",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 123
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 174
+                    }
+                  }
+                },
+                "successful": {
+                  "state": "known",
+                  "value": true,
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 123
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 174
+                    }
+                  }
+                },
+                "range": {
+                  "start": {
+                    "line": 3,
+                    "character": 123
+                  },
+                  "end": {
+                    "line": 3,
+                    "character": 174
+                  }
+                }
+              },
+              {
+                "name": {
+                  "state": "known",
+                  "value": "blocked",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 181
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 195
+                    }
+                  }
+                },
+                "controlKind": {
+                  "state": "known",
+                  "value": "input",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 174
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 219
+                    }
+                  }
+                },
+                "inputType": {
+                  "state": "known",
+                  "value": "text",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 196
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 207
+                    }
+                  }
+                },
+                "multiple": {
+                  "state": "known",
+                  "value": false,
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 174
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 219
+                    }
+                  }
+                },
+                "multiplicity": {
+                  "state": "known",
+                  "value": "scalar",
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 174
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 219
+                    }
+                  }
+                },
+                "successful": {
+                  "state": "known",
+                  "value": false,
+                  "range": {
+                    "start": {
+                      "line": 3,
+                      "character": 174
+                    },
+                    "end": {
+                      "line": 3,
+                      "character": 219
+                    }
+                  }
+                },
+                "range": {
+                  "start": {
+                    "line": 3,
+                    "character": 174
+                  },
+                  "end": {
+                    "line": 3,
+                    "character": 219
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "fields": [
+        "attendance"
+      ]
+    },
+    {
+      "id": "empty-action-utf16",
+      "expected": {
+        "inspection": {
+          "state": "complete"
+        },
+        "forms": [
+          {
+            "identity": {
+              "state": "known",
+              "value": "signup",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 23
+                },
+                "end": {
+                  "line": 2,
+                  "character": 34
+                }
+              }
+            },
+            "method": {
+              "state": "known",
+              "value": "post",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 35
+                },
+                "end": {
+                  "line": 2,
+                  "character": 48
+                }
+              }
+            },
+            "action": {
+              "state": "current-document",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 49
+                },
+                "end": {
+                  "line": 2,
+                  "character": 58
+                }
+              }
+            },
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 17
+              },
+              "end": {
+                "line": 2,
+                "character": 59
+              }
+            },
+            "controls": [
+              {
+                "name": {
+                  "state": "known",
+                  "value": "email",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 66
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 78
+                    }
+                  }
+                },
+                "controlKind": {
+                  "state": "known",
+                  "value": "input",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 59
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 94
+                    }
+                  }
+                },
+                "inputType": {
+                  "state": "known",
+                  "value": "email",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 79
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 91
+                    }
+                  }
+                },
+                "multiple": {
+                  "state": "known",
+                  "value": false,
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 59
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 94
+                    }
+                  }
+                },
+                "multiplicity": {
+                  "state": "known",
+                  "value": "scalar",
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 59
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 94
+                    }
+                  }
+                },
+                "successful": {
+                  "state": "known",
+                  "value": true,
+                  "range": {
+                    "start": {
+                      "line": 2,
+                      "character": 59
+                    },
+                    "end": {
+                      "line": 2,
+                      "character": 94
+                    }
+                  }
+                },
+                "range": {
+                  "start": {
+                    "line": 2,
+                    "character": 59
+                  },
+                  "end": {
+                    "line": 2,
+                    "character": 94
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "fields": [
+        "email"
+      ]
+    },
+    {
+      "id": "computed-attribute",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "computed-attribute",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 39
+            },
+            "end": {
+              "line": 2,
+              "character": 51
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    },
+    {
+      "id": "spread-attribute",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "computed-attribute",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 32
+            },
+            "end": {
+              "line": 2,
+              "character": 42
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    },
+    {
+      "id": "conditional-control",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "conditional-presence",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 32
+            },
+            "end": {
+              "line": 2,
+              "character": 66
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    },
+    {
+      "id": "repeated-control",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "repeated-generation",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 32
+            },
+            "end": {
+              "line": 2,
+              "character": 76
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    },
+    {
+      "id": "custom-component",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "custom-helper-semantics",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 32
+            },
+            "end": {
+              "line": 2,
+              "character": 45
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    },
+    {
+      "id": "external-association",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "unsupported-control-kind",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 48
+            },
+            "end": {
+              "line": 2,
+              "character": 61
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    },
+    {
+      "id": "file-input",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "file-input",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 51
+            },
+            "end": {
+              "line": 2,
+              "character": 62
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    },
+    {
+      "id": "named-submitter",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "named-submitter",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 40
+            },
+            "end": {
+              "line": 2,
+              "character": 53
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    },
+    {
+      "id": "route-override",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "submitter-route-override",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 54
+            },
+            "end": {
+              "line": 2,
+              "character": 73
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    },
+    {
+      "id": "custom-sibling",
+      "expected": {
+        "inspection": {
+          "state": "incomplete",
+          "reason": "custom-helper-semantics",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 62
+            },
+            "end": {
+              "line": 2,
+              "character": 75
+            }
+          }
+        },
+        "forms": []
+      },
+      "fields": null
+    }
+  ]
+}

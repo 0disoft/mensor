@@ -47,7 +47,9 @@
 - HonoX compatibility boundary: `docs/engineering/honox-compatibility-spike.md`
 - Prepared HonoX trial: [versioned brief](../internal/agent-runner/briefs/honox-rsvp-v1.md)
   and [semantic oracle](../internal/agent-runner/oracles/honox-rsvp-v1.test.mjs);
-  framework execution and JSX extraction remain deferred.
+  [local framework execution](../internal/agent-runner/trials/honox-rsvp-v1/README.md)
+  is complete; JSX extraction remains deferred.
+- Hono JSX implementation contract: `architecture/hono-jsx-form-index-v1.md`
 - Local compiler performance baseline: `docs/engineering/compiler-performance-baseline.md`
 - Hono adoption cost report: `docs/product/hono-adoption-cost.md`
 - Current multi-project adoption cost report:

@@ -113,8 +113,8 @@ it does not satisfy the separate HonoX opt-in gate below.
 
 - **Applied:** retain this compatibility map, the corrected action model, and
   the runnable static HTML Hono fixture.
-- **Defer:** Hono JSX intrinsic extraction until an agent-authored trial proves
-  a bounded application shape from an empty workspace.
+- **Next:** implement the bounded Hono JSX parser against the accepted
+  [fixture contract](../architecture/hono-jsx-form-index-v1.md).
 - **Reject:** generic TSX traversal, BYOR support, HonoX config execution, Vite
   plugin loading, schema inference from TypeScript generics, and component
   rendering inside the compiler.
@@ -125,10 +125,9 @@ it does not satisfy the separate HonoX opt-in gate below.
 - **Executed:** one local, prompt-isolated HonoX RSVP capability trial using
   an isolated locked toolchain. The original candidate passed three of four
   semantic tests; after one unknown-field validation repair, all four passed.
-- **Research next:** define synthetic supported/unsupported JSX fixtures and
-  canonical source-range expectations using the observed shape below. The
-  stronger provenance and cross-root gates remain open; a local capability
-  result does not waive them.
+- **Specified:** synthetic supported/unsupported JSX fixtures, canonical source
+  ranges and expected artifacts under two physical roots. Actual extractor
+  output and CLI renderer activation still require implementation evidence.
 
 ## Prepared Trial Evidence
 
@@ -155,15 +154,18 @@ dynamic constructs, and source ranges found in the candidate.
 
 ## Implementation Gate
 
-Implementation may start only when all of the following exist:
+Parser implementation may start against the accepted synthetic fixture
+contract, using the existing TypeScript parser and FormIndex boundary. It must
+not introduce HonoX, Vite, Babel or a renderer runtime into the compiler.
+Completion requires actual output equality, explicit unsupported evidence and
+cross-root extraction determinism; current oracle tests alone are not enough.
+CLI exposure additionally requires a reviewed renderer-activation and bounded
+source/output contract.
 
-- one agent-authored HonoX project generated from an approved versioned brief;
-- proof that the agent did not read or copy existing Mensor fixtures;
-- synthetic pass and explicit-unsupported fixtures that do not copy upstream
-  application code;
-- canonical output and cross-root determinism expectations; and
-- a package and dependency plan that does not introduce HonoX, Vite, Babel, or
-  a renderer runtime into the compiler.
+Independent-agent provenance is a separate evaluation gate, not a prerequisite
+for implementing a deterministic parser. The local trial remains exploratory:
+it does not acquire access attestation or an exact model identity through this
+policy change. Its historical limitations remain recorded below.
 
 ## Local HonoX Capability Result
 
@@ -182,5 +184,5 @@ source ranges, not a fabricated FormIndex or a claim that JSX inspection ships.
 The author received a fresh context without existing fixture or oracle content.
 Tool use was forbidden by prompt, but no OS-level filesystem-access attestation
 or exact inherited model identifier was available. This is local capability
-evidence, not satisfaction of the stronger independent-generation gate above.
+evidence, not satisfaction of an independent-generation evaluation gate.
 No public dependency, compiler behavior, runtime API or release version changed.

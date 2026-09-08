@@ -49,3 +49,12 @@ runner must inject that producer version only for tests.
 Invalid fixtures should normally prove one root diagnostic. Compound agent
 repair scenarios belong under `fixtures/compound` after individual rules are
 stable.
+
+## Producer Contract Fixtures
+
+`contracts/hono-jsx-v1` contains synthetic TSX sources and hand-authored
+FormIndex expectations for the next bounded JSX producer. These are output
+oracle/consumer tests, not executable framework applications or passing
+extractor fixtures. The contract is documented in
+`docs/architecture/hono-jsx-form-index-v1.md`; actual producer-output comparison
+will be added with the implementation.
