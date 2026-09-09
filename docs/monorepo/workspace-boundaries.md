@@ -68,7 +68,7 @@ compiler analysis, source reads, host metadata, or environment-dependent data.
 The current executable exposes `mensor check [root] [--config <path>] [--json]
 [--report-version <1|2>]`, `mensor compile [root] [--config <path>] [--out
 <path>] [--json]`, plus the narrow `mensor index-hono-routes` and
-`mensor index-ts-forms` producers. It maps
+`mensor index-ts-forms` and `mensor index-hono-jsx-forms` producers. It maps
 results to the documented `0/1/2/3` exit statuses. Report revision selection
 stays in the CLI shell; inspection and manifest derivation remain
 compiler-owned.

@@ -18,6 +18,7 @@ mensor check [root] [--config <path>] [--json] [--report-version <1|2>] [--sarif
 mensor compile [root] [--config <path>] [--out <path>] [--json]
 mensor index-hono-routes [root] --source <path> --receiver <name> [--out <path>] [--json]
 mensor index-ts-forms [root] --source <path> --tag <identifier> [--out <path>] [--json]
+mensor index-hono-jsx-forms [root] --source <path> --jsx-config <path> --build-config <path> --renderer <path> [--out <path>] [--json]
 ```
 
 - `root` defaults to the current working directory.
@@ -29,10 +30,12 @@ mensor index-ts-forms [root] --source <path> --tag <identifier> [--out <path>] [
   `--json`. The default is revision `1`. It is valid only for `check`.
 - `--out` selects the artifact path relative to `root` and defaults to
   `.mensor/manifest.json` for `compile`, `mensor.route-index.json` for
-  `index-hono-routes`, and `mensor.form-index.json` for `index-ts-forms`.
-- `--source` is repeatable for either index command. `--receiver` is
+  `index-hono-routes`, and `mensor.form-index.json` for both form index commands.
+- `--source` is repeatable for index commands. `--receiver` is
   repeatable only for `index-hono-routes`; `--tag` is repeatable only for
   `index-ts-forms`. Each command requires all of its named inputs.
+- `--jsx-config`, `--build-config` and `--renderer` are required only for
+  `index-hono-jsx-forms` and rejected by other commands.
 - Paths supplied through flags must resolve inside `root`.
 - Environment variables do not alter contract or rule behavior in the MVP.
 - The CLI applies compiler defaults of 10,000 discovered files, 1 MiB per
@@ -107,6 +110,17 @@ resolve aliases or shadowed bindings.
 
 ## Exit Status
 
+`index-hono-jsx-forms` follows the same canonical output and atomic replacement
+contract. It accepts only the explicit static HonoX subset in
+[Hono JSX FormIndex v1](../architecture/hono-jsx-form-index-v1.md). It binds the
+selected renderer and both configuration files into the artifact so stale
+activation evidence fails consumer freshness checks. Unsupported form syntax
+produces incomplete evidence, not a guessed complete form. Inputs are never
+executed; successful indexing is not a runtime-behavior attestation.
+
+JSX activation/input failures use status `2`; atomic output failures use `3`.
+Its output must be a portable relative `.json` path distinct from every input.
+
 - `0`: checking or compilation completed with no error diagnostics
 - `1`: project contract violations were found; compile output was not replaced
 - `2`: CLI arguments or project configuration are invalid
@@ -124,7 +138,7 @@ The failure envelope is:
   "schemaVersion": 1,
   "producer": {
     "name": "mensor",
-    "version": "0.9.1"
+    "version": "0.10.0"
   },
   "status": "error",
   "failure": {

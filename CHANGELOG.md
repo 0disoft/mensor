@@ -2,7 +2,24 @@
 
 All notable changes to Mensor are documented in this file.
 
-## [0.9.1] - Unreleased
+## [0.10.0] - Unreleased
+
+### Added
+
+- Explicit `index-hono-jsx-forms` CLI with bounded HonoX source, JSX/build
+  configuration and transparent renderer validation.
+- Source-bound activation documents preserve configuration freshness using
+  the existing FormIndex v1 schema.
+- Compiler `hono-jsx` subpath exposes the pure TSX syntax primitive.
+
+### Changed
+
+- Shared template reads preserve UTF-8 BOM bytes, handle short reads and
+  reject changed file identity and nonportable paths.
+- This candidate includes the unreleased 0.9.1 changes below. Upgrade all
+  four public packages together; no database or schema migration is required.
+
+## [0.9.1] - Superseded Candidate
 
 ### Fixed
 

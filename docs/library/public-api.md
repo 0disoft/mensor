@@ -5,6 +5,14 @@
 
 ## Current Package Surface
 
+The compiler's `@0disoft/mensor-compiler/hono-jsx` subpath exports
+`extractHonoJsxFormDocument(sourcePath, source)`, a bounded source-only TSX
+primitive returning one FormIndex document. It does not establish renderer
+activation, read files or execute source. Use `mensor index-hono-jsx-forms`
+for the CLI-owned configuration checks and atomic artifact workflow. The
+package-root exports are unchanged. See
+[the subset contract](../architecture/hono-jsx-form-index-v1.md).
+
 `@0disoft/mensor-contract` is the publishable serializable contract package and
 exports:
 

@@ -21,6 +21,8 @@ import {
   writeManifestAtomic,
 } from "./manifest-output.js";
 import { formatDiagnosticReportSarif } from "./sarif.js";
+import { produceHonoJsxFormIndex } from "./hono-jsx-form-index.js";
+import { normalizeSourcePath } from "./template-source.js";
 import type {
   CliFailureEnvelope,
   RunCliOptions,
@@ -62,13 +64,14 @@ function readPackageVersion(): string {
   return value.version;
 }
 
-const helpText = `Usage: mensor <check|compile|index-hono-routes|index-ts-forms> [root] [options]
+const helpText = `Usage: mensor <check|compile|index-hono-routes|index-ts-forms|index-hono-jsx-forms> [root] [options]
 
 Commands:
   check              Check project contracts against static source facts.
   compile            Check contracts and atomically write a runtime manifest.
   index-hono-routes  Produce a source-bound RouteIndex from explicit Hono sources.
   index-ts-forms     Produce a FormIndex from explicit tagged HTML templates.
+  index-hono-jsx-forms Produce a FormIndex from explicit HonoX TSX routes.
 
 Options:
   --config <path>    Root-relative project contract path.
@@ -78,6 +81,9 @@ Options:
   --source <path>    Hono source path; repeat for multiple files.
   --receiver <name>  Hono receiver identifier; repeat for multiple receivers.
   --tag <name>       Tagged-template identifier; repeat for multiple tags.
+  --jsx-config <path> Standalone Hono JSX TypeScript configuration.
+  --build-config <path> Explicit static HonoX Vite configuration.
+  --renderer <path>  Explicit transparent Hono _renderer.tsx.
   --report-version   Select check JSON output revision 1 or 2. Requires --json.
   --help             Show this help.
 `;
@@ -99,6 +105,9 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         sarif: { type: "boolean" },
         source: { type: "string", multiple: true },
         tag: { type: "string", multiple: true },
+        "jsx-config": { type: "string" },
+        "build-config": { type: "string" },
+        renderer: { type: "string" },
       },
     });
   } catch (error) {
@@ -167,13 +176,14 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       command !== "check" &&
       command !== "compile" &&
       command !== "index-hono-routes" &&
-      command !== "index-ts-forms"
+      command !== "index-ts-forms" &&
+      command !== "index-hono-jsx-forms"
     ) ||
     parsed.positionals.length > 2
   ) {
     return writeUsageFailure(
       options,
-      "Expected command check, compile, index-hono-routes, or index-ts-forms and at most one project root.",
+      "Expected command check, compile, index-hono-routes, index-ts-forms, or index-hono-jsx-forms and at most one project root.",
       json,
       reportVersion,
     );
@@ -204,7 +214,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     );
   }
   if (
-    (command === "index-hono-routes" || command === "index-ts-forms")
+    (command === "index-hono-routes" || command === "index-ts-forms" || command === "index-hono-jsx-forms")
     && parsed.values["config"] !== undefined
   ) {
     return writeUsageFailure(
@@ -215,7 +225,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     );
   }
   if (
-    command !== "index-hono-routes" && command !== "index-ts-forms" &&
+    command !== "index-hono-routes" && command !== "index-ts-forms" && command !== "index-hono-jsx-forms" &&
     (
       parsed.values["source"] !== undefined
       || parsed.values["receiver"] !== undefined
@@ -231,6 +241,15 @@ export async function runCli(options: RunCliOptions): Promise<number> {
   }
 
   const root = path.resolve(options.cwd, parsed.positionals[1] ?? ".");
+  const jsxConfig = parsed.values["jsx-config"];
+  const buildConfig = parsed.values["build-config"];
+  const renderer = parsed.values["renderer"];
+  if (command !== "index-hono-jsx-forms" && [jsxConfig, buildConfig, renderer].some((value) => value !== undefined)) {
+    return writeUsageFailure(options, "--jsx-config, --build-config and --renderer are available only for index-hono-jsx-forms.", json, reportVersion);
+  }
+  if (command === "index-hono-jsx-forms" && [jsxConfig, buildConfig, renderer].some((value) => typeof value !== "string" || value.length === 0)) {
+    return writeUsageFailure(options, "JSX indexing requires --jsx-config, --build-config and --renderer.", json, reportVersion);
+  }
   const configValue = parsed.values["config"];
   if (
     typeof configValue === "string" &&
@@ -331,7 +350,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       return 3;
     }
   }
-  if (command === "index-ts-forms") {
+  if (command === "index-ts-forms" || command === "index-hono-jsx-forms") {
     const sources = stringArray(parsed.values["source"]);
     const tags = stringArray(parsed.values["tag"]);
     if (sources === undefined || tags === undefined) {
@@ -355,14 +374,23 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       );
     }
     try {
-      const produced = await produceTypeScriptTemplateFormIndex({
+      if (command === "index-hono-jsx-forms") {
+        normalizeSourcePath(output);
+        if (!output.endsWith(".json") || [...sources, String(jsxConfig), String(buildConfig), String(renderer)]
+          .some((file) => file.toLowerCase() === output.toLowerCase())) {
+          throw new TypeScriptTemplateFormIndexError("hono_jsx.output_invalid", "JSX output must be a JSON path distinct from every input.", output);
+        }
+      }
+      const produced = command === "index-hono-jsx-forms"
+        ? await produceHonoJsxFormIndex({ root, sources, jsxConfig: String(jsxConfig), buildConfig: String(buildConfig), renderer: String(renderer), producerVersion: cliVersion })
+        : await produceTypeScriptTemplateFormIndex({
         root,
         sources,
         tags,
         producerVersion: cliVersion,
       });
       await writeCanonicalArtifactAtomic(root, output, produced.text);
-      options.stdout(json ? produced.text : `Wrote TypeScript FormIndex to ${output}.\n`);
+      options.stdout(json ? produced.text : `Wrote ${command === "index-hono-jsx-forms" ? "Hono JSX" : "TypeScript"} FormIndex to ${output}.\n`);
       return 0;
     } catch (error) {
       if (error instanceof TypeScriptTemplateFormIndexError) {
@@ -384,7 +412,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         {
           kind: "filesystem",
           code: "form_indexer.output_write_failed",
-          message: "The TypeScript FormIndex could not be written atomically.",
+          message: "The FormIndex could not be written atomically.",
           file: output,
         },
         json,

@@ -9,7 +9,7 @@ source syntax and does not add rule logic to the CLI.
 
 The CLI exposes `mensor check`, the clean-check artifact command
 `mensor compile`, and explicit `mensor index-hono-routes` and
-`mensor index-ts-forms` producers.
+`mensor index-ts-forms` and `mensor index-hono-jsx-forms` producers.
 Additional commands require a concrete workflow that cannot be expressed
 through those outputs. See
 `command-contract.md` for exact arguments, output, and exit status.

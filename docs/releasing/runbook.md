@@ -17,9 +17,9 @@ minimum remains Node 22.13; the Node 22 CI lane protects public runtime support:
 
 ```text
 pnpm install --frozen-lockfile
-pnpm run release-check -- --version 0.9.1 --tag latest
+pnpm run release-check -- --version 0.10.0 --tag latest
 pnpm run check
-pnpm run release:pack -- --version 0.9.1
+pnpm run release:pack -- --version 0.10.0
 ```
 
 Review `dist/release/manifest.json`, the four tarballs, package names,

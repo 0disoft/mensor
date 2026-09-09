@@ -26,7 +26,9 @@ framework CLI, install packages, or access the network.
 Without an external `formIndex`, an action form template must end in `.html`.
 Other source kinds require a canonical source-bound FormIndex and are never
 implicitly parsed as HTML. The explicit tagged-template producer supplies one
-bounded non-HTML input path; it does not add JSX extraction.
+bounded non-HTML input path. A separate explicit Hono JSX producer supports
+the static subset in `docs/architecture/hono-jsx-form-index-v1.md`; neither
+producer enables automatic JSX extraction by the compiler.
 
 ## Contract Authoring Rule
 
@@ -353,6 +355,14 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
     metadata are preserved without absolute roots, timestamps, source snippets,
     or process facts. SARIF is opt-in and does not replace Mensor JSON.
 
+57. The explicit `mensor index-hono-jsx-forms` command may produce FormIndex v1
+    from selected TSX routes and static HonoX activation inputs. The renderer,
+    TypeScript JSX configuration and Vite configuration are source-bound index
+    documents, so consumer discovery and digest checks also cover them. Invalid
+    activation fails before atomic output; unsupported forms remain incomplete.
+    The command never executes the application or configuration and does not
+    attest the eventual build process, deployment or outer middleware.
+
 ## Accepted Report Evolution
 
 ADR-0034 accepts an opt-in Check Output v2 design that declares Mensor's static
@@ -474,7 +484,8 @@ and cannot stand in for throughput evidence.
   persistence, and deployment remain host-owned.
 - Dynamic template adapters: the public FormIndex ingestion boundary is
   implemented. One explicit syntax-bounded TypeScript tagged-template producer
-  is implemented; framework transforms, interpolation evaluation, producer
+  and one explicit bounded Hono JSX producer are implemented; framework
+  transforms, interpolation evaluation, producer
   discovery, and generic adapter lifecycles remain deferred.
 - IDE, watch mode, caching, and cloud services: post-MVP integrations. SARIF
   output is implemented as a bounded projection only.

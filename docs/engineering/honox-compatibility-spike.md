@@ -1,6 +1,6 @@
 # HonoX Compatibility Spike
 
-- Status: Local HonoX trial and internal JSX parser complete; CLI integration deferred
+- Status: Local HonoX trial, bounded JSX parser and explicit CLI producer complete
 - Evidence date: 2026-09-09
 - Decision: Support framework-neutral static HTML integration; defer HonoX JSX extraction
 
@@ -34,7 +34,7 @@ runtime owns the source semantics.
 | `.tsx` parsing | Partial | The TypeScript fact extractor already parses TSX without executing it. |
 | `POST` export | Compatible | A named value export can already become a handler export fact. |
 | import boundaries | Compatible | Literal TypeScript imports already become normalized module edges. |
-| intrinsic form markup | Internal parser implemented | Bounded JSX facts match synthetic fixtures; CLI source and renderer activation remain unimplemented. |
+| intrinsic form markup | Bounded producer implemented | JSX facts match synthetic fixtures; explicit CLI inputs validate the selected static build and renderer subset. |
 | omitted form action | Core and internal JSX support implemented | Current-document facts still require explicit documentPath evidence during semantic linking. |
 | file-based route path | Unsupported | Mensor does not interpret HonoX route filenames or configuration. |
 | middleware schema | Intentionally unsupported | Type arguments are not runtime validation, and external schema semantics do not own the Mensor contract. |
@@ -87,7 +87,7 @@ The private form fact now distinguishes a literal action path from
 the action form contract's explicit `documentPath` during semantic linking.
 Missing page evidence fails configuration instead of borrowing the expected
 action route. The internal Hono JSX parser now preserves the same action model;
-its CLI activation remains deferred.
+its explicit CLI producer validates the bounded activation subset separately.
 
 ## Runnable Hono Static HTML Pilot
 
@@ -116,7 +116,8 @@ it does not satisfy the separate HonoX opt-in gate below.
   the runnable static HTML Hono fixture.
 - **Implemented:** the bounded internal Hono JSX parser matches the accepted
   [fixture contract](../architecture/hono-jsx-form-index-v1.md), including actual
-  cross-root extraction. It is not exposed through the CLI or public exports.
+  cross-root extraction. The explicit CLI and compiler `hono-jsx` subpath now
+  expose the bounded implementation without enabling automatic TSX discovery.
 - **Reject:** generic TSX traversal, BYOR support, HonoX config execution, Vite
   plugin loading, schema inference from TypeScript generics, and component
   rendering inside the compiler.
@@ -128,8 +129,8 @@ it does not satisfy the separate HonoX opt-in gate below.
   an isolated locked toolchain. The original candidate passed three of four
   semantic tests; after one unknown-field validation repair, all four passed.
 - **Specified:** synthetic supported/unsupported JSX fixtures, canonical source
-  ranges and actual output under two physical roots. CLI renderer activation
-  and bounded file/output integration remain the next implementation gates.
+  ranges and actual output under two physical roots. CLI tests additionally
+  cover selected renderer/build settings, source snapshots and atomic output.
 
 ## Prepared Trial Evidence
 
@@ -149,8 +150,9 @@ claimed by this preparation.
 Before running the trial, record exact dependency/build versions, input and
 oracle digests, candidate source/artifact digests, model identity, and actual
 isolation limits. Record semantic results separately from Mensor coverage.
-Current CLI JSX form extraction is unavailable; do not create fake FormIndex evidence
-or use this exploratory result as an ordinary all-gates-passing build trial.
+CLI JSX form extraction was unavailable during this historical trial. The new
+producer supports a narrower static activation subset and has not retroactively
+validated this trial; do not relabel it as an all-gates-passing build trial.
 The next decision consumes the actual intrinsic elements, literal attributes,
 dynamic constructs, and source ranges found in the candidate.
 
@@ -161,8 +163,8 @@ contract, using the existing TypeScript parser and FormIndex boundary. It must
 not introduce HonoX, Vite, Babel or a renderer runtime into the compiler.
 Completion requires actual output equality, explicit unsupported evidence and
 cross-root extraction determinism; current oracle tests alone are not enough.
-CLI exposure additionally requires a reviewed renderer-activation and bounded
-source/output contract.
+CLI exposure uses the reviewed renderer-activation and bounded source/output
+contract in `docs/architecture/hono-jsx-form-index-v1.md`.
 
 Independent-agent provenance is a separate evaluation gate, not a prerequisite
 for implementing a deterministic parser. The local trial remains exploratory:

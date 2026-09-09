@@ -17,9 +17,9 @@ JSON that a person, CI job, or coding agent can act on.
 Version `0.9.0` is the current public preview. It adds deterministic SARIF
 2.1.0 output for completed checks.
 
-Version `0.9.1` is the current release candidate. It hardens runtime redirects
-and reduces compiler allocation and repeated validation builds. It has not
-been published to npm.
+Version `0.10.0` is the current release candidate. It adds explicit bounded
+Hono JSX form indexing and includes the unreleased 0.9.1 runtime and compiler
+hardening. It has not been published to npm.
 
 ## Registry Installation
 
@@ -40,8 +40,8 @@ note](docs/releasing/0.9.0.md), and the prior
 process and compatibility boundary.
 
 After publication, install the candidate with
-`pnpm add --save-dev @0disoft/mensor-cli@0.9.1`. Its changes and compatibility
-notes are in [the 0.9.1 release notes](docs/releasing/0.9.1.md).
+`pnpm add --save-dev @0disoft/mensor-cli@0.10.0`. Its changes and compatibility
+notes are in [the 0.10.0 release notes](docs/releasing/0.10.0.md).
 
 ## Contract Path Bases
 
