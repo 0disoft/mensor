@@ -97,8 +97,9 @@ export function assertHonoJsxRoute(file: string, source: string): void {
   let body: ts.Node = handler.body;
   if (ts.isBlock(body)) {
     const bindings = new Set([handler.parameters[0]!.name.text]);
+    const helperCache = new Map<string, boolean>();
     for (const statement of body.statements.slice(0, -1)) {
-      assertLiteralPrelude(statement, bindings, file);
+      assertRoutePrelude(statement, bindings, file, parsed, handler.parameters[0]!.name.text, helperCache);
     }
     const returned = body.statements.at(-1);
     if (!returned || !ts.isReturnStatement(returned) || !returned.expression) {
@@ -129,21 +130,105 @@ export function assertHonoJsxRoute(file: string, source: string): void {
   }
 }
 
-function assertLiteralPrelude(statement: ts.Statement, bindings: Set<string>, file: string): void {
+function assertRoutePrelude(statement: ts.Statement, bindings: Set<string>, file: string, parsed: ts.SourceFile, context: string, helperCache: Map<string, boolean>): void {
   if (!ts.isVariableStatement(statement) || statement.modifiers?.length
     || statement.declarationList.flags !== ts.NodeFlags.Const) {
-    invalid(file, "Only literal const declarations may precede the route render return.", "route_prelude_unsupported", statement);
+    invalid(file, "Only supported const declarations may precede the route render return.", "route_prelude_unsupported", statement);
   }
   for (const declaration of statement.declarationList.declarations) {
     const value = declaration.initializer;
     if (!ts.isIdentifier(declaration.name) || bindings.has(declaration.name.text) || !value
+      || (ts.isCallExpression(value) && ts.isIdentifier(value.expression) && value.expression.text === declaration.name.text)
       || !(ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)
         || ts.isNumericLiteral(value) || value.kind === ts.SyntaxKind.TrueKeyword
-        || value.kind === ts.SyntaxKind.FalseKeyword || value.kind === ts.SyntaxKind.NullKeyword)) {
-      invalid(file, "Route declarations require unique local names and scalar literals; calls, context aliases and computed values are unsupported.", "route_prelude_unsupported", statement);
+        || value.kind === ts.SyntaxKind.FalseKeyword || value.kind === ts.SyntaxKind.NullKeyword
+        || isReadOnlyContextHelper(value, parsed, context, bindings, helperCache))) {
+      invalid(file, "Route declarations require unique local names and scalar literals or a verified read-only context helper.", "route_prelude_unsupported", statement);
     }
     bindings.add(declaration.name.text);
   }
+}
+
+function isReadOnlyContextHelper(value: ts.Expression, source: ts.SourceFile, context: string, bindings: Set<string>, cache: Map<string, boolean>): boolean {
+  if (!ts.isCallExpression(value) || value.questionDotToken || !ts.isIdentifier(value.expression)
+    || bindings.has(value.expression.text) || value.arguments.length !== 1
+    || !ts.isIdentifier(value.arguments[0]!) || value.arguments[0]!.text !== context) return false;
+  const name = value.expression.text;
+  const cached = cache.get(name);
+  if (cached !== undefined) return cached;
+  if (cache.size >= 16) return false;
+  // Keep repeated calls bounded; each distinct helper is checked once per route.
+  const result = verifyContextHelper(name, source);
+  cache.set(name, result);
+  return result;
+}
+
+function verifyContextHelper(name: string, source: ts.SourceFile): boolean {
+  const factory = importedName(source, "honox/factory", "createRoute");
+  const registration = (node: ts.Node): boolean => ts.isCallExpression(node) && !node.questionDotToken
+    && ts.isIdentifier(node.expression) && node.expression.text === factory
+    && node.arguments.length === 1 && ts.isArrowFunction(node.arguments[0]!);
+  for (const statement of source.statements) {
+    if (ts.isFunctionDeclaration(statement) || ts.isTypeAliasDeclaration(statement)
+      || ts.isInterfaceDeclaration(statement) || ts.isEmptyStatement(statement)) continue;
+    if (ts.isImportDeclaration(statement) && (statement.importClause?.isTypeOnly
+      || (ts.isStringLiteral(statement.moduleSpecifier) && statement.moduleSpecifier.text === "honox/factory"))) continue;
+    if (ts.isExportAssignment(statement) && !statement.isExportEquals && registration(statement.expression)) continue;
+    if (ts.isVariableStatement(statement) && statement.declarationList.flags === ts.NodeFlags.Const
+      && statement.declarationList.declarations.every((entry) => ts.isIdentifier(entry.name)
+        && entry.initializer && registration(entry.initializer))) continue;
+    return false;
+  }
+  const helper = source.statements.find((node): node is ts.FunctionDeclaration =>
+    ts.isFunctionDeclaration(node) && node.name?.text === name);
+  if (!helper?.body || helper.modifiers?.length || helper.asteriskToken || helper.parameters.length !== 1) return false;
+  const parameter = helper.parameters[0]!;
+  if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken || parameter.questionToken) return false;
+  const isRead = (node: ts.Node | undefined): boolean => !!node && ts.isCallExpression(node)
+    && !node.questionDotToken && ts.isPropertyAccessExpression(node.expression) && !node.expression.questionDotToken
+    && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === parameter.name.getText(source)
+    && node.expression.name.text === "get" && node.arguments.length === 1 && ts.isStringLiteral(node.arguments[0]!);
+  const statements = helper.body.statements;
+  let arrayIdentifier: ts.Identifier | undefined;
+  if (statements.length === 1 && ts.isReturnStatement(statements[0]!) && isRead(statements[0]!.expression)) {
+    // A literal-key context read returns opaque data, never text evidence.
+  } else {
+    const [read, guard, fallback] = statements;
+    if (statements.length !== 3 || !read || !ts.isVariableStatement(read) || read.modifiers?.length
+      || read.declarationList.flags !== ts.NodeFlags.Const || read.declarationList.declarations.length !== 1) return false;
+    const local = read.declarationList.declarations[0]!;
+    if (!ts.isIdentifier(local.name) || local.name.text === parameter.name.text || local.name.text === "Array"
+      || parameter.name.text === "Array" || !isRead(local.initializer)
+      || !guard || !ts.isIfStatement(guard) || guard.elseStatement
+      || !ts.isCallExpression(guard.expression) || guard.expression.questionDotToken
+      || !ts.isPropertyAccessExpression(guard.expression.expression) || guard.expression.expression.questionDotToken
+      || !ts.isIdentifier(guard.expression.expression.expression) || guard.expression.expression.expression.text !== "Array"
+      || guard.expression.expression.name.text !== "isArray" || guard.expression.arguments.length !== 1
+      || !ts.isIdentifier(guard.expression.arguments[0]!) || guard.expression.arguments[0]!.text !== local.name.text
+      || !ts.isBlock(guard.thenStatement) || guard.thenStatement.statements.length !== 1) return false;
+    const returned = guard.thenStatement.statements[0]!;
+    if (!ts.isReturnStatement(returned) || !returned.expression) return false;
+    let result = returned.expression;
+    while (ts.isAsExpression(result) || ts.isTypeAssertionExpression(result) || ts.isParenthesizedExpression(result)) result = result.expression;
+    if (!ts.isIdentifier(result) || result.text !== local.name.text || !fallback || !ts.isReturnStatement(fallback)
+      || !fallback.expression || !ts.isArrayLiteralExpression(fallback.expression) || fallback.expression.elements.length !== 0) return false;
+    arrayIdentifier = guard.expression.expression.expression;
+  }
+  // Reject source-local rebinding or escape of the helper and the intrinsic guard.
+  const pending: ts.Node[] = [source];
+  while (pending.length > 0) {
+    const node = pending.pop()!;
+    if (ts.isIdentifier(node) && node.text === name && node !== helper.name) {
+      if (!ts.isCallExpression(node.parent) || node.parent.expression !== node) return false;
+    }
+    if (ts.isIdentifier(node) && node.text === factory
+      && !(ts.isImportSpecifier(node.parent) && node.parent.name === node)
+      && !(ts.isCallExpression(node.parent) && node.parent.expression === node)) return false;
+    if (arrayIdentifier && ts.isIdentifier(node) && node.text === "Array" && node !== arrayIdentifier) return false;
+    if (ts.isIdentifier(node) && ["globalThis", "global", "window", "self", "eval", "Function"].includes(node.text)) return false;
+    ts.forEachChild(node, (child) => { pending.push(child); });
+  }
+  return true;
 }
 
 export function assertHonoJsxRenderer(file: string, source: string): void {

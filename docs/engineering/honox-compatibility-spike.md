@@ -162,9 +162,10 @@ dynamic constructs, and source ranges found in the candidate.
 
 The unchanged `honox-rsvp-v1` build configuration now passes the static
 activation check, including its literal Rollup output filenames. Its renderer
-also passes. The route deliberately still fails with
-`hono_jsx.route_prelude_unsupported` at `const responses = getStore(c)`:
-discarding arbitrary context-bearing helper calls could hide renderer changes.
+also passes. The route now passes activation because its local `getStore(c)`
+matches the bounded literal-key context-read and array-fallback helper contract.
+Mutation, helper escape and unrecognized context-bearing calls still fail with
+`hono_jsx.route_prelude_unsupported`; arbitrary calls are not ignored.
 Independently, the syntax extractor marks the runtime `responses.map(...)`
 sibling incomplete. Type assertions do not prove that runtime values cannot
 contain JSX nodes or externally associated controls.

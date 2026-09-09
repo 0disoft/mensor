@@ -6,6 +6,9 @@ All notable changes to Mensor are documented in this file.
 
 ### Added
 
+- Verify bounded local read-only context helpers in Hono JSX route preludes.
+  The original RSVP route passes activation but its dynamic list remains
+  incomplete evidence; runtime type assertions do not prove text safety.
 - Admit side-effect-free scalar `const` declarations before Hono JSX route
   returns while rejecting context aliases, helper calls and mutable preludes.
 - Installed-package smoke covers the JSX public subpath, CLI indexing,

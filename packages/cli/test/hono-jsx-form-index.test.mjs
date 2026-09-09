@@ -126,20 +126,63 @@ test("JSX CLI rejects effectful, aliased and shadowing route preludes without re
   }
 });
 
-test("unchanged real RSVP sources distinguish supported build names from unsafe-to-ignore route logic", async () => {
+test("read-only context helpers admit opaque data but reject mutation and escape", async (context) => {
+  const root = await project(context);
+  const helper = 'function getStore(ctx: any) { return ctx.get("entries"); }';
+  const route = files["app/routes/index.tsx"].replace('=> c.render(', '=> { const entries = getStore(c); return c.render(').replace('</form>));', '</form>); });');
+  await writeFile(path.join(root, "app/routes/index.tsx"), helper + route);
+  const valid = await invoke(root);
+  assert.equal(valid.code, 0, valid.stdout);
+  assert.deepEqual(JSON.parse(valid.stdout).documents.find((entry) => entry.path.endsWith("index.tsx")).inspection, { state: "complete" });
+  const output = path.join(root, "mensor.form-index.json");
+  const previous = await readFile(output, "utf8");
+  const rejected = [
+    helper.replace('return ctx.get', 'ctx.setRenderer(other); return ctx.get') + route,
+    helper.replace('return ctx.get("entries")', 'return consume(ctx)') + route,
+    helper.replace('return ctx.get("entries")', 'return ctx') + route,
+    helper.replace('"entries"', 'key') + route,
+    helper.replace('function ', 'async function ') + route,
+    helper.replace('ctx: any', 'ctx: any = acquire()') + route,
+    helper.replace('return ctx.get', 'return ctx?.get') + route,
+    helper + 'getStore = other;' + route,
+    helper + 'const escaped = getStore;' + route,
+    helper + route.replace('const entries =', 'const getStore ='),
+    helper + route.replace('const entries =', 'const getStore = "shadow"; const entries ='),
+    helper + 'initialize();' + route,
+    helper + 'import "./patch-context.js";' + route,
+    helper + 'function createRoute(callback) { return patch(callback); }' + route,
+    helper + 'createRoute = other;' + route,
+  ];
+  for (const source of rejected) {
+    await writeFile(path.join(root, "app/routes/index.tsx"), source);
+    const result = await invoke(root);
+    assert.equal(result.code, 2, result.stdout);
+    assert.equal(JSON.parse(result.stdout).failure.code, "hono_jsx.route_prelude_unsupported");
+    assert.equal(await readFile(output, "utf8"), previous);
+  }
+});
+
+test("unchanged real RSVP passes read-only activation but retains incomplete dynamic list evidence", async () => {
   const trial = new URL("../../../internal/agent-runner/trials/honox-rsvp-v1/", import.meta.url);
   const build = await readFile(new URL("vite.config.ts", trial), "utf8");
   const renderer = await readFile(new URL("app/routes/_renderer.tsx", trial), "utf8");
   const route = await readFile(new URL("app/routes/rsvp.tsx", trial), "utf8");
   assert.doesNotThrow(() => assertHonoJsxBuild("vite.config.ts", build));
   assert.doesNotThrow(() => assertHonoJsxRenderer("app/routes/_renderer.tsx", renderer));
-  assert.throws(() => assertHonoJsxRoute("app/routes/rsvp.tsx", route), (error) => {
-    assert.equal(error.code, "hono_jsx.route_prelude_unsupported");
-    const offset = route.indexOf("const responses = getStore(c)");
-    const line = route.slice(0, offset).split(/\r?\n/u).length;
-    assert.match(error.message, new RegExp(`^Line ${line}, column 3:`));
-    return true;
-  });
+  assert.doesNotThrow(() => assertHonoJsxRoute("app/routes/rsvp.tsx", route));
+  for (const mutated of [
+    route.replace("const value =", "c.setRenderer(other); const value ="),
+    route.replace("return value as RsvpEntry[]", "return change(c)"),
+    route.replace("return []", "return leak(c)"),
+    route.replace("Array.isArray(value)", "customGuard(value)"),
+    route.replace("Array.isArray(value)", "Array.isArray(c)"),
+    route.replace("return []", "return [c]"),
+    route + '\nArray.isArray = other;',
+    route + '\nfunction modify(Array: any) { return Array; }',
+    route + '\nfunction modify() { globalThis["Array"].isArray = other; }',
+  ]) {
+    assert.throws(() => assertHonoJsxRoute("app/routes/rsvp.tsx", mutated), { code: "hono_jsx.route_prelude_unsupported" });
+  }
   const extracted = extractHonoJsxFormDocument("app/routes/rsvp.tsx", route);
   assert.equal(extractHonoJsxFormDocument("headings.tsx", 'const view = <><h1>Title</h1><h2>Details</h2><form id="signup" /></>;').inspection.state, "complete");
   assert.equal(extracted.inspection.state, "incomplete");
@@ -150,6 +193,15 @@ test("unchanged real RSVP sources distinguish supported build names from unsafe-
   }
   assert.throws(() => assertHonoJsxBuild("vite.config.ts", build.replace("entryFileNames:", "plugins:")), { code: "hono_jsx.build_settings_unsupported" });
   assert.equal(await readFile(new URL("app/routes/rsvp.tsx", trial), "utf8"), route);
+});
+
+test("read-only helper analysis bounds distinct helpers while reusing repeated calls", () => {
+  const helpers = Array.from({ length: 17 }, (_, index) => `function read${index}(ctx: any) { return ctx.get("entries"); }`);
+  const declaration = (index) => `const entries${index} = read${index}(c);`;
+  const route = (prelude) => helpers.join("\n") + files["app/routes/index.tsx"].replace('=> c.render(', `=> { ${prelude} return c.render(`).replace('</form>));', '</form>); });');
+  assert.doesNotThrow(() => assertHonoJsxRoute("route.tsx", route(Array.from({ length: 16 }, (_, index) => declaration(index)).join("\n"))));
+  assert.throws(() => assertHonoJsxRoute("route.tsx", route(Array.from({ length: 17 }, (_, index) => declaration(index)).join("\n"))), { code: "hono_jsx.route_prelude_unsupported" });
+  assert.doesNotThrow(() => assertHonoJsxRoute("route.tsx", route(Array.from({ length: 20 }, (_, index) => `const entries${index} = read0(c);`).join("\n"))));
 });
 
 test("JSX CLI artifact is consumed by check and rejects a stale renderer", async (context) => {

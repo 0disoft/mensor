@@ -47,9 +47,24 @@ Routes must directly default-export `createRoute` with one synchronous callback
 returning `context.render(JSX)`, with no JSX outside that render argument.
 Block callbacks may precede that return with uniquely named `const` declarations
 initialized by string, number, boolean, null or no-substitution template literals.
-They may not shadow the context parameter. Calls (including context reads),
-aliases, destructuring, computed values, mutable bindings and other statements
-remain unsupported: their effects are not proven by TypeScript annotations.
+They may not shadow the context parameter. A const initializer may also call a
+verified local helper with the context as its only argument. At most 16 distinct
+helpers are inspected per route; repeated calls reuse the same proof.
+The helper must be a synchronous, non-exported function declaration with one
+plain parameter and either directly return `context.get("literal-key")`, or
+bind that read to one const, return it under `Array.isArray(value)`, and otherwise
+return an empty array. Type assertions on that guarded return are erased, not
+trusted as value validation. Other calls, aliases, destructuring, computed values,
+mutable bindings and statements remain unsupported.
+Helper references must remain direct calls; source-local rebinding, shadowing,
+escape, other `Array` references for the guarded shape and global-object or
+dynamic-evaluation references are rejected. The helper-enabled module admits
+only type declarations, function declarations, HonoX factory imports, type-only
+imports and direct arrow-callback route registrations, not arbitrary module
+initializers. This is a bounded source-local effect check under the selected
+Hono runtime, not proof against external monkey-patching of runtime intrinsics.
+Returned context data stays opaque; neither `Array.isArray` nor a type assertion
+proves scalar elements or safe JSX content.
 Admission of a declaration does not resolve its references inside JSX; the
 independent form extractor still rejects unproven dynamic content.
 The selected renderer must directly export
