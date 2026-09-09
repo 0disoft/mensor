@@ -6,6 +6,10 @@ All notable changes to Mensor are documented in this file.
 
 ### Added
 
+- Hono JSX activation failures identify unsupported settings and include AST
+  locations when available; static Rollup output filename settings are supported.
+- Supported intrinsic heading tags are no longer mistaken for custom components.
+
 - Explicit `index-hono-jsx-forms` CLI with bounded HonoX source, JSX/build
   configuration and transparent renderer validation.
 - Source-bound activation documents preserve configuration freshness using

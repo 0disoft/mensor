@@ -158,6 +158,22 @@ dynamic constructs, and source ranges found in the candidate.
 
 ## Implementation Gate
 
+### Existing RSVP Adoption Check
+
+The unchanged `honox-rsvp-v1` build configuration now passes the static
+activation check, including its literal Rollup output filenames. Its renderer
+also passes. The route deliberately still fails with
+`hono_jsx.route_prelude_unsupported` at `const responses = getStore(c)`:
+discarding arbitrary context-bearing helper calls could hide renderer changes.
+Independently, the syntax extractor marks the runtime `responses.map(...)`
+sibling incomplete. Type assertions do not prove that runtime values cannot
+contain JSX nodes or externally associated controls.
+
+The CLI regression test reads the actual trial files without simplifying or
+rewriting them. This is an adoption-gap test, not a claim that the application
+passes all Mensor gates. Supporting this data flow requires an explicit scalar
+rendering or provenance contract; silently ignoring it remains forbidden.
+
 Parser implementation may start against the accepted synthetic fixture
 contract, using the existing TypeScript parser and FormIndex boundary. It must
 not introduce HonoX, Vite, Babel or a renderer runtime into the compiler.

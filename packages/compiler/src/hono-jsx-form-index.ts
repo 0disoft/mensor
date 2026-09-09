@@ -126,7 +126,7 @@ export function extractHonoJsxFormDocument(sourcePath: string, source: string): 
       : ts.isJsxSelfClosingElement(node) ? node : undefined;
     if (opening) {
       const tag = opening.tagName.getText(file);
-      if (!/^[a-z]+$/u.test(tag)) {
+      if (!/^[a-z][a-z0-9]*$/u.test(tag)) {
         unsupported(opening, "custom-helper-semantics");
         continue;
       }

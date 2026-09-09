@@ -37,7 +37,10 @@ must be standalone JSONC with automatic JSX and `jsxImportSource: "hono/jsx"`,
 without inheritance, references, path remapping or custom transforms. The Vite
 file must directly export `defineConfig` with only the default `honox()` plugin
 and explicit automatic Hono JSX esbuild settings. Optional `build` settings
-are limited to literal `outDir`, `emptyOutDir` and `ssr` values.
+are limited to literal `outDir`, `emptyOutDir` and `ssr` values, plus
+`rollupOptions.output` containing literal `entryFileNames`, `chunkFileNames`
+and `assetFileNames`. Output callbacks, plugins and other Rollup settings
+remain unsupported.
 
 Routes must directly default-export `createRoute` with one synchronous callback
 returning `context.render(JSX)`, with no JSX outside that render argument.
@@ -97,6 +100,13 @@ Unrecognized syntax must not
 silently become a complete empty document.
 
 ## Unsupported Evidence
+
+Activation errors distinguish `hono_jsx.configuration_unsupported`,
+`hono_jsx.build_plugin_unsupported`, `hono_jsx.build_settings_unsupported`,
+`hono_jsx.runtime_mismatch` and `hono_jsx.route_prelude_unsupported`.
+When a source AST node is available, the message includes its one-based line
+and column; the failure's `file` remains root-relative. Other unrecognized
+activation shapes retain `hono_jsx.activation_invalid`.
 
 Emit one incomplete document, an offending source range and no forms. Partial
 form extraction is deferred. Existing consumers reject a linked incomplete

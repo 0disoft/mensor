@@ -6,6 +6,8 @@ import test from "node:test";
 import { runCli } from "@0disoft/mensor-cli";
 import { parseFormIndex } from "@0disoft/mensor-contract";
 import { verifyExternalFormIndex } from "../../compiler/dist/src/form-index.js";
+import { extractHonoJsxFormDocument } from "@0disoft/mensor-compiler/hono-jsx";
+import { assertHonoJsxBuild, assertHonoJsxRenderer, assertHonoJsxRoute } from "../dist/src/hono-jsx-activation.js";
 
 const files = {
   "tsconfig.json": JSON.stringify({ compilerOptions: { jsx: "react-jsx", jsxImportSource: "hono/jsx" } }),
@@ -59,30 +61,56 @@ test("JSX CLI rejects unverified configuration and renderer semantics without re
   const root = await project(context);
   await writeFile(path.join(root, "mensor.form-index.json"), "previous\n");
   const cases = [
-    ["tsconfig.json", '{"extends":"./base.json","compilerOptions":{"jsx":"react-jsx","jsxImportSource":"hono/jsx"}}'],
-    ["tsconfig.json", files["tsconfig.json"].replace("hono/jsx", "react")],
-    ["vite.config.ts", files["vite.config.ts"].replace("plugins: [honox()]", "plugins: [honox(), other()]")],
-    ["vite.config.ts", files["vite.config.ts"].replace('jsxImportSource: "hono/jsx"', 'jsxImportSource: "react"')],
+    ["tsconfig.json", '{"extends":"./base.json","compilerOptions":{"jsx":"react-jsx","jsxImportSource":"hono/jsx"}}', "hono_jsx.configuration_unsupported"],
+    ["tsconfig.json", files["tsconfig.json"].replace("hono/jsx", "react"), "hono_jsx.configuration_unsupported"],
+    ["vite.config.ts", files["vite.config.ts"].replace("plugins: [honox()]", "plugins: [honox(), other()]") , "hono_jsx.build_plugin_unsupported"],
+    ["vite.config.ts", files["vite.config.ts"].replace('jsxImportSource: "hono/jsx"', 'jsxImportSource: "react"'), "hono_jsx.runtime_mismatch"],
     ["app/routes/_renderer.tsx", files["app/routes/_renderer.tsx"].replace("{children}", "{children}{children}")],
     ["app/routes/_renderer.tsx", files["app/routes/_renderer.tsx"].replaceAll("body", "title")],
     ["app/routes/_renderer.tsx", files["app/routes/_renderer.tsx"].replace("<body>", '<body onClick="custom">')],
     ["app/routes/_renderer.tsx", files["app/routes/_renderer.tsx"].replace("<body>", "<form>").replace("</body>", "</form>")],
     ["app/routes/index.tsx", files["app/routes/index.tsx"].replace("createRoute((c)", "createRoute(custom, (c)")],
-    ["app/routes/index.tsx", '/** @jsxImportSource react */\n' + files["app/routes/index.tsx"]],
+    ["app/routes/index.tsx", '/** @jsxImportSource react */\n' + files["app/routes/index.tsx"], "hono_jsx.runtime_mismatch"],
     ["app/routes/index.tsx", 'const unused = <form id="unused" />;\n' + files["app/routes/index.tsx"]],
     ["app/routes/index.tsx", 'import { createRoute } from "honox/factory"; const view = <form />; export default createRoute((c) => c.render(view));'],
     ["app/routes/index.tsx", "globalThis.__mensorJsxExecuted = true; this is not valid TSX <"],
   ];
-  for (const [file, text] of cases) {
+  for (const [file, text, code = "hono_jsx.activation_invalid"] of cases) {
     await writeFile(path.join(root, file), text);
     const result = await invoke(root);
     assert.equal(result.code, 2, `${file}: ${result.stdout}`);
-    assert.equal(JSON.parse(result.stdout).failure.code, "hono_jsx.activation_invalid");
+    assert.equal(JSON.parse(result.stdout).failure.code, code);
     assert.equal(result.stderr, "");
     assert.equal(await readFile(path.join(root, "mensor.form-index.json"), "utf8"), "previous\n");
     assert.equal(globalThis.__mensorJsxExecuted, undefined);
     await writeFile(path.join(root, file), files[file]);
   }
+});
+
+test("unchanged real RSVP sources distinguish supported build names from unsafe-to-ignore route logic", async () => {
+  const trial = new URL("../../../internal/agent-runner/trials/honox-rsvp-v1/", import.meta.url);
+  const build = await readFile(new URL("vite.config.ts", trial), "utf8");
+  const renderer = await readFile(new URL("app/routes/_renderer.tsx", trial), "utf8");
+  const route = await readFile(new URL("app/routes/rsvp.tsx", trial), "utf8");
+  assert.doesNotThrow(() => assertHonoJsxBuild("vite.config.ts", build));
+  assert.doesNotThrow(() => assertHonoJsxRenderer("app/routes/_renderer.tsx", renderer));
+  assert.throws(() => assertHonoJsxRoute("app/routes/rsvp.tsx", route), (error) => {
+    assert.equal(error.code, "hono_jsx.route_prelude_unsupported");
+    const offset = route.indexOf("const responses = getStore(c)");
+    const line = route.slice(0, offset).split(/\r?\n/u).length;
+    assert.match(error.message, new RegExp(`^Line ${line}, column 3:`));
+    return true;
+  });
+  const extracted = extractHonoJsxFormDocument("app/routes/rsvp.tsx", route);
+  assert.equal(extractHonoJsxFormDocument("headings.tsx", 'const view = <><h1>Title</h1><h2>Details</h2><form id="signup" /></>;').inspection.state, "complete");
+  assert.equal(extracted.inspection.state, "incomplete");
+  assert.equal(extracted.inspection.reason, "repeated-generation");
+  assert.deepEqual(extracted.forms, []);
+  for (const replacement of ["() => 'server.js'", "chooseName()"] ) {
+    assert.throws(() => assertHonoJsxBuild("vite.config.ts", build.replace("'server.js'", replacement)), { code: "hono_jsx.build_settings_unsupported" });
+  }
+  assert.throws(() => assertHonoJsxBuild("vite.config.ts", build.replace("entryFileNames:", "plugins:")), { code: "hono_jsx.build_settings_unsupported" });
+  assert.equal(await readFile(new URL("app/routes/rsvp.tsx", trial), "utf8"), route);
 });
 
 test("JSX CLI artifact is consumed by check and rejects a stale renderer", async (context) => {

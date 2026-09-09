@@ -13,7 +13,7 @@ export function assertHonoJsxConfiguration(file: string, source: string): void {
     || !["react-jsx", "react-jsxdev"].includes(String(options["jsx"]))
     || options["jsxImportSource"] !== "hono/jsx"
     || ["jsxFactory", "jsxFragmentFactory", "reactNamespace", "plugins", "paths", "baseUrl"].some((key) => options[key] !== undefined)) {
-    invalid(file, "Select a standalone automatic-JSX configuration with jsxImportSource hono/jsx and no inherited or custom transform settings.");
+    invalid(file, "Select a standalone automatic-JSX configuration with jsxImportSource hono/jsx and no inherited or custom transform settings.", "configuration_unsupported");
   }
 }
 
@@ -35,11 +35,11 @@ export function assertHonoJsxBuild(file: string, source: string): void {
   if (!plugins || !ts.isArrayLiteralExpression(plugins) || plugins.elements.length !== 1
     || !entry || !ts.isCallExpression(entry) || !ts.isIdentifier(entry.expression)
     || entry.expression.text !== plugin.importClause.name.text || entry.arguments.length !== 0) {
-    invalid(file, "Build must activate only the default honox() plugin without options.");
+    invalid(file, "Build must activate only the default honox() plugin without options.", "build_plugin_unsupported", plugins ?? parsed);
   }
   const jsx = objectProperties(config.get("esbuild"), file);
   if (jsx.size !== 2 || literal(jsx.get("jsx")) !== "automatic" || literal(jsx.get("jsxImportSource")) !== "hono/jsx") {
-    invalid(file, "Build JSX settings must explicitly select automatic hono/jsx.");
+    invalid(file, "Build JSX settings must explicitly select automatic hono/jsx.", "runtime_mismatch", config.get("esbuild") ?? parsed);
   }
   const build = config.get("build");
   if (build) assertStaticBuild(build, file);
@@ -64,8 +64,19 @@ function assertStaticBuild(node: ts.Node, file: string): void {
   const properties = objectProperties(node, file);
   const allowed = new Set(["outDir", "emptyOutDir", "ssr"]);
   for (const [key, value] of properties) {
+    if (key === "rollupOptions") {
+      const rollup = objectProperties(value, file);
+      if (rollup.size !== 1 || !rollup.has("output")) invalid(file, "Only static Rollup output filenames are supported.", "build_settings_unsupported", value);
+      const output = objectProperties(rollup.get("output"), file);
+      for (const [name, setting] of output) {
+        if (!["entryFileNames", "chunkFileNames", "assetFileNames"].includes(name) || !ts.isStringLiteral(setting)) {
+          invalid(file, "Rollup output accepts only literal entryFileNames, chunkFileNames and assetFileNames.", "build_settings_unsupported", setting);
+        }
+      }
+      continue;
+    }
     if (!allowed.has(key) || (!ts.isStringLiteral(value) && value.kind !== ts.SyntaxKind.TrueKeyword
-      && value.kind !== ts.SyntaxKind.FalseKeyword)) invalid(file, "Custom bundler transforms and build settings are unsupported.");
+      && value.kind !== ts.SyntaxKind.FalseKeyword)) invalid(file, "Custom bundler transforms and build settings are unsupported.", "build_settings_unsupported", value);
   }
 }
 
@@ -87,7 +98,7 @@ export function assertHonoJsxRoute(file: string, source: string): void {
   if (ts.isBlock(body)) {
     const returned = body.statements[0];
     if (body.statements.length !== 1 || !returned || !ts.isReturnStatement(returned) || !returned.expression) {
-      invalid(file, "Route callback must directly return context.render(JSX).");
+      invalid(file, "Route callback must directly return context.render(JSX); preceding statements may change rendering and cannot be ignored.", "route_prelude_unsupported", returned ?? body);
     }
     body = returned.expression;
   }
@@ -193,7 +204,7 @@ function parseSource(file: string, source: string): ts.SourceFile {
   const prologue = source.slice(0, parsed.statements[0]?.getStart(parsed) ?? source.length);
   for (const match of prologue.matchAll(/@(jsxImportSource|jsxRuntime|jsxFrag|jsx)\s+([^\s*]+)/gu)) {
     if (!((match[1] === "jsxImportSource" && match[2] === "hono/jsx")
-      || (match[1] === "jsxRuntime" && match[2] === "automatic"))) invalid(file, "JSX pragmas conflict with the selected Hono runtime.");
+      || (match[1] === "jsxRuntime" && match[2] === "automatic"))) invalid(file, "JSX pragmas conflict with the selected Hono runtime.", "runtime_mismatch", parsed);
   }
   return parsed;
 }
@@ -216,6 +227,8 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function invalid(file: string, message: string): never {
-  throw new TypeScriptTemplateFormIndexError("hono_jsx.activation_invalid", message, file);
+function invalid(file: string, message: string, reason = "activation_invalid", node?: ts.Node): never {
+  const location = node ? node.getSourceFile().getLineAndCharacterOfPosition(node.getStart()) : undefined;
+  const prefix = location ? `Line ${location.line + 1}, column ${location.character + 1}: ` : "";
+  throw new TypeScriptTemplateFormIndexError(`hono_jsx.${reason}`, prefix + message, file);
 }
