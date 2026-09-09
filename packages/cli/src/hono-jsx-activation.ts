@@ -96,9 +96,13 @@ export function assertHonoJsxRoute(file: string, source: string): void {
   }
   let body: ts.Node = handler.body;
   if (ts.isBlock(body)) {
-    const returned = body.statements[0];
-    if (body.statements.length !== 1 || !returned || !ts.isReturnStatement(returned) || !returned.expression) {
-      invalid(file, "Route callback must directly return context.render(JSX); preceding statements may change rendering and cannot be ignored.", "route_prelude_unsupported", returned ?? body);
+    const bindings = new Set([handler.parameters[0]!.name.text]);
+    for (const statement of body.statements.slice(0, -1)) {
+      assertLiteralPrelude(statement, bindings, file);
+    }
+    const returned = body.statements.at(-1);
+    if (!returned || !ts.isReturnStatement(returned) || !returned.expression) {
+      invalid(file, "Route callback must end with a direct return of context.render(JSX).", "route_prelude_unsupported", returned ?? body);
     }
     body = returned.expression;
   }
@@ -122,6 +126,23 @@ export function assertHonoJsxRoute(file: string, source: string): void {
       invalid(file, "JSX outside the selected route render argument is unsupported.");
     }
     ts.forEachChild(node, (child) => { pending.push(child); });
+  }
+}
+
+function assertLiteralPrelude(statement: ts.Statement, bindings: Set<string>, file: string): void {
+  if (!ts.isVariableStatement(statement) || statement.modifiers?.length
+    || statement.declarationList.flags !== ts.NodeFlags.Const) {
+    invalid(file, "Only literal const declarations may precede the route render return.", "route_prelude_unsupported", statement);
+  }
+  for (const declaration of statement.declarationList.declarations) {
+    const value = declaration.initializer;
+    if (!ts.isIdentifier(declaration.name) || bindings.has(declaration.name.text) || !value
+      || !(ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)
+        || ts.isNumericLiteral(value) || value.kind === ts.SyntaxKind.TrueKeyword
+        || value.kind === ts.SyntaxKind.FalseKeyword || value.kind === ts.SyntaxKind.NullKeyword)) {
+      invalid(file, "Route declarations require unique local names and scalar literals; calls, context aliases and computed values are unsupported.", "route_prelude_unsupported", statement);
+    }
+    bindings.add(declaration.name.text);
   }
 }
 

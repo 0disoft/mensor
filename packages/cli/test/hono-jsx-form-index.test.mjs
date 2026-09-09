@@ -87,6 +87,45 @@ test("JSX CLI rejects unverified configuration and renderer semantics without re
   }
 });
 
+test("JSX CLI admits literal const preludes without resolving dynamic JSX", async (context) => {
+  const root = await project(context);
+  const source = files["app/routes/index.tsx"].replace('=> c.render(', '=> { const label = "Join", count = 2; const enabled = true; const hidden = false; const empty = null; const hint = `hello`; return c.render(').replace('</form>));', '</form>); });');
+  await writeFile(path.join(root, "app/routes/index.tsx"), source);
+  const result = await invoke(root);
+  assert.equal(result.code, 0, result.stdout);
+  const route = JSON.parse(result.stdout).documents.find((document) => document.path.endsWith("index.tsx"));
+  assert.deepEqual(route.inspection, { state: "complete" });
+  assert.equal(route.forms[0].controls[0].name.value, "email");
+  await writeFile(path.join(root, "app/routes/index.tsx"), source.replace('name="email"', 'name={label}'));
+  const dynamic = await invoke(root);
+  assert.equal(dynamic.code, 0, dynamic.stdout);
+  const incomplete = JSON.parse(dynamic.stdout).documents.find((document) => document.path.endsWith("index.tsx"));
+  assert.equal(incomplete.inspection.reason, "computed-attribute");
+  assert.deepEqual(incomplete.forms, []);
+});
+
+test("JSX CLI rejects effectful, aliased and shadowing route preludes without replacing output", async (context) => {
+  const root = await project(context);
+  const output = path.join(root, "mensor.form-index.json");
+  await writeFile(output, "previous\n");
+  for (const prelude of [
+    'const values = getStore(c);', 'const value = c.get("value");',
+    'const alias = c;', 'let label = "Join";', 'var label = "Join";',
+    'const c = "shadow";', 'const x = 1; const x = 2;',
+    'const { render } = c;', 'const x = { get value() { c.setRenderer(other); } };',
+    'const x = `hello ${c.get("name")}`;', 'const x = 1, y = change(c);',
+    'c.setRenderer(other);', 'return other;', 'if (flag) return other;',
+    'using resource = acquire();',
+  ]) {
+    const source = files["app/routes/index.tsx"].replace('=> c.render(', `=> { ${prelude} return c.render(`).replace('</form>));', '</form>); });');
+    await writeFile(path.join(root, "app/routes/index.tsx"), source);
+    const result = await invoke(root);
+    assert.equal(result.code, 2, `${prelude}: ${result.stdout}`);
+    assert.equal(JSON.parse(result.stdout).failure.code, "hono_jsx.route_prelude_unsupported", prelude);
+    assert.equal(await readFile(output, "utf8"), "previous\n");
+  }
+});
+
 test("unchanged real RSVP sources distinguish supported build names from unsafe-to-ignore route logic", async () => {
   const trial = new URL("../../../internal/agent-runner/trials/honox-rsvp-v1/", import.meta.url);
   const build = await readFile(new URL("vite.config.ts", trial), "utf8");

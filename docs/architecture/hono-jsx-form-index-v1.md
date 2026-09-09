@@ -45,6 +45,13 @@ remain unsupported.
 
 Routes must directly default-export `createRoute` with one synchronous callback
 returning `context.render(JSX)`, with no JSX outside that render argument.
+Block callbacks may precede that return with uniquely named `const` declarations
+initialized by string, number, boolean, null or no-substitution template literals.
+They may not shadow the context parameter. Calls (including context reads),
+aliases, destructuring, computed values, mutable bindings and other statements
+remain unsupported: their effects are not proven by TypeScript annotations.
+Admission of a declaration does not resolve its references inside JSX; the
+independent form extractor still rejects unproven dynamic content.
 The selected renderer must directly export
 Hono `jsxRenderer`, returning intrinsic non-form wrappers with exactly one
 children slot and no behavioral or dynamic attributes. Conflicting JSX pragmas,

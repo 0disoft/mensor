@@ -6,6 +6,8 @@ All notable changes to Mensor are documented in this file.
 
 ### Added
 
+- Admit side-effect-free scalar `const` declarations before Hono JSX route
+  returns while rejecting context aliases, helper calls and mutable preludes.
 - Installed-package smoke covers the JSX public subpath, CLI indexing,
   explicit evidence freshness, semantic drift and the unchanged RSVP rejection.
 
