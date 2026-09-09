@@ -1,7 +1,4 @@
-import { createHash } from "node:crypto";
-import type { Stats } from "node:fs";
-import { lstat, open, realpath } from "node:fs/promises";
-import type { FileHandle } from "node:fs/promises";
+import { realpath } from "node:fs/promises";
 import * as path from "node:path";
 
 import { extractStaticHtmlFormDocument } from "@0disoft/mensor-compiler";
@@ -16,19 +13,10 @@ import {
 } from "@0disoft/mensor-contract";
 import ts from "@typescript/typescript6";
 
-const maxSourceBytes = 1_048_576;
-const identifierPattern = /^[A-Za-z_$][A-Za-z0-9_$]*$/u;
+import { readSource, normalizeSourcePath, TypeScriptTemplateFormIndexError } from "./template-source.js";
+export { TypeScriptTemplateFormIndexError } from "./template-source.js";
 
-export class TypeScriptTemplateFormIndexError extends Error {
-  public constructor(
-    public readonly code: string,
-    message: string,
-    public readonly file?: string,
-  ) {
-    super(message);
-    this.name = "TypeScriptTemplateFormIndexError";
-  }
-}
+const identifierPattern = /^[A-Za-z_$][A-Za-z0-9_$]*$/u;
 
 export interface ProduceTypeScriptTemplateFormIndexOptions {
   readonly root: string;
@@ -264,110 +252,6 @@ function nodeRange(node: ts.Node, sourceFile: ts.SourceFile): SourceRange {
     start: { line: start.line, character: start.character },
     end: { line: end.line, character: end.character },
   };
-}
-
-async function readSource(
-  root: string,
-  relativePath: string,
-): Promise<{ readonly text: string; readonly digest: `sha256:${string}` }> {
-  const absolutePath = path.resolve(root, relativePath);
-  if (!isWithin(root, absolutePath)) {
-    throw new TypeScriptTemplateFormIndexError(
-      "form_indexer.source_outside_root",
-      "Template source resolves outside the selected project root.",
-      relativePath,
-    );
-  }
-  await rejectSymbolicLinkComponents(root, absolutePath, relativePath);
-  let handle: FileHandle | undefined;
-  try {
-    handle = await open(absolutePath, "r");
-    const before = await handle.stat();
-    if (!before.isFile()) {
-      throw sourceFailure("form_indexer.source_not_file", "Template source must be a regular file.", relativePath);
-    }
-    if (before.size > maxSourceBytes) {
-      throw sourceFailure("form_indexer.source_too_large", `Template source exceeds ${maxSourceBytes} bytes.`, relativePath);
-    }
-    const bytes = Buffer.alloc(before.size + 1);
-    const { bytesRead } = await handle.read(bytes, 0, bytes.length, 0);
-    const after = await handle.stat();
-    if (bytesRead > maxSourceBytes || !sameFile(before, after)) {
-      throw sourceFailure("form_indexer.source_changed", "Template source changed while it was read.", relativePath);
-    }
-    const sourceBytes = bytes.subarray(0, bytesRead);
-    let text: string;
-    try {
-      text = new TextDecoder("utf-8", { fatal: true }).decode(sourceBytes);
-    } catch {
-      throw sourceFailure("form_indexer.source_encoding_invalid", "Template source must be valid UTF-8.", relativePath);
-    }
-    return {
-      text,
-      digest: `sha256:${createHash("sha256").update(sourceBytes).digest("hex")}`,
-    };
-  } catch (error) {
-    if (error instanceof TypeScriptTemplateFormIndexError) throw error;
-    throw sourceFailure("form_indexer.source_read_failed", "Template source could not be read.", relativePath);
-  } finally {
-    await handle?.close().catch(() => undefined);
-  }
-}
-
-async function rejectSymbolicLinkComponents(
-  root: string,
-  absolutePath: string,
-  relativePath: string,
-): Promise<void> {
-  const relative = path.relative(root, absolutePath);
-  let current = root;
-  for (const segment of relative.split(path.sep).filter(Boolean)) {
-    current = path.join(current, segment);
-    const stats = await lstat(current).catch(() => undefined);
-    if (stats === undefined) {
-      throw sourceFailure("form_indexer.source_read_failed", "Template source could not be read.", relativePath);
-    }
-    if (stats.isSymbolicLink()) {
-      throw sourceFailure("form_indexer.source_symlink", "Template source must not use symbolic-link components.", relativePath);
-    }
-  }
-}
-
-function normalizeSourcePath(value: string): string {
-  if (
-    value.length === 0
-    || path.isAbsolute(value)
-    || path.win32.isAbsolute(value)
-    || value.includes("\\")
-  ) {
-    throw sourceFailure("form_indexer.source_path_invalid", "Template source must be a root-relative POSIX path.", value);
-  }
-  const segments = value.split("/");
-  if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) {
-    throw sourceFailure("form_indexer.source_path_invalid", "Template source path is not canonical.", value);
-  }
-  return value;
-}
-
-function sourceFailure(code: string, message: string, file: string) {
-  return new TypeScriptTemplateFormIndexError(code, message, file);
-}
-
-function sameFile(left: Stats, right: Stats): boolean {
-  return left.dev === right.dev
-    && left.ino === right.ino
-    && left.size === right.size
-    && left.mtimeMs === right.mtimeMs
-    && left.ctimeMs === right.ctimeMs;
-}
-
-function isWithin(root: string, candidate: string): boolean {
-  const relative = path.relative(root, candidate);
-  return relative === "" || (
-    relative !== ".."
-    && !relative.startsWith(`..${path.sep}`)
-    && !path.isAbsolute(relative)
-  );
 }
 
 function scriptKind(fileName: string): ts.ScriptKind {
