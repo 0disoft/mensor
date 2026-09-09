@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { copyHonoJsxTrial, prepareHonoJsxConsumerFixture } from "./lib/hono-jsx-consumer-fixture.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const temporaryRoot = await mkdtemp(path.join(tmpdir(), "mensor-package-smoke-"));
@@ -90,7 +91,12 @@ import path from "node:path";
 import { parseCheckOutputV2, parseFormIndex, parseRouteIndex, parseRuntimeManifest, serializeFormIndex, serializeRouteIndex, serializeRuntimeManifest } from "@0disoft/mensor-contract";
 import { formatDiagnosticReportSarif } from "@0disoft/mensor-cli";
 import { compileProject } from "@0disoft/mensor-compiler";
+import { extractHonoJsxFormDocument } from "@0disoft/mensor-compiler/hono-jsx";
 import { createReferenceRuntime } from "@0disoft/mensor-reference-runtime";
+
+const jsx = extractHonoJsxFormDocument("view.tsx", 'const view = <><h1>Smoke</h1><form id="smoke" /></>;');
+assert.equal(jsx.inspection.state, "complete");
+assert.equal(jsx.forms[0].identity.value, "smoke");
 
 const text = serializeRouteIndex({
   schemaVersion: 1,
@@ -205,6 +211,8 @@ if (compiled.ok) {
     recursive: true,
   });
   await prepareTypeScriptFormFixture(path.join(consumerRoot, "valid-ts"));
+  await prepareHonoJsxConsumerFixture(repositoryRoot, path.join(consumerRoot, "valid-jsx"));
+  await copyHonoJsxTrial(repositoryRoot, path.join(consumerRoot, "real-rsvp"));
   await cp(
     path.join(repositoryRoot, "fixtures", "valid", "hono-static-tasks"),
     path.join(consumerRoot, "valid-hono"),
@@ -318,6 +326,28 @@ if (compiled.ok) {
   ]);
   assert.equal(typedProject.code, 0, typedProject.stderr);
   assert.equal(JSON.parse(typedProject.stdout).inspection.forms.basis, "form-index");
+
+  const jsxIndex = await runMensorJsxIndex(consumerRoot, "valid-jsx");
+  assert.equal(jsxIndex.code, 0, jsxIndex.stdout || jsxIndex.stderr);
+  assert.equal(JSON.parse(jsxIndex.stdout).producer.name, "mensor/hono-jsx");
+  assert.equal(await readFile(path.join(consumerRoot, "valid-jsx/mensor.form-index.json"), "utf8"), jsxIndex.stdout);
+  const jsxChecked = await runMensor(consumerRoot, "valid-jsx", ["--report-version", "2"]);
+  assert.equal(jsxChecked.code, 0, jsxChecked.stdout || jsxChecked.stderr);
+  assert.equal(JSON.parse(jsxChecked.stdout).inspection.forms.basis, "form-index");
+  const jsxConfig = path.join(consumerRoot, "valid-jsx/tsconfig.json");
+  await writeFile(jsxConfig, await readFile(jsxConfig, "utf8") + "\n");
+  const staleJsx = await runMensor(consumerRoot, "valid-jsx");
+  assert.equal(staleJsx.code, 2, staleJsx.stdout);
+  assert.equal(JSON.parse(staleJsx.stdout).failure.code, "form_index.digest_mismatch");
+  const jsxSource = path.join(consumerRoot, "valid-jsx/app/routes/index.tsx");
+  await writeFile(jsxSource, (await readFile(jsxSource, "utf8")).replace('name="title"', 'name="other"'));
+  assert.equal((await runMensorJsxIndex(consumerRoot, "valid-jsx")).code, 0);
+  const driftedJsx = await runMensor(consumerRoot, "valid-jsx");
+  assert.equal(driftedJsx.code, 1, driftedJsx.stdout);
+  assert.ok(JSON.parse(driftedJsx.stdout).diagnostics.some((item) => item.code === "form.field_missing"));
+  const rsvp = await runMensorJsxIndex(consumerRoot, "real-rsvp", "app/routes/rsvp.tsx");
+  assert.equal(rsvp.code, 2, rsvp.stdout);
+  assert.equal(JSON.parse(rsvp.stdout).failure.code, "hono_jsx.route_prelude_unsupported");
 
   const invalid = await runMensor(consumerRoot, "invalid");
   assert.equal(invalid.code, 1, invalid.stderr);
@@ -496,6 +526,14 @@ async function prepareTypeScriptFormFixture(root) {
   const feature = JSON.parse(await readFile(featurePath, "utf8"));
   feature.actions[0].form.template = "views/index.ts";
   await writeFile(featurePath, `${JSON.stringify(feature, null, 2)}\n`, "utf8");
+}
+
+async function runMensorJsxIndex(cwd, fixture, source = "app/routes/index.tsx") {
+  return capture(pnpmExecutable ? pnpmEntrypoint : process.execPath, [
+    ...(pnpmExecutable ? [] : [pnpmEntrypoint]), "exec", "mensor", "index-hono-jsx-forms", fixture,
+    "--source", source, "--renderer", "app/routes/_renderer.tsx", "--jsx-config", "tsconfig.json",
+    "--build-config", "vite.config.ts", "--json",
+  ], cwd);
 }
 
 function tarballDependency(tarball) {

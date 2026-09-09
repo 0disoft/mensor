@@ -55,6 +55,12 @@ TypeScript tagged-template FormIndex. It also checks the installed public
 SARIF formatter and CLI output. Build output is cleaned first and
 must exactly match the current source graph before packaging.
 
+The installed-consumer gate also imports the compiler's `hono-jsx` subpath,
+generates and consumes a JSX FormIndex using explicit root-level evidence,
+rejects stale configuration and detects form-field drift after regeneration.
+An unchanged copy of the real RSVP trial must retain its specific unsupported
+route-prelude error rather than being reported as a fully supported application.
+
 `registry-smoke` is a networked post-publication check. It installs the exact
 current workspace version of all four public packages from the official npm
 registry into a temporary consumer with lifecycle scripts disabled, verifies

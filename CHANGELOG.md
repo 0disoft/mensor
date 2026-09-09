@@ -6,6 +6,9 @@ All notable changes to Mensor are documented in this file.
 
 ### Added
 
+- Installed-package smoke covers the JSX public subpath, CLI indexing,
+  explicit evidence freshness, semantic drift and the unchanged RSVP rejection.
+
 - Optional `formIndexEvidence` explicitly snapshots form-free configuration
   evidence outside `sourceRoot`, without widening application source discovery.
 
