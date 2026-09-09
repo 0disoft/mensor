@@ -3,6 +3,9 @@ import { cp, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "n
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
+import ts from "@typescript/typescript6";
+import { jsx } from "hono/jsx";
 import { runCli } from "@0disoft/mensor-cli";
 import { parseFormIndex } from "@0disoft/mensor-contract";
 import { verifyExternalFormIndex } from "../../compiler/dist/src/form-index.js";
@@ -202,6 +205,88 @@ test("read-only helper analysis bounds distinct helpers while reusing repeated c
   assert.doesNotThrow(() => assertHonoJsxRoute("route.tsx", route(Array.from({ length: 16 }, (_, index) => declaration(index)).join("\n"))));
   assert.throws(() => assertHonoJsxRoute("route.tsx", route(Array.from({ length: 17 }, (_, index) => declaration(index)).join("\n"))), { code: "hono_jsx.route_prelude_unsupported" });
   assert.doesNotThrow(() => assertHonoJsxRoute("route.tsx", route(Array.from({ length: 20 }, (_, index) => `const entries${index} = read0(c);`).join("\n"))));
+});
+
+test("guarded native array mapping proves text snapshots but not unchecked values or controls", () => {
+  const source = 'const view = <><form id="signup"><input name="email" /></form><ul>{Array.from(entries, (entry) => { const name = entry.name; return <li>{typeof name === "string" ? name : ""}</li>; })}</ul></>;';
+  const extract = (text) => extractHonoJsxFormDocument("guarded.tsx", text);
+  assert.deepEqual(extract(source).inspection, { state: "complete" });
+  assert.equal(extract(source).forms[0].controls[0].name.value, "email");
+  const nested = 'const view = <div>{["outer"].map(name => <div>{["inner"].map(inner => <span>{name}{inner}</span>)}</div>)}</div>;';
+  assert.deepEqual(extract(nested).inspection, { state: "complete" });
+  for (const changed of [
+    source.replace('typeof name === "string" ? name : ""', 'name'),
+    source.replace('typeof name === "string" ? name : ""', 'name as string'),
+    source.replace('typeof name === "string" ? name : ""', 'typeof entry.name === "string" ? entry.name : ""'),
+    source.replace('=== "string"', '== "string"'),
+    source.replace('=== "string"', '=== "object"'),
+    source.replace('? name : ""', '? entry.name : ""'),
+    source.replace('? name : ""', '? name : entry'),
+    source.replace('const name =', 'let name ='),
+    source.replace('const name = entry.name;', 'const name = transform(entry);'),
+    source.replace('return <li>', 'name = entry.other; return <li>'),
+    source.replace('Array.from(entries,', 'entries.map('),
+    source.replace('Array.from(entries,', 'Array?.from(entries,'),
+    source.replace('(entry) =>', 'async (entry) =>'),
+    source.replace('<li>', '<li form="signup">'),
+    source.replace('<li>', '<li><input name="extra" form="signup" />'),
+    source.replace('<li>', '<li><Custom />'),
+    source.replace('<li>', '<li><form id="other" />'),
+    'function scope(Array) { ' + source + ' }',
+    source + ' Array.from = other;',
+    source + ' const alias = Array;',
+    source + ' globalThis["Array"].from = other;',
+    'const view = <div>{["outer"].map(name => <div>{Array.from(entries, (name) => <span>{name}</span>)}</div>)}</div>;',
+  ]) {
+    const result = extract(changed);
+    assert.equal(result.inspection.state, "incomplete", changed);
+    assert.deepEqual(result.forms, []);
+  }
+});
+
+test("an explicitly guarded RSVP copy yields its original form through the CLI", async (context) => {
+  const root = await project(context);
+  const trial = new URL("../../../internal/agent-runner/trials/honox-rsvp-v1/app/routes/rsvp.tsx", import.meta.url);
+  const original = await readFile(trial, "utf8");
+  const guarded = original.replace('responses.map((entry, index) => (', 'Array.from(responses, (entry) => { const name = entry.name; const email = entry.email; const attendance = entry.attendance; return (')
+    .replace('<li key={index}>', '<li>')
+    .replace('{entry.name}', '{typeof name === "string" ? name : ""}')
+    .replace('{entry.email}', '{typeof email === "string" ? email : ""}')
+    .replace('{entry.attendance}', '{typeof attendance === "string" ? attendance : ""}')
+    .replace('))}', '); })}');
+  assert.notEqual(guarded, original);
+  await writeFile(path.join(root, "app/routes/index.tsx"), guarded);
+  const result = await invoke(root);
+  assert.equal(result.code, 0, result.stdout);
+  const document = JSON.parse(result.stdout).documents.find((entry) => entry.path.endsWith("index.tsx"));
+  assert.deepEqual(document.inspection, { state: "complete" });
+  assert.equal(document.forms.length, 1);
+  assert.equal(document.forms[0].identity.value, "rsvp-response");
+  assert.deepEqual(document.forms[0].controls.filter((entry) => entry.name.state === "known").map((entry) => entry.name.value), ["name", "email", "attendance", "attendance", "attendance"]);
+  const unguarded = extractHonoJsxFormDocument("original.tsx", original);
+  assert.equal(unguarded.inspection.state, "incomplete");
+  assert.equal(await readFile(trial, "utf8"), original);
+});
+
+test("guarded text lists render escaped strings and reject JSX objects without rereading getters", async () => {
+  const source = 'const render = (entries) => <div><form id="signup" /><ul>{Array.from(entries, (entry) => { const name = entry.name; return <li>{typeof name === "string" ? name : ""}</li>; })}</ul></div>; render;';
+  assert.deepEqual(extractHonoJsxFormDocument("runtime.tsx", source).inspection, { state: "complete" });
+  // Execute only this fixed test fixture, never a selected project source.
+  const compiled = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.React, jsxFactory: "jsx", target: ts.ScriptTarget.ES2022 } }).outputText;
+  const render = runInNewContext(compiled, { jsx }, { timeout: 1000 });
+  let reads = 0;
+  let mapped = false;
+  const entries = [
+    { name: "<input>" },
+    { name: jsx("input", { name: "injected", form: "signup" }) },
+    { name: { isEscaped: true, toString: () => '<input name="raw" form="signup">' } },
+    { get name() { reads += 1; return reads === 1 ? "once" : jsx("input", { name: "changed" }); } },
+  ];
+  entries.map = () => { mapped = true; return [jsx("input", { name: "override" })]; };
+  const html = await render(entries).toString();
+  assert.equal(html, '<div><form id="signup"></form><ul><li>&lt;input&gt;</li><li></li><li></li><li>once</li></ul></div>');
+  assert.equal(reads, 1);
+  assert.equal(mapped, false);
 });
 
 test("JSX CLI artifact is consumed by check and rejects a stale renderer", async (context) => {

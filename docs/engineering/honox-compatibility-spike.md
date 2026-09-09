@@ -172,8 +172,16 @@ contain JSX nodes or externally associated controls.
 
 The CLI regression test reads the actual trial files without simplifying or
 rewriting them. This is an adoption-gap test, not a claim that the application
-passes all Mensor gates. Supporting this data flow requires an explicit scalar
-rendering or provenance contract; silently ignoring it remains forbidden.
+passes all Mensor gates. A separately adapted temporary copy now uses
+`Array.from`, one const snapshot per displayed property, and explicit string
+guards. The CLI extracts its original form and five named controls as complete
+evidence. The historical source and its evidence remain unchanged and incomplete.
+This proves static extraction of the guarded variant, not runtime GET/POST
+behavior or full project-contract adoption. A fixed test snippet is separately
+transpiled and rendered with Hono: string markup is escaped, JSX/raw objects are
+filtered, a getter is read once, and an overridden collection map is not called.
+No selected project source is executed by the producer. Silently ignoring opaque
+values remains forbidden.
 
 Parser implementation may start against the accepted synthetic fixture
 contract, using the existing TypeScript parser and FormIndex boundary. It must

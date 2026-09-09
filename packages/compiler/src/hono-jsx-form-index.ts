@@ -16,6 +16,7 @@ type Work = {
   node: ts.Node;
   form?: MutableForm;
   textNames: ReadonlySet<string>;
+  guardedNames?: ReadonlySet<string>;
   uncertainty?: { node: ts.Node; reason: DynamicReason };
 };
 const inertTags = new Set([
@@ -50,6 +51,7 @@ export function extractHonoJsxFormDocument(sourcePath: string, source: string): 
     fail("hono_jsx.syntax_invalid", "JSX source contains syntax errors.");
   }
   const textArrays = literalTextArrays(file, () => fail("hono_jsx.source_limit", "JSX source exceeds the AST node budget."));
+  let arrayIntrinsicProof: boolean | undefined;
   const range = (node: ts.Node): SourceRange => ({
     start: file.getLineAndCharacterOfPosition(node.getStart(file)),
     end: file.getLineAndCharacterOfPosition(node.end),
@@ -113,10 +115,14 @@ export function extractHonoJsxFormDocument(sourcePath: string, source: string): 
         unsupported(node, expressionReason(expression));
         continue;
       }
-      if (isText(expression, textNames)) continue;
-      const map = textMap(expression, textArrays);
+      if (isText(expression, textNames) || guardedText(expression, current.guardedNames)) continue;
+      const map = textMap(expression, textArrays) ?? guardedTextArray(expression,
+        () => arrayIntrinsicProof ??= unmodifiedArrayIntrinsic(file));
       if (map) {
-        pending.push({ node: map.body, textNames: new Set([...textNames, map.parameter]) });
+        pending.push({ node: map.body,
+          textNames: new Set([...textNames].filter((name) => !map.guardedNames.has(name)).concat([...map.textNames])),
+          guardedNames: new Set([...current.guardedNames ?? [], ...map.guardedNames]),
+        });
       } else {
         unsupported(node, expressionReason(expression));
       }
@@ -212,7 +218,8 @@ function isConditionalBinary(node: ts.Node): boolean {
 
 function isMapCall(node: ts.Node): boolean {
   return ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)
-    && node.expression.name.text === "map";
+    && (node.expression.name.text === "map" || (node.expression.name.text === "from"
+      && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === "Array"));
 }
 
 function isText(expression: ts.Expression, names: ReadonlySet<string>): boolean {
@@ -224,7 +231,9 @@ function isText(expression: ts.Expression, names: ReadonlySet<string>): boolean 
 }
 
 // Only a local, otherwise-unused literal text array proves that map children are escaped text.
-function textMap(expression: ts.Expression, arrays: ReadonlySet<string>): { body: ts.ConciseBody; parameter: string } | undefined {
+type TextMapping = { body: ts.ConciseBody; textNames: ReadonlySet<string>; guardedNames: ReadonlySet<string> };
+
+function textMap(expression: ts.Expression, arrays: ReadonlySet<string>): TextMapping | undefined {
   if (!ts.isCallExpression(expression) || !ts.isPropertyAccessExpression(expression.expression)
     || expression.expression.name.text !== "map" || expression.arguments.length !== 1) return undefined;
   const receiver = expression.expression.expression;
@@ -247,7 +256,73 @@ function textMap(expression: ts.Expression, arrays: ReadonlySet<string>): { body
       && ["form", "input", "button", "select", "textarea"].includes(node.tagName.getText())) return undefined;
     ts.forEachChild(node, (child) => { stack.push(child); });
   }
-  return { body: callback.body, parameter: parameter.name.text };
+  return { body: callback.body, textNames: new Set([parameter.name.text]), guardedNames: new Set() };
+}
+
+function guardedText(expression: ts.Expression, names?: ReadonlySet<string>): boolean {
+  if (!names || !ts.isConditionalExpression(expression) || !ts.isBinaryExpression(expression.condition)) return false;
+  const condition = expression.condition;
+  return condition.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken
+    && ts.isTypeOfExpression(condition.left) && ts.isIdentifier(condition.left.expression)
+    && names.has(condition.left.expression.text) && ts.isStringLiteral(condition.right) && condition.right.text === "string"
+    && ts.isIdentifier(expression.whenTrue) && expression.whenTrue.text === condition.left.expression.text
+    && isText(expression.whenFalse, new Set());
+}
+
+function guardedTextArray(expression: ts.Expression, intrinsicProof: () => boolean): TextMapping | undefined {
+  if (!ts.isCallExpression(expression) || expression.questionDotToken || !ts.isPropertyAccessExpression(expression.expression)
+    || expression.expression.questionDotToken || !ts.isIdentifier(expression.expression.expression)
+    || expression.expression.expression.text !== "Array" || expression.expression.name.text !== "from"
+    || expression.arguments.length !== 2 || !ts.isIdentifier(expression.arguments[0]!)) return undefined;
+  const callback = expression.arguments[1]!;
+  if (!ts.isArrowFunction(callback) || callback.modifiers?.length || callback.parameters.length !== 1) return undefined;
+  const parameter = callback.parameters[0]!;
+  if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken || parameter.modifiers?.length) return undefined;
+  const guardedNames = new Set([parameter.name.text]);
+  let body = callback.body;
+  if (ts.isBlock(body)) {
+    for (const statement of body.statements.slice(0, -1)) {
+      if (!ts.isVariableStatement(statement) || statement.modifiers?.length || statement.declarationList.flags !== ts.NodeFlags.Const) return undefined;
+      for (const declaration of statement.declarationList.declarations) {
+        const value = declaration.initializer;
+        if (!ts.isIdentifier(declaration.name) || guardedNames.has(declaration.name.text)
+          || !value || !ts.isPropertyAccessExpression(value) || !ts.isIdentifier(value.expression)
+          || value.expression.text !== parameter.name.text) return undefined;
+        guardedNames.add(declaration.name.text);
+      }
+    }
+    const returned = body.statements.at(-1);
+    if (!returned || !ts.isReturnStatement(returned) || !returned.expression) return undefined;
+    body = returned.expression;
+  }
+  while (ts.isParenthesizedExpression(body)) body = body.expression;
+  if (!ts.isJsxElement(body) && !ts.isJsxFragment(body) && !ts.isJsxSelfClosingElement(body)) return undefined;
+  if (!intrinsicProof()) return undefined;
+  const nodes: ts.Node[] = [body];
+  while (nodes.length) {
+    const node = nodes.pop()!;
+    if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node))
+      && ["form", "input", "button", "select", "textarea"].includes(node.tagName.getText())) return undefined;
+    ts.forEachChild(node, (child) => { nodes.push(child); });
+  }
+  return { body, textNames: new Set(), guardedNames };
+}
+
+function unmodifiedArrayIntrinsic(file: ts.SourceFile): boolean {
+  // Reject direct constructor shadowing, intrinsic writes and aliases.
+  const pending: ts.Node[] = [file];
+  while (pending.length) {
+    const node = pending.pop()!;
+    if (ts.isIdentifier(node) && node.text === "Array") {
+      const access = node.parent;
+      if (!ts.isPropertyAccessExpression(access) || access.expression !== node
+        || !["from", "isArray"].includes(access.name.text)
+        || !ts.isCallExpression(access.parent) || access.parent.expression !== access) return false;
+    }
+    if (ts.isIdentifier(node) && ["globalThis", "global", "window", "self", "eval", "Function"].includes(node.text)) return false;
+    ts.forEachChild(node, (child) => { pending.push(child); });
+  }
+  return true;
 }
 
 function literalTextArrays(file: ts.SourceFile, overBudget: () => never): ReadonlySet<string> {

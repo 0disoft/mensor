@@ -224,7 +224,11 @@ function verifyContextHelper(name: string, source: ts.SourceFile): boolean {
     if (ts.isIdentifier(node) && node.text === factory
       && !(ts.isImportSpecifier(node.parent) && node.parent.name === node)
       && !(ts.isCallExpression(node.parent) && node.parent.expression === node)) return false;
-    if (arrayIdentifier && ts.isIdentifier(node) && node.text === "Array" && node !== arrayIdentifier) return false;
+    if (arrayIdentifier && ts.isIdentifier(node) && node.text === "Array" && node !== arrayIdentifier) {
+      const access = node.parent;
+      if (!ts.isPropertyAccessExpression(access) || access.expression !== node || access.name.text !== "from"
+        || !ts.isCallExpression(access.parent) || access.parent.expression !== access) return false;
+    }
     if (ts.isIdentifier(node) && ["globalThis", "global", "window", "self", "eval", "Function"].includes(node.text)) return false;
     ts.forEachChild(node, (child) => { pending.push(child); });
   }

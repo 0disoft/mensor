@@ -57,7 +57,7 @@ return an empty array. Type assertions on that guarded return are erased, not
 trusted as value validation. Other calls, aliases, destructuring, computed values,
 mutable bindings and statements remain unsupported.
 Helper references must remain direct calls; source-local rebinding, shadowing,
-escape, other `Array` references for the guarded shape and global-object or
+escape, other `Array` references except direct `Array.from` calls for the guarded shape and global-object or
 dynamic-evaluation references are rejected. The helper-enabled module admits
 only type declarations, function declarations, HonoX factory imports, type-only
 imports and direct arrow-callback route registrations, not arbitrary module
@@ -110,12 +110,43 @@ the current document path. No route is inferred from a HonoX filename.
 Dynamic siblings may be ignored only when their visible structure is entirely
 intrinsic non-form content and text values are statically bounded. The parser
 accepts scalar literals and maps of literal text arrays (inline or non-exported
-top-level constants with no other references). Opaque values, helper calls and
-externally mutable arrays remain incomplete. This is not blanket
+top-level constants with no other references). Runtime collections can instead
+use the explicit guarded `Array.from` subset below. Other opaque values, helper
+calls and externally mutable `.map` receivers remain incomplete. This is not blanket
 permission to skip siblings: custom components can create external controls,
 and a literal `form` attribute can associate an outside control with this form.
 Both are unsupported in v1. Expressions inside the form are not evaluated,
 including apparently constant structural attribute expressions.
+
+### Guarded Runtime Text Lists
+
+`Array.from(collection, (entry) => JSX)` may produce an intrinsic, form-free
+sibling list. The collection must be an identifier, the callback must be
+synchronous with one plain parameter, and its body may contain only direct
+const snapshots of that parameter's properties followed by one JSX return.
+The callback parameter and snapshots are opaque, not automatically safe text.
+Each displayed value must use the exact `typeof value === "string" ? value : ""`
+shape (another scalar-literal fallback is also supported). The tested identifier
+and displayed identifier must match. Property re-reads, type assertions, coercion
+helpers, assignments and unguarded values remain incomplete.
+
+```tsx
+Array.from(responses, (entry) => {
+  const name = entry.name;
+  return <li>{typeof name === "string" ? name : ""}</li>;
+})
+```
+
+Taking one snapshot matters: a getter could return a string during a check and
+a JSX object on the next property read. Direct `Array.from` avoids trusting an
+opaque collection's overridden `.map` method. Source-local constructor shadowing,
+intrinsic writes/aliases and global-object references are rejected. As with
+literal-array mapping, external monkey-patching of standard runtime intrinsics
+is not covered by this source-local proof. It proves output structure, not
+iterator termination, getter purity or collection resource limits.
+Custom components, external controls, nested forms and dynamic attributes,
+including computed keys, remain unsupported. Guards inside forms do not relax
+the literal structural-attribute contract.
 
 Disabled fieldset inheritance, other input kinds, select/textarea, nested
 forms, external association, custom renderers, raw HTML, islands and client

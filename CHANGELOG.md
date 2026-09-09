@@ -6,6 +6,9 @@ All notable changes to Mensor are documented in this file.
 
 ### Added
 
+- Extract forms beside guarded runtime text lists using direct `Array.from`,
+  local value snapshots and exact string checks. Reject unchecked values,
+  property re-reads, custom map receivers and form-bearing list output.
 - Verify bounded local read-only context helpers in Hono JSX route preludes.
   The original RSVP route passes activation but its dynamic list remains
   incomplete evidence; runtime type assertions do not prove text safety.
