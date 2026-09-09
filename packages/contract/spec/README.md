@@ -9,6 +9,18 @@ model.
 
 ## Validation Layers
 
+### Explicit FormIndex Evidence
+
+`ProjectContract.formIndexEvidence` optionally names 1-16 unique root-relative
+files used only as FormIndex freshness evidence. It requires `formIndex`.
+Every listed file must have a complete index document with no forms. Files
+outside `sourceRoot` are snapshotted under the same file-count, byte, depth,
+identity and symlink constraints, but do not become application sources for
+form linkage, handler resolution, route checks or module boundaries. Omit the
+field to retain the original discovered-source-only behavior.
+
+### Layer Order
+
 1. Text parsing rejects malformed JSONC and duplicate object keys.
 2. Schema validation rejects unknown keys, invalid types, and unsupported
    contract versions.

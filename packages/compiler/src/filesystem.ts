@@ -41,6 +41,7 @@ export interface ProjectFileOperations {
 
 export interface ProjectSnapshot {
   readonly files: readonly string[];
+  readonly evidenceFiles: readonly string[];
   readonly readFile: (relativePath: string, maxFileBytes: number) => Promise<string>;
 }
 
@@ -316,6 +317,7 @@ export async function discoverProjectSnapshot(
   maxFiles: number,
   maxTotalBytes: number,
   maxDepth: number,
+  explicitEvidence: readonly string[] = [],
 ): Promise<ProjectSnapshot> {
   const safeSourceRoot = assertRelativePosixPath(sourceRoot, "sourceRoot");
   await assertPathHasNoSymlink(root, safeSourceRoot, true);
@@ -390,8 +392,31 @@ export async function discoverProjectSnapshot(
   }
 
   await visit(safeSourceRoot, 0);
+  const evidenceFiles: string[] = [];
+  for (const entry of [...new Set(explicitEvidence)].sort(compareText)) {
+    const safePath = assertRelativePosixPath(entry, "FormIndex evidence path");
+    if (identities.has(safePath)) continue;
+    if (safePath.split("/").length - 1 > maxDepth) {
+      throw new InputFailure("filesystem", "discovery.depth_limit_exceeded", "Explicit evidence exceeds the configured directory depth limit.", safePath);
+    }
+    await assertPathHasNoSymlink(root, safePath, false);
+    const stats = await lstat(fromProjectPath(root, safePath), { bigint: true });
+    if (!stats.isFile()) {
+      throw new InputFailure("filesystem", "file.not_regular", "Explicit evidence must be a regular file.", safePath);
+    }
+    if (identities.size >= maxFiles) {
+      throw new InputFailure("filesystem", "discovery.file_limit_exceeded", "Source and evidence files exceed the configured file count limit.", safePath);
+    }
+    totalBytes += stats.size;
+    if (totalBytes > BigInt(maxTotalBytes)) {
+      throw new InputFailure("filesystem", "discovery.total_bytes_limit_exceeded", "Source and evidence files exceed the configured total byte limit.", safePath);
+    }
+    identities.set(safePath, fileIdentity(stats));
+    evidenceFiles.push(safePath);
+  }
   return {
     files,
+    evidenceFiles,
     readFile(relativePath, maxFileBytes) {
       const safePath = assertRelativePosixPath(relativePath, "File path");
       const identity = identities.get(safePath);

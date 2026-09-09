@@ -43,6 +43,7 @@ export interface ProjectContract {
   readonly boundaries?: readonly BoundaryContract[];
   readonly ownershipRules?: readonly OwnershipRuleContract[];
   readonly formIndex?: string;
+  readonly formIndexEvidence?: readonly string[];
   readonly routeIndex?: string;
 }
 

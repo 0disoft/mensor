@@ -21,13 +21,14 @@ the explicit producer below.
 ## Explicit CLI Producer
 
 ```text
-mensor index-hono-jsx-forms . --source site/app/routes/index.tsx --jsx-config site/tsconfig.json --build-config site/vite.config.ts --renderer site/app/routes/_renderer.tsx --json
+mensor index-hono-jsx-forms . --source app/routes/index.tsx --jsx-config tsconfig.json --build-config vite.config.ts --renderer app/routes/_renderer.tsx --json
 ```
 
-Here the Mensor project has `sourceRoot: "site"`; the HonoX application lives
-inside `site/`. Mensor does not accept `sourceRoot: "."`, so place the Mensor
-project contract above the application when its build settings live at the
-application root. Do not exclude these settings from discovery.
+The Mensor contract can remain at the application root with `sourceRoot:
+"app"`. Declare `formIndexEvidence: ["tsconfig.json", "vite.config.ts"]`
+alongside `formIndex` to snapshot these configuration files outside `sourceRoot`.
+This does not enable root-wide source discovery or make evidence files eligible
+as form templates, handlers, routes or module-boundary sources.
 
 The producer requires every input explicitly and uses HonoX's default layout:
 `vite.config.ts` and `tsconfig.json` beside `app/`. Select at most 60 TSX routes,
@@ -58,9 +59,13 @@ semantic tests. No route URL is inferred from filenames.
 The renderer, JSX configuration and build configuration are also source-bound
 documents with kind `mensor/hono-jsx-activation`, no forms and complete static
 inspection. Their exact digests make existing FormIndex freshness checks reject
-stale configuration as well as stale TSX. All inputs must be included in the
-consumer project's discovered source tree; excluding an activation file fails
-closed. Empty activation documents are not claims about runtime execution.
+stale configuration as well as stale TSX. Inputs must be in the consumer's
+discovered source tree or its explicit `formIndexEvidence` list. The list accepts
+at most 16 unique relative files and requires `formIndex`; each listed file must
+have a complete, form-free index document. Missing, undeclared or form-bearing
+evidence fails closed. Evidence shares snapshot identity, per-file size,
+aggregate file/byte and depth limits with the source tree. Symbolic links remain
+forbidden. Empty activation documents are not claims about runtime execution.
 
 Each input is a regular UTF-8 file of at most 1 MiB, without symbolic-link
 components. Inputs are reread before serialization to reject changed snapshots.

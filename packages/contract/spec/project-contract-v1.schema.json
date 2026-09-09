@@ -5,6 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "sourceRoot", "featureContracts", "fileRoles"],
+  "dependentRequired": { "formIndexEvidence": ["formIndex"] },
   "properties": {
     "$schema": {
       "type": "string"
@@ -44,6 +45,13 @@
     },
     "formIndex": {
       "$ref": "#/$defs/relativePath"
+    },
+    "formIndexEvidence": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/relativePath" }
     },
     "routeIndex": {
       "$ref": "#/$defs/relativePath"

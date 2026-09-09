@@ -250,6 +250,7 @@ async function checkProjectInternal(
         maxFiles,
         maxTotalBytes,
         maxDepth,
+        project.formIndexEvidence ?? [],
       ),
     );
     const discoveredFiles = snapshot.files;
@@ -350,9 +351,15 @@ async function checkProjectInternal(
       if (!formIndexResult.ok) {
         return contractFailure(formIndexPath, formIndexResult.issues);
       }
+      for (const file of project.formIndexEvidence ?? []) {
+        const document = formIndexResult.value.documents.find((entry) => entry.path === file);
+        if (!document || document.forms.length !== 0 || document.inspection.state !== "complete") {
+          throw new InputFailure("configuration", "form_index.evidence_invalid", "Explicit FormIndex evidence must have one complete, form-free index document.", file);
+        }
+      }
       formIndex = await verifyExternalFormIndex({
         value: formIndexResult.value,
-        discovered,
+        discovered: new Set([...discovered, ...snapshot.evidenceFiles]),
         readSource,
       });
       const indexedPaths = new Set(formIndex.documents.map((document) => document.path));

@@ -6,6 +6,9 @@ All notable changes to Mensor are documented in this file.
 
 ### Added
 
+- Optional `formIndexEvidence` explicitly snapshots form-free configuration
+  evidence outside `sourceRoot`, without widening application source discovery.
+
 - Hono JSX activation failures identify unsupported settings and include AST
   locations when available; static Rollup output filename settings are supported.
 - Supported intrinsic heading tags are no longer mistaken for custom components.

@@ -88,14 +88,15 @@ as incomplete evidence, and a source with no selected template fails closed.
 ## Produce A Hono JSX FormIndex
 
 ```text
-pnpm exec mensor index-hono-jsx-forms . --source site/app/routes/index.tsx --jsx-config site/tsconfig.json --build-config site/vite.config.ts --renderer site/app/routes/_renderer.tsx
+pnpm exec mensor index-hono-jsx-forms . --source app/routes/index.tsx --jsx-config tsconfig.json --build-config vite.config.ts --renderer app/routes/_renderer.tsx
 ```
 
 This explicit producer supports a bounded static HonoX configuration and
 transparent Hono renderer. It never executes source or configuration. The
-artifact includes configuration digests, so all inputs must be discoverable
-by the consuming project. This example uses `sourceRoot: "site"` and the
-default HonoX layout inside `site/`. Custom transforms and nested renderers fail closed.
+artifact includes configuration digests. With `sourceRoot: "app"`, declare
+`formIndexEvidence: ["tsconfig.json", "vite.config.ts"]` alongside `formIndex`
+in the Mensor project contract. These explicit files are freshness evidence,
+not additional application sources. Custom transforms and nested renderers fail closed.
 See the [supported subset](https://github.com/0disoft/mensor/blob/main/docs/architecture/hono-jsx-form-index-v1.md).
 
 ## Documentation

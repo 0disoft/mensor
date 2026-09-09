@@ -358,7 +358,10 @@ snippets. Debug information belongs on an explicitly non-canonical stderr path.
 57. The explicit `mensor index-hono-jsx-forms` command may produce FormIndex v1
     from selected TSX routes and static HonoX activation inputs. The renderer,
     TypeScript JSX configuration and Vite configuration are source-bound index
-    documents, so consumer discovery and digest checks also cover them. Invalid
+    documents, so consumer discovery and digest checks also cover them. An
+    optional `formIndexEvidence` list admits at most 16 explicit form-free
+    evidence files outside `sourceRoot` without expanding application discovery.
+    These files share existing snapshot, path and resource limits. Invalid
     activation fails before atomic output; unsupported forms remain incomplete.
     The command never executes the application or configuration and does not
     attest the eventual build process, deployment or outer middleware.
