@@ -58,8 +58,9 @@ must exactly match the current source graph before packaging.
 The installed-consumer gate also imports the compiler's `hono-jsx` subpath,
 generates and consumes a JSX FormIndex using explicit root-level evidence,
 rejects stale configuration and detects form-field drift after regeneration.
-An unchanged copy of the real RSVP trial must retain its specific unsupported
-route-prelude error rather than being reported as a fully supported application.
+An unchanged copy of the real RSVP trial passes bounded read-only helper
+activation but must retain incomplete dynamic-list evidence and no extracted
+forms rather than being reported as a fully supported application.
 
 `registry-smoke` is a networked post-publication check. It installs the exact
 current workspace version of all four public packages from the official npm

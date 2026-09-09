@@ -346,8 +346,11 @@ if (compiled.ok) {
   assert.equal(driftedJsx.code, 1, driftedJsx.stdout);
   assert.ok(JSON.parse(driftedJsx.stdout).diagnostics.some((item) => item.code === "form.field_missing"));
   const rsvp = await runMensorJsxIndex(consumerRoot, "real-rsvp", "app/routes/rsvp.tsx");
-  assert.equal(rsvp.code, 2, rsvp.stdout);
-  assert.equal(JSON.parse(rsvp.stdout).failure.code, "hono_jsx.route_prelude_unsupported");
+  assert.equal(rsvp.code, 0, rsvp.stdout);
+  const rsvpDocument = JSON.parse(rsvp.stdout).documents.find((entry) => entry.path === "app/routes/rsvp.tsx");
+  assert.equal(rsvpDocument.inspection.state, "incomplete");
+  assert.equal(rsvpDocument.inspection.reason, "repeated-generation");
+  assert.deepEqual(rsvpDocument.forms, []);
 
   const invalid = await runMensor(consumerRoot, "invalid");
   assert.equal(invalid.code, 1, invalid.stderr);
