@@ -1,14 +1,20 @@
 # Hono JSX FormIndex v1 Implementation Contract
 
-- Status: Accepted fixture contract; extractor and CLI not implemented
+- Status: Internal parser implemented; CLI and public API exposure deferred
 - Output boundary: FormIndex v1, without a schema or public API change
 - Fixtures: `fixtures/contracts/hono-jsx-v1/expectations.json`
 
 ## Scope
 
-The next bounded Hono JSX producer remains explicit and parses source only.
+The internal bounded Hono JSX parser remains explicit and parses source only.
 It does not import or execute application modules, HonoX configuration, Vite
 plugins or renderers. This contract does not enable TSX in the current compiler.
+
+`packages/compiler/src/hono-jsx-form-index.ts` exports an internal
+`extractHonoJsxFormDocument` primitive, not a package-root API. It accepts a
+relative TSX path and source text, validates portable paths, limits input to
+1 MiB and 100,000 AST nodes, and reports invalid encoding or syntax explicitly.
+No filesystem discovery, runtime detection or application execution occurs.
 
 The first subset covers intrinsic forms, text/email/radio inputs, boolean
 `required` and `disabled`, unnamed submit buttons, labels, fragments and
@@ -22,7 +28,10 @@ produces known action evidence. The existing feature contract must still name
 the current document path. No route is inferred from a HonoX filename.
 
 Dynamic siblings may be ignored only when their visible structure is entirely
-intrinsic non-form content, such as a list of escaped text. This is not blanket
+intrinsic non-form content and text values are statically bounded. The parser
+accepts scalar literals and maps of literal text arrays (inline or non-exported
+top-level constants with no other references). Opaque values, helper calls and
+externally mutable arrays remain incomplete. This is not blanket
 permission to skip siblings: custom components can create external controls,
 and a literal `form` attribute can associate an outside control with this form.
 Both are unsupported in v1. Expressions inside the form are not evaluated,
@@ -31,7 +40,10 @@ including apparently constant structural attribute expressions.
 Disabled fieldset inheritance, other input kinds, select/textarea, nested
 forms, external association, custom renderers, raw HTML, islands and client
 submission semantics are outside this first subset. Add positive and failure
-expectations before admitting any of these. Unrecognized syntax must not
+expectations before admitting any of these. Attribute names must be lowercase;
+entity-encoded or multiline attribute strings and custom event/HTML insertion
+semantics remain unsupported rather than being decoded with guessed rules.
+Unrecognized syntax must not
 silently become a complete empty document.
 
 ## Unsupported Evidence
@@ -74,17 +86,18 @@ unverified renderer activation remain explicit failures, never complete indices.
 
 ## Current Evidence
 
-`packages/compiler/test/hono-jsx-contract.test.mjs` checks the hand-authored
-expectations against the existing public schema, serializer, freshness checker
+`packages/compiler/test/hono-jsx-contract.test.mjs` compares actual parser output
+against all hand-authored expectations and checks the public schema, serializer, freshness checker
 and semantic consumer. Supported ranges must match actual TypeScript JSX opening
 nodes; a supplementary Unicode case distinguishes UTF-16 from code points.
 Copies under two physical roots exercise canonical bytes, discovery rejection,
 stale-source rejection and invalid ranges.
 
-These tests validate the output oracle and consumer, not extraction. The actual
-producer must process every fixture and match its complete expected output,
-then repeat extraction under both roots. No placeholder or skipped extractor
-tests are added. Normal compiler test discovery includes these contract tests.
+Both physical roots run actual extraction and must produce the same canonical
+bytes as the expected artifact. Additional cases reject opaque/repeated sibling
+content, malformed and oversized source, unsupported attributes and nested forms,
+and prove that application statements are not executed. Normal compiler test
+discovery includes these tests. They do not prove renderer activation or CLI use.
 
 ## Separate Gates
 

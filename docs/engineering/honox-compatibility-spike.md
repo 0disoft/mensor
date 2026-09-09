@@ -1,7 +1,7 @@
 # HonoX Compatibility Spike
 
-- Status: Static HTML pilot and local HonoX capability trial complete; JSX extraction deferred
-- Evidence date: 2026-09-08
+- Status: Local HonoX trial and internal JSX parser complete; CLI integration deferred
+- Evidence date: 2026-09-09
 - Decision: Support framework-neutral static HTML integration; defer HonoX JSX extraction
 
 ## Question
@@ -34,8 +34,8 @@ runtime owns the source semantics.
 | `.tsx` parsing | Partial | The TypeScript fact extractor already parses TSX without executing it. |
 | `POST` export | Compatible | A named value export can already become a handler export fact. |
 | import boundaries | Compatible | Literal TypeScript imports already become normalized module edges. |
-| intrinsic form markup | Unsupported | Form extraction currently accepts parsed `.html` documents only. |
-| omitted form action | Core support implemented | The current-document fact resolves through explicit documentPath evidence; JSX extraction is still missing. |
+| intrinsic form markup | Internal parser implemented | Bounded JSX facts match synthetic fixtures; CLI source and renderer activation remain unimplemented. |
+| omitted form action | Core and internal JSX support implemented | Current-document facts still require explicit documentPath evidence during semantic linking. |
 | file-based route path | Unsupported | Mensor does not interpret HonoX route filenames or configuration. |
 | middleware schema | Intentionally unsupported | Type arguments are not runtime validation, and external schema semantics do not own the Mensor contract. |
 | custom JSX components | Unsupported | Their rendered controls cannot be proven without component analysis or execution. |
@@ -86,7 +86,8 @@ The private form fact now distinguishes a literal action path from
 `current-document`. Static HTML with an omitted or empty action resolves through
 the action form contract's explicit `documentPath` during semantic linking.
 Missing page evidence fails configuration instead of borrowing the expected
-action route. The Hono JSX extractor remains deferred.
+action route. The internal Hono JSX parser now preserves the same action model;
+its CLI activation remains deferred.
 
 ## Runnable Hono Static HTML Pilot
 
@@ -113,8 +114,9 @@ it does not satisfy the separate HonoX opt-in gate below.
 
 - **Applied:** retain this compatibility map, the corrected action model, and
   the runnable static HTML Hono fixture.
-- **Next:** implement the bounded Hono JSX parser against the accepted
-  [fixture contract](../architecture/hono-jsx-form-index-v1.md).
+- **Implemented:** the bounded internal Hono JSX parser matches the accepted
+  [fixture contract](../architecture/hono-jsx-form-index-v1.md), including actual
+  cross-root extraction. It is not exposed through the CLI or public exports.
 - **Reject:** generic TSX traversal, BYOR support, HonoX config execution, Vite
   plugin loading, schema inference from TypeScript generics, and component
   rendering inside the compiler.
@@ -126,8 +128,8 @@ it does not satisfy the separate HonoX opt-in gate below.
   an isolated locked toolchain. The original candidate passed three of four
   semantic tests; after one unknown-field validation repair, all four passed.
 - **Specified:** synthetic supported/unsupported JSX fixtures, canonical source
-  ranges and expected artifacts under two physical roots. Actual extractor
-  output and CLI renderer activation still require implementation evidence.
+  ranges and actual output under two physical roots. CLI renderer activation
+  and bounded file/output integration remain the next implementation gates.
 
 ## Prepared Trial Evidence
 
@@ -147,7 +149,7 @@ claimed by this preparation.
 Before running the trial, record exact dependency/build versions, input and
 oracle digests, candidate source/artifact digests, model identity, and actual
 isolation limits. Record semantic results separately from Mensor coverage.
-Current JSX form checking is unavailable; do not create fake FormIndex evidence
+Current CLI JSX form extraction is unavailable; do not create fake FormIndex evidence
 or use this exploratory result as an ordinary all-gates-passing build trial.
 The next decision consumes the actual intrinsic elements, literal attributes,
 dynamic constructs, and source ranges found in the candidate.
