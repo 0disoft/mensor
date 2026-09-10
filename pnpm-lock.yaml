@@ -18,8 +18,8 @@ importers:
         specifier: 6.0.2
         version: 6.0.2
       hono:
-        specifier: 4.12.34
-        version: 4.12.34
+        specifier: 4.13.5
+        version: 4.13.5
 
   internal/agent-runner:
     dependencies:
@@ -107,8 +107,8 @@ packages:
   fast-uri@3.1.6:
     resolution: {integrity: sha512-7Ical1vFEMr0onbVzEDIreM22I4khW+fzyQPwvAFWBp1iwdshSZRsL4jjRvPG9JP1uiqMHRto+YU6R2/CzDz5Q==}
 
-  hono@4.12.34:
-    resolution: {integrity: sha512-GqXJqY/xJkJmuloTrnV1ZEXG3fqte+VjkUqoRNZXcrUidiUOP4fMSIHHY4tsqZBK++kVyWmt/AAfSUuy57/eSA==}
+  hono@4.13.5:
+    resolution: {integrity: sha512-O6+/eCYRkzzzy0rPWwKLiGBR1nFuUPZynnwjxN1MBA62NNqbT0wQEzQyK2gSO5yDIDB336sXQleAhOHrzlYyKw==}
     engines: {node: '>=16.9.0'}
 
   json-schema-traverse@1.0.0:
@@ -155,7 +155,7 @@ snapshots:
 
   fast-uri@3.1.6: {}
 
-  hono@4.12.34: {}
+  hono@4.13.5: {}
 
   json-schema-traverse@1.0.0: {}
 
