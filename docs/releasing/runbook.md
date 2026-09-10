@@ -1,14 +1,13 @@
 # npm Release Runbook
 
-This runbook separates the one-time `0.1.0` registry bootstrap from later
-stage-only trusted publishing. npm staged publishing cannot create a package
-that does not already exist, so using one path for both cases would make the
-first release impossible.
+This runbook separates the one-time registry bootstrap from later manually
+dispatched, direct OIDC publishing. All four package identities already exist.
 
-Registry commands in this document are maintainer-only operations. Coding
-agents may prepare and inspect local artifacts through configured intents, but
-must not publish, approve, reject, change package access, or configure a trust
-relationship.
+The maintainer authorizes a release by requesting or manually dispatching it.
+Coding agents may prepare artifacts and dispatch that explicitly requested
+release through configured intents or the corresponding GitHub interface.
+Changes to publishing permissions and removal of staged packages require
+explicit confirmation at the action boundary; interactive 2FA remains human-owned.
 
 ## Common Gate
 
@@ -39,16 +38,14 @@ npm publish ./dist/release/0disoft-mensor-cli-0.1.0.tgz --access public --tag la
 ```
 
 The reference runtime first appears in `0.4.0` and needs the same one-time
-identity bootstrap before staged publishing can manage later versions:
+identity bootstrap before trusted publishing can manage later versions:
 
 ```text
 npm publish ./dist/release/0disoft-mensor-reference-runtime-0.4.0.tgz --access public --tag latest --provenance=false
 ```
 
-For that release only, publish the reviewed reference-runtime tarball first,
-then dispatch the workflow for `0.4.0` with `stage_reference_runtime` disabled
-so the existing three packages are staged without attempting to replace the
-already published runtime version. From `0.5.0` onward, leave it enabled.
+These commands document the historical bootstrap only. The current workflow
+always publishes all four packages and has no runtime-omission switch.
 
 Before entering an OTP, verify that the checkout is the exact remotely tested
 release commit, the Git worktree is clean, `npm whoami` names the expected scope
@@ -60,7 +57,7 @@ The package manifests request provenance for normal automated releases, but
 npm can generate provenance only from a supported cloud CI runner. The
 one-time local bootstrap therefore overrides that setting with
 `--provenance=false`. Version `0.1.0` will not carry provenance; later releases
-staged through the trusted GitHub publisher will receive it automatically.
+published through the trusted GitHub publisher will receive it automatically.
 
 After each successful publish, verify the exact package version in the public
 registry before publishing its dependent:
@@ -96,10 +93,9 @@ each package in npm with these exact bindings:
 | Repository | `mensor` |
 | Workflow file | `release.yml` |
 | Environment | `npm-release` |
-| Allowed action | staged publishing only |
+| Allowed action | `Allow npm publish` enabled (direct OIDC publishing) |
 
-Staged publishing requires npm 11.15.0 or newer and Node 22.14.0 or newer. The
-release workflow deliberately pins Node 24 and npm 11.18.0. Enter only the
+The release workflow deliberately pins Node 24 and npm 11.18.0. Enter only the
 workflow filename `release.yml`, including its extension, rather than the full
 `.github/workflows/` path.
 
@@ -120,21 +116,34 @@ release path and must be scoped, short-lived, and rotated independently.
 1. Update the fixed workspace version, changelog, and matching migration note.
 2. Merge a commit that passes CI on every supported Node and operating-system
    lane.
-3. Manually dispatch `Stage npm release` with the exact version and `latest` or
+3. Manually dispatch `Publish npm release` with the exact version and `latest` or
    `next` dist-tag.
-4. Confirm the workflow ran from the intended commit and staged all four
-   package tarballs in dependency order.
-5. Use `npm stage list`, `npm stage view`, and `npm stage download` or the npm
-   website to inspect every staged package and downloaded tarball.
-6. Approve each verified stage with `npm stage approve` or the npm website;
-   approval requires interactive 2FA.
-7. Verify registry metadata, install the CLI in a fresh consumer, create the
+4. The workflow rejects non-main dispatches, a changed main SHA, and missing,
+   pending, cancelled or failed push runs of `ci.yml` and `guarded-rsvp.yml`
+   for that exact SHA. GitHub `actions: read` is used only for this gate.
+5. It validates, builds, packs and directly publishes all four tarballs in
+   dependency order using short-lived OIDC credentials and provenance.
+6. Verify registry metadata, install the CLI in a fresh consumer, create the
    matching Git tag and GitHub release, and record the remote evidence in the
    release-candidate audit.
 
-Reject or let a staged release expire when any package, checksum, dependency,
-provenance, or release-note detail is wrong. A staged package is not a release
-until the maintainer approves it in npm.
+There is no per-package npm approval after the manual dispatch. Protect the
+workflow and `npm-release` environment: compromise of that authorized workflow
+can now publish without a separate npm approval. A partial publication is not
+atomic; stop, inspect exact registry versions and fix the cause instead of
+blindly rerunning or unpublishing consumer-visible packages.
+
+## Retiring Pending Stages
+
+The earlier 0.10.0 staging attempt created contract, compiler and CLI entries,
+but the runtime entry failed authentication. Pending staged versions reserve
+their version numbers and must be rejected before direct publication of the
+same version. Use `npm stage list`, `npm stage view` and `npm stage download`
+to identify and inspect only these exact entries; use `npm stage reject` or
+the npm website with explicit confirmation and interactive 2FA to remove them.
+Do not use `npm stage approve` during this migration: it would publish the
+old staged artifacts outside the new release run. Staged commands require
+npm 11.15.0 or newer and Node 22.14.0 or newer.
 
 ## Repository Security Setup
 

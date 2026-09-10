@@ -84,6 +84,9 @@ for (const required of [
   "npm stage view",
   "npm stage download",
   "npm stage approve",
+  "npm stage reject",
+  "Publish npm release",
+  "Allow npm publish",
   "Node 22.14.0",
   "npm 11.15.0",
 ]) {
@@ -100,7 +103,10 @@ for (const required of [
   "environment: npm-release",
   "node-version: 24",
   "npm@11.18.0",
-  "npm stage publish",
+  "npm publish",
+  "actions: read",
+  "node scripts/check-release-ci.mjs",
+  "--provenance",
 ]) {
   if (!workflow.includes(required)) {
     failures.push(`release.yml must contain ${JSON.stringify(required)}.`);
@@ -108,13 +114,13 @@ for (const required of [
 }
 for (const packageName of releasePackageNames) {
   const artifact = releaseArtifactFileName(packageName, workspace.version);
-  if (!workflow.includes(artifact.replace(workspace.version, "${{ inputs.version }}"))) {
-    failures.push(`release.yml must stage ${artifact}.`);
+  if (!workflow.includes(artifact.replace(workspace.version, "${RELEASE_VERSION}"))) {
+    failures.push(`release.yml must publish ${artifact}.`);
   }
 }
 for (const [description, pattern] of [
   ["a long-lived npm token", /NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./u],
-  ["direct npm publish", /(^|\s)npm publish(\s|$)/mu],
+  ["staged npm publishing", /npm stage publish/u],
   ["a disabled provenance override", /--provenance=false/u],
   ["an automatic push trigger", /^\s*push\s*:/mu],
   ["an automatic pull-request trigger", /^\s*pull_request\s*:/mu],
