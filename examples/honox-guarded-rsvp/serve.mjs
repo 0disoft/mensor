@@ -2,8 +2,8 @@ import { createServer } from "node:http";
 import app from "./dist/server.js";
 
 const port = Number(process.env.PORT ?? 4174);
-if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("PORT must be 1-65535");
-createServer(async (incoming, outgoing) => {
+if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("PORT must be 0-65535 (0 selects a free port)");
+const server = createServer(async (incoming, outgoing) => {
   try {
     const chunks = [];
     let size = 0;
@@ -13,7 +13,7 @@ createServer(async (incoming, outgoing) => {
       chunks.push(chunk);
     }
     const method = incoming.method ?? "GET";
-    const request = new Request(new URL(incoming.url, `http://127.0.0.1:${port}`), {
+    const request = new Request(new URL(incoming.url ?? "/", `http://127.0.0.1:${server.address().port}`), {
       method, headers: incoming.headers,
       ...(["GET", "HEAD"].includes(method) ? {} : { body: Buffer.concat(chunks) }),
     });
@@ -23,4 +23,13 @@ createServer(async (incoming, outgoing) => {
   } catch {
     outgoing.writeHead(500).end("Request failed");
   }
-}).listen(port, "127.0.0.1", () => console.log(`RSVP: http://127.0.0.1:${port}/rsvp`));
+});
+server.on("error", (error) => {
+  console.error(error.code === "EADDRINUSE" ? "Port already in use; choose another PORT." : error.message);
+  process.exitCode = 1;
+});
+for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => {
+  server.close(() => process.exit(0));
+  server.closeAllConnections();
+});
+server.listen(port, "127.0.0.1", () => console.log(`RSVP: http://127.0.0.1:${server.address().port}/rsvp`));

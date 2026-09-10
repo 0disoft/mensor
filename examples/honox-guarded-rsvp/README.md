@@ -17,6 +17,8 @@ npm start
 ```
 
 Open `http://127.0.0.1:4174/rsvp`. Set `PORT` to another free port if needed.
+`PORT=0` selects a free port and prints its address. An occupied or invalid port
+fails explicitly. Ctrl+C closes the listener; restarting clears the in-memory data.
 `npm test` builds the real HonoX/Vite server and checks it through Request/Response
 calls. `npm start` serves that build on loopback only. Data is in memory and is
 lost when the process restarts; this is not a production deployment template.
@@ -48,5 +50,7 @@ email shape and the three attendance choices, covered by the HTTP tests.
 From the parent Mustflow workspace, use the delegated repository selector
 `--repo projects/hobby/opensource/mensor` with `mensor_guarded_rsvp_install` and
 `mensor_guarded_rsvp_check`. Installation requires network and dependency-install
-allowances. The check is bounded and does not start a listener. `npm start` is a
+allowances. Tests start and stop loopback listeners within the bounded check.
+`mensor_guarded_browser_session` opens a free loopback port for 120 seconds for
+manual browser verification and then reaps its server. `npm start` is a
 manual developer command, not an agent-runnable background process.
