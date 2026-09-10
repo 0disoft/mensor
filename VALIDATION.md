@@ -134,8 +134,11 @@ bounded `mensor_guarded_rsvp_check` gate: generate and consume FormIndex, reject
 stale source and renderer evidence, detect a regenerated field mutation, build
 the real HonoX server, and run the protected HTTP oracle. It requires its own
 installed private dependencies and built workspace packages. It is not part of
-aggregate `check`, does not start a listener, and does not claim a static HonoX
-RouteIndex. The example README documents manual installation and serving.
+aggregate `check`. Its real loopback tests verify submission, port collisions,
+invalid ports and port release, then terminate their child processes. It does
+not claim a static HonoX RouteIndex. The separate 120-second browser session
+also terminates and reaps its child server. The example README documents
+manual installation and serving.
 
 Repository hygiene file changes must check line-ending churn, binary diff pollution,
 tracked secret files, ignored build/cache artifacts, and generated-output drift.
