@@ -15,6 +15,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isPackageManagerExecutable } from "./lib/package-manager-entrypoint.mjs";
+import { prepareHonoJsxConsumerFixture } from "./lib/hono-jsx-consumer-fixture.mjs";
 
 const registry = "https://registry.npmjs.org/";
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
@@ -85,6 +86,11 @@ import { readFile } from "node:fs/promises";
 import { parseCheckOutputV2, parseRouteIndex, serializeRouteIndex } from "@0disoft/mensor-contract";
 import { formatDiagnosticReportSarif } from "@0disoft/mensor-cli";
 import { createReferenceRuntime } from "@0disoft/mensor-reference-runtime";
+import { extractHonoJsxFormDocument } from "@0disoft/mensor-compiler/hono-jsx";
+
+const jsx = extractHonoJsxFormDocument("view.tsx", 'const view = <><h1>Smoke</h1><form id="smoke" /></>;');
+assert.equal(jsx.inspection.state, "complete");
+assert.equal(jsx.forms[0].identity.value, "smoke");
 
 const text = serializeRouteIndex({
   schemaVersion: 1,
@@ -165,6 +171,12 @@ assert.equal(await response.text(), "ok\\n");
     { recursive: true },
   );
   await prepareTypeScriptFormFixture(path.join(consumerRoot, "valid-ts"));
+  await prepareHonoJsxConsumerFixture(repositoryRoot, path.join(consumerRoot, "valid-jsx"));
+  const guardedRoot = path.join(consumerRoot, "guarded-rsvp");
+  await mkdir(guardedRoot);
+  for (const file of ["app", "mensor.project.jsonc", "tsconfig.json", "vite.config.ts"]) {
+    await cp(path.join(repositoryRoot, "examples/honox-guarded-rsvp", file), path.join(guardedRoot, file), { recursive: true });
+  }
   await cp(
     path.join(repositoryRoot, "fixtures", "valid", "hono-static-tasks"),
     path.join(consumerRoot, "valid-hono"),
@@ -302,6 +314,49 @@ assert.equal(await response.text(), "ok\\n");
   assert.equal(typedProject.code, 0, typedProject.stderr);
   assert.equal(JSON.parse(typedProject.stdout).inspection.forms.basis, "form-index");
 
+  const indexJsx = (fixture, source) => capture(process.execPath, [
+    cliEntrypoint, "index-hono-jsx-forms", fixture, "--source", source,
+    "--renderer", "app/routes/_renderer.tsx", "--jsx-config", "tsconfig.json",
+    "--build-config", "vite.config.ts", "--json",
+  ], consumerRoot);
+  const checkJsx = (fixture) => capture(process.execPath, [
+    cliEntrypoint, "check", fixture, "--json", "--report-version", "2",
+  ], consumerRoot);
+  for (const [fixture, source, field] of [
+    ["valid-jsx", "app/routes/index.tsx", "title"],
+    ["guarded-rsvp", "app/routes/rsvp.tsx", "email"],
+  ]) {
+    const indexed = await indexJsx(fixture, source);
+    assert.equal(indexed.code, 0, indexed.stdout || indexed.stderr);
+    assert.equal(JSON.parse(indexed.stdout).producer.name, "mensor/hono-jsx");
+    assert.equal(await readFile(path.join(consumerRoot, fixture, "mensor.form-index.json"), "utf8"), indexed.stdout);
+    const checked = await checkJsx(fixture);
+    assert.equal(checked.code, 0, checked.stdout || checked.stderr);
+    assert.deepEqual(JSON.parse(checked.stdout).inspection.forms, { state: "checked", basis: "form-index" });
+    const config = path.join(consumerRoot, fixture, "tsconfig.json");
+    await writeFile(config, await readFile(config, "utf8") + "\n");
+    const staleConfig = await checkJsx(fixture);
+    assert.equal(staleConfig.code, 2, staleConfig.stdout || staleConfig.stderr);
+    assert.equal(JSON.parse(staleConfig.stdout).failure.code, "form_index.digest_mismatch");
+    const refreshed = await indexJsx(fixture, source);
+    assert.equal(refreshed.code, 0, refreshed.stdout || refreshed.stderr);
+    const sourcePath = path.join(consumerRoot, fixture, source);
+    const original = await readFile(sourcePath, "utf8");
+    const mutated = original.replace(`name="${field}"`, 'name="other"');
+    assert.notEqual(mutated, original, `${fixture} field mutation must apply`);
+    await writeFile(sourcePath, mutated);
+    const staleSource = await checkJsx(fixture);
+    assert.equal(staleSource.code, 2, staleSource.stdout || staleSource.stderr);
+    assert.equal(JSON.parse(staleSource.stdout).failure.code, "form_index.digest_mismatch");
+    const regenerated = await indexJsx(fixture, source);
+    assert.equal(regenerated.code, 0, regenerated.stdout || regenerated.stderr);
+    const drifted = await checkJsx(fixture);
+    assert.equal(drifted.code, 1, drifted.stdout || drifted.stderr);
+    assert.ok(JSON.parse(drifted.stdout).diagnostics.some(
+      (entry) => entry.code === "form.field_missing" && entry.facts.fieldName === field,
+    ));
+  }
+
   const invalid = await capture(
     process.execPath,
     [cliEntrypoint, "check", "invalid", "--json"],
@@ -346,6 +401,11 @@ assert.equal(await response.text(), "ok\\n");
         compileArtifactStatus: "passed",
         honoRouteIndexStatus: "passed",
         typescriptFormIndexStatus: "passed",
+        jsxPublicImportStatus: "passed",
+        jsxFormIndexStatus: "passed",
+        guardedRsvpFormIndexStatus: "passed",
+        jsxStaleEvidenceStatus: "passed",
+        jsxRegeneratedFieldDriftStatus: "passed",
         sarifStatus: "passed",
         validProjectStatus: "passed",
         invalidProjectStatus: "failed",

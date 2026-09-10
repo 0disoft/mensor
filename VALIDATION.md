@@ -70,7 +70,11 @@ current workspace version of all four public packages from the official npm
 registry into a temporary consumer with lifecycle scripts disabled, verifies
 the public contract import and packaged licenses, and runs the installed CLI
 against valid and invalid fixtures plus compile, Hono RouteIndex, and
-TypeScript FormIndex artifacts and SARIF output. It is not part of
+TypeScript FormIndex artifacts and SARIF output. It also imports the public
+`hono-jsx` compiler subpath and checks minimal JSX and maintained guarded RSVP
+sources with only the registry-installed CLI: canonical index output, passing
+reports, stale configuration and source rejection, and regenerated field drift.
+Checkout application runners and local package tarballs are not used. It is not part of
 aggregate `check` and
 must run only through the configured `mensor_registry_smoke` intent after
 explicit network approval.
