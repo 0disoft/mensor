@@ -14,19 +14,16 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.9.0` is the current public preview. It adds deterministic SARIF
-2.1.0 output for completed checks.
-
-Version `0.10.0` is the current release candidate. It adds explicit bounded
+Version `0.10.0` is the current public preview. It adds explicit bounded
 Hono JSX form indexing and includes the unreleased 0.9.1 runtime and compiler
-hardening. It has not been published to npm.
+hardening. All four packages are published to npm with provenance.
 
 ## Registry Installation
 
 The supported CLI installation path is:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.9.0
+pnpm add --save-dev @0disoft/mensor-cli@0.10.0
 pnpm exec mensor check . --json
 pnpm exec mensor check . --sarif
 pnpm exec mensor compile . --out .mensor/manifest.json
@@ -34,14 +31,10 @@ pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app
 pnpm exec mensor index-ts-forms . --source src/views.ts --tag html
 ```
 
-See the [release runbook](docs/releasing/runbook.md), the [`0.9.0` migration
-note](docs/releasing/0.9.0.md), and the prior
+See the [release runbook](docs/releasing/runbook.md), the [`0.10.0` migration
+note](docs/releasing/0.10.0.md), and the prior
 [`0.2.0` release audit](docs/product/0.2.0-release-audit.md) for the publication
 process and compatibility boundary.
-
-After publication, install the candidate with
-`pnpm add --save-dev @0disoft/mensor-cli@0.10.0`. Its changes and compatibility
-notes are in [the 0.10.0 release notes](docs/releasing/0.10.0.md).
 
 ## Contract Path Bases
 

@@ -181,7 +181,6 @@ assert.equal(await response.text(), "ok\\n");
       "install",
       "--ignore-scripts",
       "--lockfile=false",
-      "--prefer-offline=false",
       `--registry=${registry}`,
       `--store-dir=${storeRoot}`,
     ],
