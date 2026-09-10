@@ -56,6 +56,9 @@ SARIF formatter and CLI output. Build output is cleaned first and
 must exactly match the current source graph before packaging.
 
 The installed-consumer gate also imports the compiler's `hono-jsx` subpath,
+copies the maintained guarded RSVP source and contracts without checkout runners,
+and verifies its index, passing report, stale-source rejection and regenerated
+email-field drift using only the installed CLI. It also
 generates and consumes a JSX FormIndex using explicit root-level evidence,
 rejects stale configuration and detects form-field drift after regeneration.
 An unchanged copy of the real RSVP trial passes bounded read-only helper

@@ -213,6 +213,11 @@ if (compiled.ok) {
   await prepareTypeScriptFormFixture(path.join(consumerRoot, "valid-ts"));
   await prepareHonoJsxConsumerFixture(repositoryRoot, path.join(consumerRoot, "valid-jsx"));
   await copyHonoJsxTrial(repositoryRoot, path.join(consumerRoot, "real-rsvp"));
+  const guardedRoot = path.join(consumerRoot, "guarded-rsvp");
+  await mkdir(guardedRoot);
+  for (const file of ["app", "mensor.project.jsonc", "tsconfig.json", "vite.config.ts"]) {
+    await cp(path.join(repositoryRoot, "examples/honox-guarded-rsvp", file), path.join(guardedRoot, file), { recursive: true });
+  }
   await cp(
     path.join(repositoryRoot, "fixtures", "valid", "hono-static-tasks"),
     path.join(consumerRoot, "valid-hono"),
@@ -345,6 +350,20 @@ if (compiled.ok) {
   const driftedJsx = await runMensor(consumerRoot, "valid-jsx");
   assert.equal(driftedJsx.code, 1, driftedJsx.stdout);
   assert.ok(JSON.parse(driftedJsx.stdout).diagnostics.some((item) => item.code === "form.field_missing"));
+  const guardedIndex = await runMensorJsxIndex(consumerRoot, "guarded-rsvp", "app/routes/rsvp.tsx");
+  assert.equal(guardedIndex.code, 0, guardedIndex.stdout);
+  const guardedCheck = await runMensor(consumerRoot, "guarded-rsvp", ["--report-version", "2"]);
+  assert.equal(guardedCheck.code, 0, guardedCheck.stdout);
+  assert.deepEqual(JSON.parse(guardedCheck.stdout).inspection.forms, { state: "checked", basis: "form-index" });
+  const guardedSource = path.join(guardedRoot, "app/routes/rsvp.tsx");
+  await writeFile(guardedSource, (await readFile(guardedSource, "utf8")).replace('name="email"', 'name="contact"'));
+  const guardedStale = await runMensor(consumerRoot, "guarded-rsvp");
+  assert.equal(guardedStale.code, 2, guardedStale.stdout);
+  assert.equal(JSON.parse(guardedStale.stdout).failure.code, "form_index.digest_mismatch");
+  assert.equal((await runMensorJsxIndex(consumerRoot, "guarded-rsvp", "app/routes/rsvp.tsx")).code, 0);
+  const guardedDrift = await runMensor(consumerRoot, "guarded-rsvp");
+  assert.equal(guardedDrift.code, 1, guardedDrift.stdout);
+  assert.ok(JSON.parse(guardedDrift.stdout).diagnostics.some((entry) => entry.code === "form.field_missing" && entry.facts.fieldName === "email"));
   const rsvp = await runMensorJsxIndex(consumerRoot, "real-rsvp", "app/routes/rsvp.tsx");
   assert.equal(rsvp.code, 0, rsvp.stdout);
   const rsvpDocument = JSON.parse(rsvp.stdout).documents.find((entry) => entry.path === "app/routes/rsvp.tsx");

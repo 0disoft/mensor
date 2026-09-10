@@ -6,6 +6,8 @@ All notable changes to Mensor are documented in this file.
 
 ### Added
 
+- Exercise the maintained guarded RSVP example with the isolated installed CLI,
+  including source freshness and regenerated email-field drift.
 - Add a runnable guarded HonoX RSVP checkout example with FormIndex generation,
   project checks, temporary mutation detection and protected HTTP semantics.
 - Extract forms beside guarded runtime text lists using direct `Array.from`,
