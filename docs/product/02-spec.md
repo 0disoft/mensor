@@ -383,18 +383,28 @@ package exports, migration note, and consumer smokes are synchronized through
 
 ## Next Product Validation Gate
 
+The current public preview is `0.10.0`, with four published packages: contract,
+compiler, CLI, and reference runtime. Release closure, exact release commit,
+same-SHA hosted checks, and publication evidence are recorded in
+`docs/releasing/0.10.0.md`. The manually dispatched release workflow directly
+publishes all four packages through OIDC with provenance after its CI gate;
+it receives no registry secret. This supersedes the historical stage-only
+publication procedure. The product name, Apache-2.0 license, DCO policy,
+`@0disoft/mensor-*` package identities, and repository security policy remain
+unchanged.
+
+The public registry-consumer smoke now covers the JSX compiler subpath and
+explicit JSX FormIndex CLI in addition to the earlier consumers. Minimal JSX
+and maintained guarded RSVP inputs pass; stale evidence is rejected and
+regenerated field drift is diagnosed. This is installed-package engineering
+evidence, not a fresh agent onboarding result or general HonoX compatibility.
+Runtime application tests remain a separate required gate even when Mensor
+passes. The next product validation is a fresh published-package coding-agent
+trial, followed only by fixes for observed setup or diagnostic friction.
+
 The repeated evaluator-owned `rsvp-v2` response run and the `0.1.0`
-release-candidate audit are complete. Runtime application tests remain a
-separate required gate even when Mensor passes. The product name, Apache-2.0
-license, DCO policy, `@0disoft/mensor-*` package identities, repository security
-policy, public package metadata, release notes, migration note, and stage-only
-OIDC workflow are decided. Version `0.1.0` and all three package identities are
-public, and their stage-only trusted-publisher bindings are configured. Release
-closure is complete: the fresh public registry-consumer smoke passed and the
-`v0.1.0` tag and GitHub release point to the remotely tested release commit, as
-recorded in `docs/product/0.1.0-release-candidate-audit.md`. Package settings
-may permit granular tokens, but the release workflow remains OIDC-only and
-receives no registry secret. The later Hermes onboarding exposed omitted and
+release-candidate audit remain completed historical evidence, recorded in
+`docs/product/0.1.0-release-candidate-audit.md`. The later Hermes onboarding exposed omitted and
 hand-maintained RouteIndexes, opening the narrow explicit Hono producer in
 ADR-0038. This does not open Node request inference or a generic adapter
 lifecycle. External maintainer recruitment and another agent attestation layer
