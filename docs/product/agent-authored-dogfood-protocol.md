@@ -28,6 +28,14 @@
 - Hermes desktop onboarding run:
   `docs/product/agent-authored-hermes-onboarding-run-2026-07-22.md`
 
+## Prepared 0.10.0 Trial
+
+The next single-trial preparation is [published onboarding v3](published-onboarding-v3.md).
+It has a new brief, protected oracle wrapper and disjoint result paths. It has
+not dispatched an agent; the v2 cohort and observations above remain historical
+and are not migrated or overwritten. A v3-specific evaluator is required before
+generated artifact execution.
+
 ## Purpose
 
 This protocol measures whether a coding agent can learn Mensor's project

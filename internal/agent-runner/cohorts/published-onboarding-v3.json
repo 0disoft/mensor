@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "cohortId": "published-onboarding-v3",
+  "status": "prepared-not-run",
+  "packageVersion": "0.10.0",
+  "packageManager": "pnpm@12.3.4",
+  "registry": "https://registry.npmjs.org/",
+  "trialCount": 1,
+  "correctionLimit": 1,
+  "modelSelection": "inherit-host-model-record-observed-identity-at-dispatch",
+  "contextPolicy": "fresh-agent-no-inherited-conversation",
+  "toolPolicy": "instruct-no-tools-not-host-enforced",
+  "classification": "exploratory-not-sandbox-evidence",
+  "brief": "internal/agent-runner/briefs/published-rsvp-onboarding-v3.md",
+  "transport": "internal/agent-runner/briefs/response-artifact-v1.md",
+  "oracle": "internal/agent-runner/oracles/published-rsvp-onboarding-v3.test.mjs",
+  "documentation": [
+    "docs/cli/command-contract.md",
+    "docs/library/public-api.md",
+    "packages/contract/spec/README.md"
+  ],
+  "rawResponsePath": "dist/agent-onboarding/published-v3/raw/trial-1.txt",
+  "observationPath": "internal/agent-runner/observations/published-onboarding-v3/trial-1.json",
+  "executionLimits": {
+    "generationSeconds": 300,
+    "installSeconds": 120,
+    "semanticSeconds": 30,
+    "checkSeconds": 30,
+    "processOutputBytes": 65536
+  }
+}
