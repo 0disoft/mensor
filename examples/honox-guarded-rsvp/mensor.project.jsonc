@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "sourceRoot": "app",
+  "featureContracts": ["app/feature.mensor.jsonc"],
+  "formIndex": "mensor.form-index.json",
+  "formIndexEvidence": ["tsconfig.json", "vite.config.ts"],
+  "fileRoles": [{ "role": "route", "withinFeature": "routes" }]
+}

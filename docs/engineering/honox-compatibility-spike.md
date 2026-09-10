@@ -160,6 +160,15 @@ dynamic constructs, and source ranges found in the candidate.
 
 ### Existing RSVP Adoption Check
 
+The maintained [guarded RSVP example](../../examples/honox-guarded-rsvp/README.md)
+now supplies a reproducible checkout path: explicit JSX index generation,
+project `check`, temporary field-drift and freshness checks, and a real Vite/HonoX
+build exercised by the protected HTTP oracle. The contract names the actual
+POST export in the route file. Static route inspection remains `not-configured`;
+the HTTP tests separately exercise file routing and handler behavior. Example
+dependencies and generated output are isolated from public packages, and its
+local in-memory server is a manual developer entrypoint, not production hosting.
+
 The unchanged `honox-rsvp-v1` build configuration now passes the static
 activation check, including its literal Rollup output filenames. Its renderer
 also passes. The route now passes activation because its local `getStore(c)`

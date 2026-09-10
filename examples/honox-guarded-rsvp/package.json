@@ -1,0 +1,13 @@
+{
+  "name": "mensor-honox-guarded-rsvp-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "start": "node serve.mjs",
+    "check": "node check.mjs",
+    "test": "vite build && node --test test/*.test.mjs"
+  },
+  "dependencies": { "hono": "^4.13.7", "honox": "^0.1.61" },
+  "devDependencies": { "vite": "^7.0.0" }
+}

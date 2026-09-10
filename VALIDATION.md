@@ -120,6 +120,14 @@ repair-rate measurement.
 
 ## Hygiene Validation
 
+The maintained `examples/honox-guarded-rsvp` checkout example has a separate
+bounded `mensor_guarded_rsvp_check` gate: generate and consume FormIndex, reject
+stale source and renderer evidence, detect a regenerated field mutation, build
+the real HonoX server, and run the protected HTTP oracle. It requires its own
+installed private dependencies and built workspace packages. It is not part of
+aggregate `check`, does not start a listener, and does not claim a static HonoX
+RouteIndex. The example README documents manual installation and serving.
+
 Repository hygiene file changes must check line-ending churn, binary diff pollution,
 tracked secret files, ignored build/cache artifacts, and generated-output drift.
 
