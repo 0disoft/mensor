@@ -16,6 +16,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isPackageManagerExecutable } from "./lib/package-manager-entrypoint.mjs";
 
 import {
   createAgentAuthoredBuildExploratoryObservation,
@@ -360,8 +361,7 @@ async function runMensorCheck(projectRoot) {
 }
 
 function runPackageManager(args, cwd, npmUserConfig, timeoutMs) {
-  const executable = path.extname(packageManagerEntrypoint).toLowerCase()
-    === ".exe";
+  const executable = isPackageManagerExecutable(packageManagerEntrypoint);
   return capture(
     executable ? packageManagerEntrypoint : process.execPath,
     [...(executable ? [] : [packageManagerEntrypoint]), ...args],

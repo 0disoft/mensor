@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isPackageManagerExecutable } from "./lib/package-manager-entrypoint.mjs";
 
 const modulePath = fileURLToPath(import.meta.url);
 
@@ -44,7 +45,7 @@ export async function packReleaseArtifacts({
     );
   }
 
-  const pnpmExecutable = path.extname(pnpmEntrypoint).toLowerCase() === ".exe";
+  const pnpmExecutable = isPackageManagerExecutable(pnpmEntrypoint);
   await rm(releaseRoot, { recursive: true, force: true });
   await mkdir(releaseRoot, { recursive: true });
 

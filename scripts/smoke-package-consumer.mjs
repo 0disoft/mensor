@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { isPackageManagerExecutable } from "./lib/package-manager-entrypoint.mjs";
 import { copyHonoJsxTrial, prepareHonoJsxConsumerFixture } from "./lib/hono-jsx-consumer-fixture.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
@@ -14,7 +15,7 @@ const pnpmEntrypoint = process.env.npm_execpath;
 if (pnpmEntrypoint === undefined || pnpmEntrypoint.length === 0) {
   throw new Error("Package smoke must be run through the configured pnpm script.");
 }
-const pnpmExecutable = path.extname(pnpmEntrypoint).toLowerCase() === ".exe";
+const pnpmExecutable = isPackageManagerExecutable(pnpmEntrypoint);
 
 try {
   await mkdir(consumerRoot, { recursive: true });

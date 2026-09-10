@@ -14,6 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isPackageManagerExecutable } from "./lib/package-manager-entrypoint.mjs";
 
 const registry = "https://registry.npmjs.org/";
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
@@ -39,8 +40,7 @@ if (
   throw new Error("Registry smoke must be run through the configured pnpm script.");
 }
 
-const packageManagerIsExecutable =
-  path.extname(packageManagerEntrypoint).toLowerCase() === ".exe";
+const packageManagerIsExecutable = isPackageManagerExecutable(packageManagerEntrypoint);
 const temporaryRoot = await mkdtemp(
   path.join(tmpdir(), "mensor-registry-smoke-"),
 );
