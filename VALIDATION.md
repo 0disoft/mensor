@@ -123,6 +123,12 @@ repair-rate measurement.
 
 ## Hygiene Validation
 
+The `Guarded RSVP` GitHub workflow runs the maintained example gate for changes
+to its sources, compiler packages, protected oracle, scripts or dependency
+metadata. It uses locked installs and a read-only token on Ubuntu/Node 24; it
+does not publish packages. Local verification is not a claim that a remote run
+has completed.
+
 The maintained `examples/honox-guarded-rsvp` checkout example has a separate
 bounded `mensor_guarded_rsvp_check` gate: generate and consume FormIndex, reject
 stale source and renderer evidence, detect a regenerated field mutation, build
