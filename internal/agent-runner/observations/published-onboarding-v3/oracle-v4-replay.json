@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "kind": "published-onboarding-v3-oracle-replay",
+  "independentSample": false,
+  "artifactModified": false,
+  "correctionCount": 0,
+  "originalObservation": {
+    "file": "internal/agent-runner/observations/published-onboarding-v3/trial-1.json",
+    "sha256": "c68e981fe20e30de702663d693c871a6ae273ad5f1bdf732696f36f4d9c61783"
+  },
+  "responseSha256": "d12677d1499e8ac89fa15ad7ef265e3eb57b411b760640c17be742169c5a53c2",
+  "originalInput": {
+    "profileSha256": "4878baba810f8a13f8609f18955694fbbc589a2563b7db69367f2ca0b02606ed",
+    "documents": [
+      {
+        "file": "internal/agent-runner/briefs/published-rsvp-onboarding-v3.md",
+        "sha256": "4424fe95e2ab07fc631e102ff5436f65409b18b6ca2df8694f86c87d21fe6db2"
+      },
+      {
+        "file": "internal/agent-runner/briefs/response-artifact-v1.md",
+        "sha256": "df2a08425eeeadb4268d3b5de6d1fac8d0f76ee5840b970665c9a178a38db491"
+      },
+      {
+        "file": "docs/cli/command-contract.md",
+        "sha256": "26e62f7e10abb6e76075c6ca312485440f64461958ecf153de1d012e50713a74"
+      },
+      {
+        "file": "docs/library/public-api.md",
+        "sha256": "6cb5b789af20e780549b97626d430037eb5ca0c4c4a3e676add03161b4ca050c"
+      },
+      {
+        "file": "packages/contract/spec/README.md",
+        "sha256": "80faaa8f6bec18682c9568ebd5ae8d30fbc743ab5a19276c0f9293ac163261dc"
+      }
+    ],
+    "oracleDigests": [
+      {
+        "file": "internal/agent-runner/oracles/published-rsvp-onboarding-v3.test.mjs",
+        "sha256": "dadc50510b9c7c3d0b6d170bc8987349ba93b166755a0cf527058ba56bf6e547"
+      },
+      {
+        "file": "internal/agent-runner/oracles/rsvp-v2.test.mjs",
+        "sha256": "d3bcc766ce3cff6d79326c8aa805f7e09643d403d771b9e029ac0e86db3f5ef4"
+      }
+    ]
+  },
+  "oracleInputs": [
+    {
+      "file": "internal/agent-runner/oracles/published-rsvp-onboarding-v4.test.mjs",
+      "sha256": "7927f88dd524fc9479bc194322280abca99781356f4c54ea913077c031bb8322"
+    },
+    {
+      "file": "internal/agent-runner/oracles/rsvp-v3.test.mjs",
+      "sha256": "626dc2aa8f55cb10012503bacc3ab0cea9c9efd4b9d9efc7c4c1baea8325a236"
+    },
+    {
+      "file": "scripts/lib/rsvp-response-content.mjs",
+      "sha256": "2a76e056a6186dcd62dc27293a549bdaafb515e468ea4a2173e85c443e7a17e2"
+    },
+    {
+      "file": "scripts/replay-onboarding-v3-oracle.mjs",
+      "sha256": "76d207cd3ba3c782ce8a66860182377b3091eff52046f16b1f6e5545a2fff894"
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "sha256": "d61b4b6fda7061c77bf9ce80aeefe5a316fa24c967b39fea6e2d660a09c2e7a8"
+    }
+  ],
+  "packageInstallation": "not-repeated",
+  "mensorCheck": "not-repeated",
+  "originalMensor": {
+    "outcome": "completed",
+    "exitCode": 2,
+    "passed": false,
+    "diagnosticCodes": [],
+    "failureCode": "contract.invalid",
+    "inspection": null
+  },
+  "semanticPassed": true,
+  "semantic": {
+    "outcome": "completed",
+    "exitCode": 0,
+    "tests": 7,
+    "passed": 7,
+    "failed": 0
+  }
+}

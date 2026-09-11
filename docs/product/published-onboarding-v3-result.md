@@ -54,6 +54,12 @@ was produced because configuration validation failed first.
 
 ## Next Bounded Change
 
+Follow-up: the [corrected-oracle replay](published-onboarding-v3-replay.md)
+completed with 7/7 protected checks passing on the unchanged artifact. The
+original observation above remains immutable; this is not another independent
+sample or a successful Mensor check. The plan below records the original next
+steps rather than replacing that initial result.
+
 Create a new oracle revision that checks rendered response content without fixing
 the surrounding markup. Add paragraph/list positive controls and a missing-value
 negative control. Preserve the original oracle, its input hashes and this verdict;
