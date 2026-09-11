@@ -26,8 +26,13 @@ historical v1/v2 outputs. Raw responses remain ignored under `dist/`.
 At dispatch, record the observed host model/provider, reasoning configuration,
 exact baseline commit and input manifest; do not fabricate unavailable identity
 or silently substitute a model. Start a fresh agent with no inherited context.
-The next execution increment must configure a v3-only artifact evaluator before
-running any generated code. Do not invoke `evaluate-published-onboarding.mjs`:
+The v3-only `mensor_onboarding_v3_evaluate` intent runs the reviewed artifact
+through `scripts/evaluate-published-onboarding-v3.mjs`. It requires a separate
+review receipt bound to the response digest, input digests, dispatch baseline
+and actual agent id. Host-inherited model identity may be unavailable and must
+then remain null rather than guessed. It rejects changed inputs before execution
+and exclusively creates the observation so a retry cannot overwrite evidence.
+Do not invoke `evaluate-published-onboarding.mjs`:
 it targets historical v2 paths and 0.9.0 packages and has obsolete pnpm options.
 
 Review and validate the response transport before materializing a fresh temporary
