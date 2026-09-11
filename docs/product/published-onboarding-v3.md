@@ -1,9 +1,12 @@
 # Published Onboarding v3 Preparation
 
-- Status: Prepared, no agent dispatched and no adoption result claimed
+- Status: One artifact evaluated; see [actual results](published-onboarding-v3-result.md)
 - Package baseline: Four public Mensor packages at 0.10.0
 - Scope: One fresh response-artifact Node RSVP trial, at most one correction
 - Classification: Exploratory, prompt-only restrictions are not host isolation
+
+The profile's `prepared-not-run` status is the immutable pre-dispatch input state,
+not a live run tracker. Actual verdicts belong to the separate observation above.
 
 The [brief](../../internal/agent-runner/briefs/published-rsvp-onboarding-v3.md)
 and [profile](../../internal/agent-runner/cohorts/published-onboarding-v3.json)

@@ -28,13 +28,13 @@
 - Hermes desktop onboarding run:
   `docs/product/agent-authored-hermes-onboarding-run-2026-07-22.md`
 
-## Prepared 0.10.0 Trial
+## 0.10.0 Trial
 
-The next single-trial preparation is [published onboarding v3](published-onboarding-v3.md).
-It has a new brief, protected oracle wrapper and disjoint result paths. It has
-not dispatched an agent; the v2 cohort and observations above remain historical
-and are not migrated or overwritten. A v3-specific evaluator is required before
-generated artifact execution.
+The single [published onboarding v3](published-onboarding-v3.md) trial has been
+evaluated with disjoint v3 inputs and output. Its [result](published-onboarding-v3-result.md)
+separates a real enum-authoring failure from an overly specific semantic oracle.
+The v2 cohort and observations above remain historical and are not migrated or
+overwritten. The original v3 failed verdict is also preserved.
 
 ## Purpose
 
