@@ -258,6 +258,58 @@ as is adding `"empty":"reject"`. Unknown decoder properties cause
 
 These are the existing revision-1 rules, not newly supported decoder options.
 
+#### Check, Correct, And Recheck
+
+Run these commands from your application's project root with its existing
+project and feature contracts. The snippets below edit only the attendance
+binding's `decode` object from the complete example above; they are not complete
+feature contracts.
+
+1. **Identify the configuration error.** An enum decoder copied from a text
+   binding might incorrectly contain these properties:
+
+   ```json
+   { "kind": "enum", "values": ["yes", "no", "maybe"], "trim": true, "empty": "reject" }
+   ```
+
+   Run `pnpm exec mensor check .`. It exits `2` with `contract.invalid`,
+   naming the invalid feature contract. In the unpublished `0.10.1` candidate,
+   an otherwise-valid enum decoder also produces this hint when it is the
+   first binding of the first action:
+
+   ```text
+     hint: /actions/0/input/formCodec/bindings/0/decode: enum decoders accept only "kind" and "values"; "trim" and "empty" are text-decoder options.
+   ```
+
+   The numbers are zero-based array indexes. Follow this path in the feature
+   contract named on the error line. On `0.10.0`, use
+   `pnpm exec mensor check . --json` and inspect `failure.file` and
+   `failure.issues[].instancePath` instead. JSON includes errors from other
+   decoder candidates too; not every candidate error describes your decoder.
+
+2. **Remove only the unsupported properties.** Replace that decoder with:
+
+   ```json
+   { "kind": "enum", "values": ["yes", "no", "maybe"] }
+   ```
+
+   Keep the enum schema, its value order, required field and form controls
+   unchanged. Do not switch to a text decoder or weaken the contract just to
+   silence the error. If your application needs whitespace normalization,
+   handle that as a separate runtime design decision, not an enum option.
+
+3. **Recheck the complete project.** Run
+   `pnpm exec mensor check . --json --report-version 2`. Correcting this decoder
+   removes this configuration failure; it does not guarantee a passing project.
+   Exit `0` means the configured checks passed. Exit `1` means contract
+   diagnostics remain; inspect `diagnostics`. Exit `2` means a configuration
+   failure remains; inspect `failure`. A completed revision-2 report also lists
+   `inspection` states so you can see which checks were configured.
+
+Run the application's own tests separately. A passing Mensor report does not
+prove request handling, persistence or other runtime behavior. Human hints are
+for people; automation should continue consuming the JSON envelope.
+
 `ProjectContract.boundaries` declares project-owned role policies. `direct`
 checks only edges originating in a configured role; `transitive` follows the
 normalized local module graph. ESM and literal CommonJS edges are included,
