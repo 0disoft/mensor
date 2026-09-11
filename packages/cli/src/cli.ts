@@ -23,6 +23,7 @@ import {
 import { formatDiagnosticReportSarif } from "./sarif.js";
 import { produceHonoJsxFormIndex } from "./hono-jsx-form-index.js";
 import { normalizeSourcePath } from "./template-source.js";
+import { humanFailureHints } from "./human-failure-hints.js";
 import type {
   CliFailureEnvelope,
   RunCliOptions,
@@ -596,6 +597,9 @@ function writeFailure(
     return;
   }
   options.stderr(`mensor: ${failure.code}: ${failure.message}\n`);
+  for (const hint of humanFailureHints(failure)) {
+    options.stderr(`  hint: ${hint}\n`);
+  }
 }
 
 function canonicalV2Failure(failure: CompilerFailure): CompilerFailure {

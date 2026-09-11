@@ -2,6 +2,15 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.10.1] - Unreleased
+
+### Fixed
+
+- Explain otherwise-valid enum decoders with unsupported properties in human
+  CLI failures, including their JSON Pointer and allowed properties. Preserve
+  JSON envelopes, compiler failures, error codes and exit codes.
+
+
 ## [0.10.0] - Unreleased
 
 ### Added

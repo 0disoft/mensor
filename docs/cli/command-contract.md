@@ -51,6 +51,15 @@ Human mode writes concise diagnostics for a terminal. JSON mode writes exactly
 one JSON document followed by one LF newline to stdout. JSON mode does not emit
 progress, color codes, banners, timing, or debug logs to stdout.
 
+For an invalid feature contract, human mode retains the configuration error
+line and may append up to three sorted, deduplicated decoder-path hints to
+stderr. An otherwise-valid enum decoder rejected only for additional properties
+gets a reminder that only `kind` and `values` are allowed; `trim` and `empty`
+belong to text decoders. Ambiguous decoder candidates and malformed enum values
+do not receive this hint. These hints use existing schema issues, without
+rereading input files. JSON failure envelopes, error codes and exit codes are
+unchanged.
+
 The default revision-1 report envelope contains:
 
 ```text
@@ -138,7 +147,7 @@ The failure envelope is:
   "schemaVersion": 1,
   "producer": {
     "name": "mensor",
-    "version": "0.10.0"
+    "version": "0.10.1"
   },
   "status": "error",
   "failure": {
