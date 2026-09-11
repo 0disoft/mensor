@@ -290,6 +290,7 @@ if (compiled.ok) {
     }
   }
   await run(process.execPath, ["contract-smoke.mjs"], consumerRoot);
+  await assertInstalledEnumHints(consumerRoot);
 
   const valid = await runMensor(consumerRoot, "valid");
   assert.equal(valid.code, 0, valid.stderr);
@@ -447,6 +448,44 @@ async function listFiles(root, relativeDirectory = "") {
     }
   }
   return files;
+}
+
+async function assertInstalledEnumHints(cwd) {
+  const root = path.join(cwd, "invalid-enum");
+  await cp(path.join(cwd, "valid"), root, { recursive: true });
+  const file = path.join(root, "src/features/tasks/feature.mensor.jsonc");
+  const contract = JSON.parse(await readFile(file, "utf8"));
+  contract.actions[0].input.formCodec.bindings[0].decode = {
+    kind: "enum", values: ["yes", "no"], trim: true, empty: "reject",
+  };
+  await writeFile(file, `${JSON.stringify(contract)}\n`, "utf8");
+  const human = await capture(pnpmExecutable ? pnpmEntrypoint : process.execPath,
+    [...(pnpmExecutable ? [] : [pnpmEntrypoint]), "exec", "mensor", "check", "invalid-enum"], cwd);
+  assert.equal(human.code, 2, human.stdout || human.stderr);
+  assert.equal(human.stdout, "");
+  const expectedHint = '  hint: /actions/0/input/formCodec/bindings/0/decode: ' +
+    'enum decoders accept only "kind" and "values"; "trim" and "empty" are text-decoder options.\n';
+  const metadata = JSON.parse(await readFile(
+    path.join(cwd, "node_modules/@0disoft/mensor-cli/package.json"), "utf8"));
+  let originalFailure;
+  for (const schemaVersion of [1, 2]) {
+    const result = await runMensor(cwd, "invalid-enum", ["--report-version", String(schemaVersion)]);
+    assert.equal(result.code, 2, result.stdout || result.stderr);
+    assert.equal(result.stderr, "");
+    const envelope = JSON.parse(result.stdout);
+    assert.deepEqual(Object.keys(envelope), ["schemaVersion", "producer", "status", "failure"]);
+    assert.equal(envelope.schemaVersion, schemaVersion);
+    assert.deepEqual(envelope.producer, { name: "mensor", version: metadata.version });
+    assert.equal(envelope.status, "error");
+    assert.equal(envelope.failure.code, "contract.invalid");
+    assert.ok(envelope.failure.issues.length > 0);
+    assert.equal(human.stderr, `mensor: contract.invalid: ${envelope.failure.message}\n${expectedHint}`);
+    if (originalFailure) assert.deepEqual(envelope.failure, originalFailure);
+    originalFailure = envelope.failure;
+    assert.equal(result.stdout, `${JSON.stringify(envelope, null, 2)}\n`);
+    assert.equal(result.stdout.includes("hint:"), false);
+  }
+  process.stdout.write(`Installed CLI ${metadata.version}: enum human hint and JSON v1/v2 passed.\n`);
 }
 
 async function runMensor(cwd, fixture, extraArgs = []) {

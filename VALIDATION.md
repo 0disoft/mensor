@@ -55,6 +55,11 @@ TypeScript tagged-template FormIndex. It also checks the installed public
 SARIF formatter and CLI output. Build output is cleaned first and
 must exactly match the current source graph before packaging.
 
+The same isolated consumer checks an invalid enum decoder through the installed
+CLI: human stderr must contain the decoder path and allowed properties, while
+JSON revisions 1 and 2 preserve the configuration failure without hints. Both
+modes must exit 2, and producer metadata must match the installed CLI version.
+
 The installed-consumer gate also imports the compiler's `hono-jsx` subpath,
 copies the maintained guarded RSVP source and contracts without checkout runners,
 and verifies its index, passing report, stale-source rejection and regenerated
