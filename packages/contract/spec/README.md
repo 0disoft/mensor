@@ -214,6 +214,50 @@ overrides are represented as unsupported control facts and emit
 missing explicit runtime value export emits `handler.export_missing`. Type-only
 and ambient declarations do not satisfy a handler contract.
 
+### Enum Authoring
+
+Use the following complete action `input` object for one required attendance
+radio group. Its controls share `name="attendance"` and use the literal values
+`yes`, `no`, and `maybe`.
+
+```json
+{
+  "schema": {
+    "kind": "object",
+    "properties": {
+      "attendance": {
+        "kind": "enum",
+        "values": ["yes", "no", "maybe"]
+      }
+    },
+    "required": ["attendance"]
+  },
+  "formCodec": {
+    "encoding": "urlencoded",
+    "unknownFields": "reject",
+    "bindings": [
+      {
+        "name": "attendance",
+        "path": ["attendance"],
+        "decode": {
+          "kind": "enum",
+          "values": ["yes", "no", "maybe"]
+        }
+      }
+    ]
+  }
+}
+```
+
+An enum decoder accepts exactly `kind` and `values`. Its values must match the
+enum schema in the same order. Do not copy `trim` or `empty` from a text decoder:
+neither property is accepted by an enum decoder. For example,
+`{"kind":"enum","values":["yes","no","maybe"],"trim":true}` is invalid,
+as is adding `"empty":"reject"`. Unknown decoder properties cause
+`contract.invalid` before the compiler can emit an inspection report.
+
+These are the existing revision-1 rules, not newly supported decoder options.
+
 `ProjectContract.boundaries` declares project-owned role policies. `direct`
 checks only edges originating in a configured role; `transitive` follows the
 normalized local module graph. ESM and literal CommonJS edges are included,
