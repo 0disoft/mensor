@@ -54,6 +54,10 @@ was produced because configuration validation failed first.
 
 ## Next Bounded Change
 
+Closure: the [single guided correction](published-onboarding-v3-correction.md)
+subsequently passed all seven revised semantic tests and the installed Mensor
+check. The original failure below is historical evidence and is not overwritten.
+
 Follow-up: the [corrected-oracle replay](published-onboarding-v3-replay.md)
 completed with 7/7 protected checks passing on the unchanged artifact. The
 original observation above remains immutable; this is not another independent

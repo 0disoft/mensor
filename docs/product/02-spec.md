@@ -399,8 +399,14 @@ and maintained guarded RSVP inputs pass; stale evidence is rejected and
 regenerated field drift is diagnosed. This is installed-package engineering
 evidence, not a fresh agent onboarding result or general HonoX compatibility.
 Runtime application tests remain a separate required gate even when Mensor
-passes. The next product validation is a fresh published-package coding-agent
-trial, followed only by fixes for observed setup or diagnostic friction.
+passes. The fresh 0.10.0 published-package coding-agent trial is now closed after
+one explicitly guided enum-contract correction passed both the revised semantic
+oracle and the installed Mensor check. Its original authoring failure, oracle
+false rejection, unchanged-artifact replay and corrected-artifact verdict are
+separately recorded in [the closure report](published-onboarding-v3-correction.md).
+This is one exploratory continuation, not a new independent sample or a general
+compatibility claim. Further work should address observed setup or diagnostic
+friction rather than automatically extending this cohort or supported syntax.
 
 The repeated evaluator-owned `rsvp-v2` response run and the `0.1.0`
 release-candidate audit remain completed historical evidence, recorded in

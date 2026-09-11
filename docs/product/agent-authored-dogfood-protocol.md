@@ -35,6 +35,10 @@ evaluated with disjoint v3 inputs and output. Its [result](published-onboarding-
 separates a real enum-authoring failure from an overly specific semantic oracle.
 The v2 cohort and observations above remain historical and are not migrated or
 overwritten. The original v3 failed verdict is also preserved.
+The trial is now closed: [one guided correction](published-onboarding-v3-correction.md)
+of the enum decoder passed the revised semantic oracle and the installed Mensor
+check. It is a continuation with additional public documentation, not another
+independent sample; no further correction is authorized by this trial.
 
 ## Purpose
 

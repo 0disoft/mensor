@@ -1,12 +1,14 @@
 # Published Onboarding v3 Preparation
 
-- Status: One artifact evaluated; see [actual results](published-onboarding-v3-result.md)
+- Status: Closed after [one guided correction](published-onboarding-v3-correction.md) passed both gates
 - Package baseline: Four public Mensor packages at 0.10.0
 - Scope: One fresh response-artifact Node RSVP trial, at most one correction
 - Classification: Exploratory, prompt-only restrictions are not host isolation
 
 The profile's `prepared-not-run` status is the immutable pre-dispatch input state,
-not a live run tracker. Actual verdicts belong to the separate observation above.
+not a live run tracker. The [initial result](published-onboarding-v3-result.md),
+[oracle-only replay](published-onboarding-v3-replay.md) and correction result are
+separate observations, not replacements or independent samples.
 
 The [brief](../../internal/agent-runner/briefs/published-rsvp-onboarding-v3.md)
 and [profile](../../internal/agent-runner/cohorts/published-onboarding-v3.json)

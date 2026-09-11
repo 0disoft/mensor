@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "kind": "published-onboarding-v3-correction",
+  "independentSample": false,
+  "correctionCount": 1,
+  "furtherCorrectionsAllowed": false,
+  "agentId": "01a08f3d-5f8c-70c1-9d9e-de72de7b7364",
+  "identity": {
+    "selection": "host-inherited",
+    "modelId": null,
+    "providerId": null,
+    "reasoningEffort": null,
+    "source": "spawn-tool-does-not-return-resolved-model"
+  },
+  "originalObservation": {
+    "file": "internal/agent-runner/observations/published-onboarding-v3/trial-1.json",
+    "sha256": "c68e981fe20e30de702663d693c871a6ae273ad5f1bdf732696f36f4d9c61783"
+  },
+  "originalResponseSha256": "d12677d1499e8ac89fa15ad7ef265e3eb57b411b760640c17be742169c5a53c2",
+  "correctedResponseSha256": "3c1e9fb47bed9e4f7dd92e5fc6da4d0cdff537f61b647db7cb168e94caf23cf6",
+  "correctionInput": {
+    "file": "internal/agent-runner/briefs/published-onboarding-v3-correction-1.md",
+    "sha256": "80ed24a530b8fd595ec623b4bd6daa7a1e2667f1fbc5c3fbe6b18571456d7b56",
+    "guidance": "diagnostic-plus-updated-public-enum-documentation"
+  },
+  "oracleInputs": [
+    {
+      "file": "internal/agent-runner/oracles/published-rsvp-onboarding-v4.test.mjs",
+      "sha256": "7927f88dd524fc9479bc194322280abca99781356f4c54ea913077c031bb8322"
+    },
+    {
+      "file": "internal/agent-runner/oracles/rsvp-v3.test.mjs",
+      "sha256": "626dc2aa8f55cb10012503bacc3ab0cea9c9efd4b9d9efc7c4c1baea8325a236"
+    },
+    {
+      "file": "scripts/lib/rsvp-response-content.mjs",
+      "sha256": "2a76e056a6186dcd62dc27293a549bdaafb515e468ea4a2173e85c443e7a17e2"
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "sha256": "d61b4b6fda7061c77bf9ce80aeefe5a316fa24c967b39fea6e2d660a09c2e7a8"
+    }
+  ],
+  "changedFiles": [
+    "src/features/rsvp/feature.mensor.jsonc"
+  ],
+  "runtimeAndTemplateUnchanged": true,
+  "phase": "complete",
+  "success": true,
+  "packageContract": "passed",
+  "install": {
+    "outcome": "completed",
+    "exitCode": 0
+  },
+  "semantic": {
+    "outcome": "completed",
+    "exitCode": 0,
+    "tests": 7,
+    "passed": 7
+  },
+  "mensor": {
+    "outcome": "completed",
+    "exitCode": 0,
+    "passed": true,
+    "diagnosticCodes": [],
+    "failureCode": null,
+    "inspection": {
+      "filePlacement": {
+        "state": "checked",
+        "basis": "file-roles"
+      },
+      "forms": {
+        "state": "checked",
+        "basis": "static-html-form-index"
+      },
+      "handlers": {
+        "state": "checked",
+        "basis": "static-module-facts"
+      },
+      "moduleBoundaries": {
+        "state": "not-configured",
+        "basis": "module-graph"
+      },
+      "ownership": {
+        "state": "not-configured",
+        "basis": "ownership-rules"
+      },
+      "routes": {
+        "state": "not-configured",
+        "basis": "route-index"
+      },
+      "runtimeSemantics": {
+        "state": "out-of-scope",
+        "basis": "none"
+      }
+    }
+  }
+}
