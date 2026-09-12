@@ -383,10 +383,10 @@ package exports, migration note, and consumer smokes are synchronized through
 
 ## Next Product Validation Gate
 
-The current public preview is `0.10.0`, with four published packages: contract,
+The current public preview is `0.10.2`, with four published packages: contract,
 compiler, CLI, and reference runtime. Release closure, exact release commit,
 same-SHA hosted checks, and publication evidence are recorded in
-`docs/releasing/0.10.0.md`. The manually dispatched release workflow directly
+`docs/releasing/0.10.2.md`. The manually dispatched release workflow directly
 publishes all four packages through OIDC with provenance after its CI gate;
 it receives no registry secret. This supersedes the historical stage-only
 publication procedure. The product name, Apache-2.0 license, DCO policy,
