@@ -291,6 +291,7 @@ if (compiled.ok) {
   }
   await run(process.execPath, ["contract-smoke.mjs"], consumerRoot);
   await assertInstalledEnumHints(consumerRoot);
+  await assertInstalledMissingConfigHints(consumerRoot);
 
   const valid = await runMensor(consumerRoot, "valid");
   assert.equal(valid.code, 0, valid.stderr);
@@ -486,6 +487,47 @@ async function assertInstalledEnumHints(cwd) {
     assert.equal(result.stdout.includes("hint:"), false);
   }
   process.stdout.write(`Installed CLI ${metadata.version}: enum human hint and JSON v1/v2 passed.\n`);
+}
+
+async function assertInstalledMissingConfigHints(cwd) {
+  const fixture = "missing-config";
+  const root = path.join(cwd, fixture);
+  await mkdir(root);
+  const metadata = JSON.parse(await readFile(
+    path.join(cwd, "node_modules/@0disoft/mensor-cli/package.json"), "utf8"));
+  for (const config of [undefined, "custom.jsonc", "settings/custom.jsonc"]) {
+    const flags = config === undefined ? [] : ["--config", config];
+    let originalFailure;
+    for (const schemaVersion of [1, 2]) {
+      const result = await runMensor(cwd, fixture, [...flags, "--report-version", String(schemaVersion)]);
+      assert.equal(result.code, 3, result.stdout || result.stderr);
+      assert.equal(result.stderr, "");
+      const envelope = JSON.parse(result.stdout);
+      assert.deepEqual(Object.keys(envelope), ["schemaVersion", "producer", "status", "failure"]);
+      assert.equal(envelope.schemaVersion, schemaVersion);
+      assert.deepEqual(envelope.producer, { name: "mensor", version: metadata.version });
+      assert.equal(envelope.status, "error");
+      assert.equal(envelope.failure.kind, "filesystem");
+      assert.equal(envelope.failure.code, "path.missing");
+      assert.equal(envelope.failure.file, config === "settings/custom.jsonc" ? "settings" : config ?? "mensor.project.jsonc");
+      if (originalFailure) assert.deepEqual(envelope.failure, originalFailure);
+      originalFailure = envelope.failure;
+      assert.equal(result.stdout, `${JSON.stringify(envelope, null, 2)}\n`);
+      assert.equal(result.stdout.includes("hint:"), false);
+    }
+    for (const command of ["check", "compile"]) {
+      const human = await capture(pnpmExecutable ? pnpmEntrypoint : process.execPath,
+        [...(pnpmExecutable ? [] : [pnpmEntrypoint]), "exec", "mensor", command, fixture, ...flags], cwd);
+      assert.equal(human.code, 3, human.stdout || human.stderr);
+      assert.equal(human.stdout, "");
+      assert.ok(human.stderr.startsWith(`mensor: path.missing: ${originalFailure.message}\n`));
+      assert.ok(human.stderr.includes(`  hint: Project contract ${JSON.stringify(config ?? "mensor.project.jsonc")}`));
+      assert.match(human.stderr, /select the correct root or --config path/u);
+      assert.match(human.stderr, /Installing Mensor does not create contract files/u);
+      assert.deepEqual(await readdir(root), []);
+    }
+  }
+  process.stdout.write(`Installed CLI ${metadata.version}: missing config hints, JSON v1/v2 and no writes passed.\n`);
 }
 
 async function runMensor(cwd, fixture, extraArgs = []) {

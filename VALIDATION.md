@@ -60,6 +60,12 @@ CLI: human stderr must contain the decoder path and allowed properties, while
 JSON revisions 1 and 2 preserve the configuration failure without hints. Both
 modes must exit 2, and producer metadata must match the installed CLI version.
 
+Missing-project-contract controls exercise the default filename, an explicit
+config filename and a missing parent directory through the installed CLI.
+Human check and compile output must name the selected config and recovery
+options, JSON v1/v2 must retain the same filesystem failure and exit status 3,
+and the empty target project must remain empty after execution.
+
 The installed-consumer gate also imports the compiler's `hono-jsx` subpath,
 copies the maintained guarded RSVP source and contracts without checkout runners,
 and verifies its index, passing report, stale-source rejection and regenerated
