@@ -20,11 +20,47 @@ release workflow and passed isolated registry installation checks.
 
 ## Registry Installation
 
-The supported CLI installation path is:
+Install the CLI in your application's existing package directory:
 
 ```text
 pnpm add --save-dev @0disoft/mensor-cli@0.10.1
+```
+
+Before the first check, create `mensor.project.jsonc` at the application root
+and the feature contracts it lists. Follow the
+[complete contract authoring example](packages/contract/spec/README.md#complete-authoring-example)
+and adapt its paths, form identity, field names and handler export to your
+actual application. Installation does not create these files; Mensor has no
+`init` command and does not generate application code.
+
+For a complete static-HTML reference, inspect the existing
+[tiny-tasks fixture](fixtures/valid/tiny-tasks/): its project contract lists
+`src/features/tasks/feature.mensor.jsonc`, which links `views/index.html` and
+the `createTask` export in `server/create-task.ts`. Both source paths are
+relative to that feature contract. Keep your application's files and behavior;
+the fixture is a reference, not a replacement application.
+
+From the directory containing `mensor.project.jsonc`, run:
+
+```text
 pnpm exec mensor check . --json
+pnpm exec mensor check . --json --report-version 2
+```
+
+Exit `0` means the configured checks passed; revision 2 also reports which
+checks ran in `inspection`. Exit `1` reports source/contract mismatches in
+`diagnostics`. Exit `2` reports configuration problems in `failure`; correct
+those before interpreting a check as a pass. For a concrete correction, see
+[check, correct, and recheck](packages/contract/spec/README.md#check-correct-and-recheck).
+Application runtime tests remain separate.
+
+The following are optional workflows, not additional setup steps. Static HTML
+does not need a FormIndex producer. Use an indexer only for the matching source
+format, replace the example source paths and identifiers with real ones, and
+configure the resulting `routeIndex` or `formIndex` in the project contract.
+Compile a runtime manifest only when you need that artifact after a clean check.
+
+```text
 pnpm exec mensor check . --sarif
 pnpm exec mensor compile . --out .mensor/manifest.json
 pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app
