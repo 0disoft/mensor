@@ -2,7 +2,7 @@
 
 All notable changes to Mensor are documented in this file.
 
-## [0.10.2] - Unreleased
+## [0.10.2] - 2026-09-12
 
 ### Fixed
 

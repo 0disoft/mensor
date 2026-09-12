@@ -14,19 +14,17 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.10.2` is the current release candidate. It adds human guidance for
-missing project contracts and has not been published.
-
-Version `0.10.1` is the published public preview. It improves human-readable
-enum decoder errors. All four packages are published to npm through the OIDC
-release workflow and passed isolated registry installation checks.
+Version `0.10.2` is the current public preview. It adds human guidance for
+missing project contracts while preserving JSON failures and exit codes.
+All four packages are published to npm through the OIDC release workflow
+and passed isolated registry installation checks.
 
 ## Registry Installation
 
 Install the CLI in your application's existing package directory:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.10.1
+pnpm add --save-dev @0disoft/mensor-cli@0.10.2
 ```
 
 Before the first check, create `mensor.project.jsonc` at the application root
@@ -70,13 +68,7 @@ pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app
 pnpm exec mensor index-ts-forms . --source src/views.ts --tag html
 ```
 
-After publication, the candidate can be installed with
-
-```text
-pnpm add --save-dev @0disoft/mensor-cli@0.10.2
-```
-
-See the [`0.10.2` candidate note](docs/releasing/0.10.2.md), the
+See the [`0.10.2` release note](docs/releasing/0.10.2.md), the
 [`0.10.1` release note](docs/releasing/0.10.1.md), the
 [release runbook](docs/releasing/runbook.md), the [`0.10.0` migration
 note](docs/releasing/0.10.0.md), and the prior
