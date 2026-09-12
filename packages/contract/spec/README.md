@@ -273,7 +273,7 @@ feature contracts.
    ```
 
    Run `pnpm exec mensor check .`. It exits `2` with `contract.invalid`,
-   naming the invalid feature contract. In the unpublished `0.10.1` candidate,
+   naming the invalid feature contract. Starting with `0.10.1`,
    an otherwise-valid enum decoder also produces this hint when it is the
    first binding of the first action:
 

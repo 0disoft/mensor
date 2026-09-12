@@ -14,19 +14,16 @@ JSON that a person, CI job, or coding agent can act on.
 
 ## Status
 
-Version `0.10.1` is the current release candidate. It improves human-readable
-enum decoder errors and has not been published by this change.
-
-Version `0.10.0` is the published public preview. It adds explicit bounded
-Hono JSX form indexing and includes the unreleased 0.9.1 runtime and compiler
-hardening. All four packages are published to npm with provenance.
+Version `0.10.1` is the current public preview. It improves human-readable
+enum decoder errors. All four packages are published to npm through the OIDC
+release workflow and passed isolated registry installation checks.
 
 ## Registry Installation
 
 The supported CLI installation path is:
 
 ```text
-pnpm add --save-dev @0disoft/mensor-cli@0.10.0
+pnpm add --save-dev @0disoft/mensor-cli@0.10.1
 pnpm exec mensor check . --json
 pnpm exec mensor check . --sarif
 pnpm exec mensor compile . --out .mensor/manifest.json
@@ -34,13 +31,7 @@ pnpm exec mensor index-hono-routes . --source src/routes.ts --receiver app
 pnpm exec mensor index-ts-forms . --source src/views.ts --tag html
 ```
 
-After the candidate is published, upgrade with
-
-```text
-pnpm add --save-dev @0disoft/mensor-cli@0.10.1
-```
-
-See the [`0.10.1` candidate note](docs/releasing/0.10.1.md), the
+See the [`0.10.1` release note](docs/releasing/0.10.1.md), the
 [release runbook](docs/releasing/runbook.md), the [`0.10.0` migration
 note](docs/releasing/0.10.0.md), and the prior
 [`0.2.0` release audit](docs/product/0.2.0-release-audit.md) for the publication
