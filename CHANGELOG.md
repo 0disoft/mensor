@@ -2,6 +2,14 @@
 
 All notable changes to Mensor are documented in this file.
 
+## [0.10.2] - Unreleased
+
+### Fixed
+
+- Explain missing project contracts in human check and compile output, including
+  custom config paths. Preserve JSON failures, filesystem classification and
+  exit status 3 without creating files or suggesting unrelated input repairs.
+
 ## [0.10.1] - 2026-09-11
 
 ### Fixed

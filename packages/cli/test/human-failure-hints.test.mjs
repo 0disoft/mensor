@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -34,6 +34,53 @@ async function invoke(root, argv) {
     stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } });
   return { code, stdout, stderr };
 }
+
+test("missing default and explicit project contracts get human guidance without writing files", async (context) => {
+  const root = await mkdtemp(path.join(repositoryRoot, ".tmp-cli-missing-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  for (const config of [undefined, "custom.jsonc", "config/custom.jsonc"]) {
+    const flags = config === undefined ? [] : ["--config", config];
+    const result = await checkProject({ root, ...(config === undefined ? {} : { configFile: config }) });
+    assert.equal(result.ok, false);
+    assert.equal(result.failure.code, "path.missing");
+    for (const command of ["check", "compile"]) {
+      const human = await invoke(root, [command, ...flags]);
+      assert.equal(human.code, 3);
+      assert.equal(human.stdout, "");
+      assert.ok(human.stderr.startsWith(`mensor: path.missing: ${result.failure.message}\n`));
+      assert.ok(human.stderr.includes(`Project contract ${JSON.stringify(config ?? "mensor.project.jsonc")}`));
+      assert.match(human.stderr, /select the correct root or --config path/u);
+      assert.match(human.stderr, /Installing Mensor does not create contract files/u);
+    }
+    for (const schemaVersion of [1, 2]) {
+      const json = await invoke(root, ["check", ...flags, "--json", "--report-version", String(schemaVersion)]);
+      assert.equal(json.code, 3);
+      assert.equal(json.stderr, "");
+      assert.equal(json.stdout, `${JSON.stringify({ schemaVersion,
+        producer: { name: "mensor", version: cliVersion }, status: "error", failure: result.failure }, null, 2)}\n`);
+    }
+    assert.deepEqual(await readdir(root), []);
+  }
+});
+
+test("missing roots, feature contracts and wrong file types do not receive project-contract guidance", async (context) => {
+  const root = await mkdtemp(path.join(repositoryRoot, ".tmp-cli-missing-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  await cp(path.join(repositoryRoot, "fixtures/valid/tiny-tasks"), root, { recursive: true });
+  await rm(path.join(root, "src/features/tasks/feature.mensor.jsonc"));
+  for (const [args, code, failureCode] of [
+    [["check"], 2, "feature_contract.not_discovered"],
+    [["check", "missing-root"], 3, "path.missing"],
+    [["check", "--config", "src"], 3, "path.not_file"],
+  ]) {
+    const result = await invoke(root, args);
+    assert.equal(result.code, code);
+    assert.ok(result.stderr.startsWith(`mensor: ${failureCode}:`));
+    assert.equal(result.stderr.includes("hint:"), false);
+  }
+  assert.deepEqual(humanFailureHints({ kind: "filesystem", code: "path.unreadable",
+    message: "denied", file: "mensor.project.jsonc" }, "mensor.project.jsonc"), []);
+});
 
 test("check and compile explain otherwise-valid enum decoders with extra properties", async (context) => {
   const { root, failure } = await invalidFixture(context, [

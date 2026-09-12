@@ -11,7 +11,7 @@ const script = path.join(repositoryRoot, "scripts", "check-release-readiness.mjs
 test("release check accepts the pnpm argument separator", () => {
   const result = spawnSync(
     process.execPath,
-    [script, "--", "--version", "0.10.1", "--tag", "latest"],
+    [script, "--", "--version", "0.10.2", "--tag", "latest"],
     {
       cwd: repositoryRoot,
       encoding: "utf8",
@@ -24,7 +24,7 @@ test("release check accepts the pnpm argument separator", () => {
 test("release check rejects a duplicate argument separator", () => {
   const result = spawnSync(
     process.execPath,
-    [script, "--", "--", "--version", "0.10.1", "--tag", "latest"],
+    [script, "--", "--", "--version", "0.10.2", "--tag", "latest"],
     {
       cwd: repositoryRoot,
       encoding: "utf8",

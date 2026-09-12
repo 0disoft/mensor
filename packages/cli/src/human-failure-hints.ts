@@ -3,7 +3,17 @@ import type { CompilerFailure } from "@0disoft/mensor-compiler";
 const enumSchema = "#/$defs/enumDecoder/";
 const decoderPath = /^\/actions\/[0-9]+\/input\/formCodec\/bindings\/[0-9]+\/decode$/u;
 
-export function humanFailureHints(failure: CompilerFailure): readonly string[] {
+export function humanFailureHints(failure: CompilerFailure, projectConfig?: string): readonly string[] {
+  if (failure.kind === "filesystem" && failure.code === "path.missing" &&
+      failure.file !== undefined && projectConfig !== undefined &&
+      (failure.file === projectConfig || projectConfig.startsWith(`${failure.file}/`))) {
+    return [
+      `Project contract ${JSON.stringify(projectConfig)} was not found under the selected project root. ` +
+      `Run from the directory containing it, select the correct root or --config path, ` +
+      `or create the project contract and its referenced feature contracts. ` +
+      `Installing Mensor does not create contract files.`,
+    ];
+  }
   if (failure.kind !== "configuration" || failure.code !== "contract.invalid") {
     return [];
   }

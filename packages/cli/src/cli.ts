@@ -447,7 +447,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         return 1;
       }
       const exitCode = compiled.failure.kind === "configuration" ? 2 : 3;
-      writeFailure(options, compiled.failure, json, reportVersion);
+      writeFailure(options, compiled.failure, json, reportVersion, config ?? "mensor.project.jsonc");
       return exitCode;
     }
     const manifestText = `${JSON.stringify(compiled.manifest, null, 2)}\n`;
@@ -476,7 +476,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
 
   if (!result.ok) {
     const exitCode = result.failure.kind === "configuration" ? 2 : 3;
-    writeFailure(options, result.failure, json, reportVersion);
+    writeFailure(options, result.failure, json, reportVersion, config ?? "mensor.project.jsonc");
     return exitCode;
   }
 
@@ -577,6 +577,7 @@ function writeFailure(
   failure: CompilerFailure,
   json: boolean,
   reportVersion: CliReportVersion,
+  projectConfig?: string,
 ): void {
   if (json) {
     const envelope: CliFailureEnvelope | CliFailureEnvelopeV2 =
@@ -597,7 +598,7 @@ function writeFailure(
     return;
   }
   options.stderr(`mensor: ${failure.code}: ${failure.message}\n`);
-  for (const hint of humanFailureHints(failure)) {
+  for (const hint of humanFailureHints(failure, projectConfig)) {
     options.stderr(`  hint: ${hint}\n`);
   }
 }

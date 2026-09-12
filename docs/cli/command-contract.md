@@ -60,6 +60,15 @@ do not receive this hint. These hints use existing schema issues, without
 rereading input files. JSON failure envelopes, error codes and exit codes are
 unchanged.
 
+When `check` or `compile` cannot find the selected project contract or one of
+its parent directories, human mode adds the root-relative contract path and
+suggests checking the selected root, `--config`, or creating the project and
+referenced feature contracts. Installation does not create these files. The
+hint is not used for a missing root, unrelated feature files, unreadable files
+or wrong filesystem types. No extra filesystem reads or writes are performed.
+The existing `filesystem` failure, `path.missing` code and exit status `3`
+are preserved, as are JSON failure envelopes.
+
 The default revision-1 report envelope contains:
 
 ```text
@@ -147,7 +156,7 @@ The failure envelope is:
   "schemaVersion": 1,
   "producer": {
     "name": "mensor",
-    "version": "0.10.1"
+    "version": "0.10.2"
   },
   "status": "error",
   "failure": {
