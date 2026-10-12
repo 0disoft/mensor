@@ -55,6 +55,14 @@ TypeScript tagged-template FormIndex. It also checks the installed public
 SARIF formatter and CLI output. Build output is cleaned first and
 must exactly match the current source graph before packaging.
 
+The current local package gate also checks the compiler's successful
+`inputFiles` metadata and refuses compile outputs matching the project contract,
+feature contract, handler or template. The installed Hono route and TypeScript
+form indexers similarly reject outputs matching their explicit source. Each
+refusal must exit 2 and preserve the original input bytes. The source suite also
+covers a configured RouteIndex and repeated writes to the normal manifest path.
+This does not attest to concurrent hostile filesystem changes or every platform.
+
 The same isolated consumer checks an invalid enum decoder through the installed
 CLI: human stderr must contain the decoder path and allowed properties, while
 JSON revisions 1 and 2 preserve the configuration failure without hints. Both

@@ -72,6 +72,7 @@ interface ProjectAnalysisSuccess {
   readonly features: readonly ParsedFeature[];
   readonly producerVersion: string;
   readonly readSource: (file: string) => Promise<string>;
+  readonly inputFiles: () => readonly string[];
 }
 
 interface ParsedFeature {
@@ -148,7 +149,7 @@ export async function compileProject(
       analysis.readSource,
       analysis.producerVersion,
     );
-    return { ok: true, report, manifest };
+    return { ok: true, report, manifest, inputFiles: analysis.inputFiles() };
   } catch (error) {
     if (error instanceof InputFailure) {
       return {
@@ -258,6 +259,7 @@ async function checkProjectInternal(
     const diagnostics: Diagnostic[] = [];
     const featureOwners: FeatureOwnerFact[] = [];
     const sourceTextCache = new Map<string, Promise<string>>();
+    const explicitInputs = new Set([configFile]);
     const readSource = (file: string): Promise<string> => {
       const existing = sourceTextCache.get(file);
       if (existing !== undefined) {
@@ -284,6 +286,7 @@ async function checkProjectInternal(
         project.routeIndex,
         "routeIndex path",
       );
+      explicitInputs.add(routeIndexPath);
       const routeIndexText = await readProjectFile(
         root,
         routeIndexPath,
@@ -346,6 +349,7 @@ async function checkProjectInternal(
         project.formIndex,
         "formIndex path",
       );
+      explicitInputs.add(formIndexPath);
       const formIndexText = await readProjectFile(root, formIndexPath, maxFileBytes);
       const formIndexResult = parseFormIndex(formIndexText);
       if (!formIndexResult.ok) {
@@ -475,6 +479,7 @@ async function checkProjectInternal(
       features: parsedFeatures,
       producerVersion,
       readSource,
+      inputFiles: () => [...new Set([...explicitInputs, ...sourceTextCache.keys()])].sort(compareText),
     };
   } catch (error) {
     if (error instanceof InputFailure) {

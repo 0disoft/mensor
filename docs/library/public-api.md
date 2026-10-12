@@ -92,6 +92,13 @@ completed rule paths, not from an empty diagnostic list.
 `compileProject` reuses the same validated analysis and emits RuntimeManifest
 v1 only when the diagnostic report is clean. A diagnostic result, malformed
 configuration, or I/O failure cannot produce a partial manifest.
+In the current unreleased checkout, its successful result also contains
+`inputFiles`: sorted, unique root-relative
+paths of the project/feature contracts, configured indexes, and source contents
+consumed by analysis or manifest creation. Hosts that materialize an artifact
+must keep its destination distinct from these inputs. This additive library
+result field is not included in RuntimeManifest v1 or CLI JSON reports and does
+not add filesystem reads, writes, or absolute paths.
 
 `extractStaticHtmlFormDocument` is the pure extraction boundary shared by the
 built-in provider and explicit TypeScript template producer. It performs no

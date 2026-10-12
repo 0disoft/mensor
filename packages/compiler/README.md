@@ -38,6 +38,10 @@ if (result.ok) {
 The compiler emits a manifest only after every configured diagnostic passes.
 The artifact contains static GET page HTML, POST routes, handler ids, and form
 decode contracts; it contains no source path, AST node, or executable handler.
+In the current, unreleased checkout, the successful result's separate
+`inputFiles` list identifies consumed inputs
+as sorted root-relative paths. Do not overwrite one of these files when storing
+`result.manifest`; the CLI enforces this boundary for `--out`.
 
 Template producers may reuse the pure `extractStaticHtmlFormDocument(file,
 html)` export to obtain the same serializable HTML facts as the built-in
@@ -55,8 +59,8 @@ const result = await checkProject({
 });
 ```
 
-Contract failures are returned as data. Unexpected I/O or compiler failures
-remain exceptions. The compiler reads supported project files but does not
+Contract, filesystem, and unexpected compiler failures are returned as data.
+The compiler reads supported project files but does not
 execute project source or configuration, spawn framework tools, install
 dependencies, or access the network.
 

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { realpath } from "node:fs/promises";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
 
@@ -319,7 +320,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         receivers,
         producerVersion: cliVersion,
       });
-      if (outputOverlapsInputs(root, output, sources)) {
+      if (await outputOverlapsInputs(root, output, sources)) {
         return writeUsageFailure(options, "--out must not replace an indexing input. Choose a separate artifact path.", json, reportVersion);
       }
       await writeCanonicalArtifactAtomic(root, output, produced.text);
@@ -381,7 +382,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       if (command === "index-hono-jsx-forms") {
         normalizeSourcePath(output);
         if (!output.endsWith(".json") || [...sources, String(jsxConfig), String(buildConfig), String(renderer)]
-          .some((file) => file.toLowerCase() === output.toLowerCase())) {
+          .some((file) => path.relative(path.resolve(root, file.replaceAll("\\", "/")), path.resolve(root, output)) === "")) {
           throw new TypeScriptTemplateFormIndexError("hono_jsx.output_invalid", "JSX output must be a JSON path distinct from every input.", output);
         }
       }
@@ -396,7 +397,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
       const inputFiles = command === "index-hono-jsx-forms"
         ? produced.value.documents.map((document) => document.path)
         : sources;
-      if (outputOverlapsInputs(root, output, inputFiles)) {
+      if (await outputOverlapsInputs(root, output, inputFiles)) {
         return writeUsageFailure(options, "--out must not replace an indexing input. Choose a separate artifact path.", json, reportVersion);
       }
       await writeCanonicalArtifactAtomic(root, output, produced.text);
@@ -461,6 +462,9 @@ export async function runCli(options: RunCliOptions): Promise<number> {
     }
     const manifestText = `${JSON.stringify(compiled.manifest, null, 2)}\n`;
     try {
+      if (await outputOverlapsInputs(root, output, compiled.inputFiles)) {
+        return writeUsageFailure(options, "--out must not replace a compilation input. Choose a separate artifact path.", json, reportVersion);
+      }
       await writeManifestAtomic(root, output, manifestText);
     } catch {
       writeFailure(
@@ -532,9 +536,19 @@ function writeReport(
   }
 }
 
-function outputOverlapsInputs(root: string, output: string, inputs: readonly string[]): boolean {
+async function outputOverlapsInputs(root: string, output: string, inputs: readonly string[]): Promise<boolean> {
   const destination = path.resolve(root, output);
-  return inputs.some((input) => path.relative(path.resolve(root, input.replaceAll("\\", "/")), destination) === "");
+  const inputPaths = inputs.map((input) => path.resolve(root, input.replaceAll("\\", "/")));
+  if (inputPaths.some((input) => path.relative(input, destination) === "")) return true;
+  const resolvedDestination = await realpath(destination).catch((error: unknown) => {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") return undefined;
+    throw error;
+  });
+  if (resolvedDestination === undefined) return false;
+  for (const input of inputPaths) {
+    if (path.relative(await realpath(input), resolvedDestination) === "") return true;
+  }
+  return false;
 }
 
 function normalizeRelativeOutput(value: string): string | undefined {

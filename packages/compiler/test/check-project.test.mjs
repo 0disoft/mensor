@@ -42,6 +42,12 @@ test("compiles a clean project into one canonical runtime manifest", async () =>
     assert.equal(result.manifest.actions[0]?.handlerId, "tasks.create");
     assert.match(result.manifest.pages[0]?.html ?? "", /<form id="create-task"/u);
     assert.equal(JSON.stringify(result.manifest).includes("server/create-task.ts"), false);
+    assert.ok(result.inputFiles.includes("mensor.project.jsonc"));
+    assert.ok(result.inputFiles.includes("src/features/tasks/feature.mensor.jsonc"));
+    assert.ok(result.inputFiles.includes("src/features/tasks/server/create-task.ts"));
+    assert.ok(result.inputFiles.includes("src/features/tasks/views/index.html"));
+    assert.deepEqual(result.inputFiles, [...new Set(result.inputFiles)].sort());
+    assert.ok(result.inputFiles.every((file) => !path.isAbsolute(file) && !file.includes("\\")));
   }
 });
 

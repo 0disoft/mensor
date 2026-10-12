@@ -184,6 +184,8 @@ const compiled = await compileProject({ root: path.resolve("valid") });
 assert.equal(compiled.ok, true);
 if (compiled.ok) assert.equal(compiled.manifest.actions.length, 1);
 if (compiled.ok) {
+  assert.ok(compiled.inputFiles.includes("mensor.project.jsonc"));
+  assert.ok(compiled.inputFiles.includes("src/features/tasks/server/create-task.ts"));
   const runtime = createReferenceRuntime({
     manifest: compiled.manifest,
     actionGuard: () => ({ allowed: true }),
@@ -334,6 +336,25 @@ if (compiled.ok) {
   ]);
   assert.equal(typedProject.code, 0, typedProject.stderr);
   assert.equal(JSON.parse(typedProject.stdout).inspection.forms.basis, "form-index");
+
+  for (const file of ["mensor.project.jsonc", "src/features/tasks/feature.mensor.jsonc", "src/features/tasks/server/create-task.ts", "src/features/tasks/views/index.html"]) {
+    const target = path.join(consumerRoot, "valid", file);
+    const original = await readFile(target);
+    const refused = await runMensorCompile(consumerRoot, "valid", file);
+    assert.equal(refused.code, 2, refused.stdout || refused.stderr);
+    assert.equal(JSON.parse(refused.stdout).failure.code, "cli.usage_invalid");
+    assert.deepEqual(await readFile(target), original);
+  }
+  for (const [fixture, source, invoke] of [
+    ["valid-hono", "src/features/tasks/routes/tasks.mjs", runMensorHonoIndex],
+    ["valid-ts", "src/features/tasks/views/index.ts", runMensorTypeScriptFormIndex],
+  ]) {
+    const target = path.join(consumerRoot, fixture, source);
+    const original = await readFile(target);
+    const refused = await invoke(consumerRoot, ["--out", source]);
+    assert.equal(refused.code, 2, refused.stdout || refused.stderr);
+    assert.deepEqual(await readFile(target), original);
+  }
 
   const jsxIndex = await runMensorJsxIndex(consumerRoot, "valid-jsx");
   assert.equal(jsxIndex.code, 0, jsxIndex.stdout || jsxIndex.stderr);
@@ -561,7 +582,7 @@ async function runMensorSarif(cwd, fixture) {
   );
 }
 
-async function runMensorCompile(cwd, fixture) {
+async function runMensorCompile(cwd, fixture, output = ".mensor/manifest.json") {
   return capture(
     pnpmExecutable ? pnpmEntrypoint : process.execPath,
     [
@@ -571,14 +592,14 @@ async function runMensorCompile(cwd, fixture) {
       "compile",
       fixture,
       "--out",
-      ".mensor/manifest.json",
+      output,
       "--json",
     ],
     cwd,
   );
 }
 
-async function runMensorHonoIndex(cwd) {
+async function runMensorHonoIndex(cwd, extraArgs = []) {
   return capture(
     pnpmExecutable ? pnpmEntrypoint : process.execPath,
     [
@@ -592,12 +613,13 @@ async function runMensorHonoIndex(cwd) {
       "--receiver",
       "app",
       "--json",
+      ...extraArgs,
     ],
     cwd,
   );
 }
 
-async function runMensorTypeScriptFormIndex(cwd) {
+async function runMensorTypeScriptFormIndex(cwd, extraArgs = []) {
   return capture(
     pnpmExecutable ? pnpmEntrypoint : process.execPath,
     [
@@ -611,6 +633,7 @@ async function runMensorTypeScriptFormIndex(cwd) {
       "--tag",
       "html",
       "--json",
+      ...extraArgs,
     ],
     cwd,
   );

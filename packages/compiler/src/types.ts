@@ -52,6 +52,7 @@ export interface CompileProjectSuccess {
   readonly ok: true;
   readonly report: DiagnosticReport;
   readonly manifest: RuntimeManifest;
+  readonly inputFiles: readonly string[];
 }
 
 export interface CompileProjectDiagnostics {

@@ -31,6 +31,10 @@ link or escape the selected project root.
 - The CLI writes a private temporary file in the destination directory, flushes
   its contents, and renames it over the destination only after a clean compile.
 - Diagnostic, configuration, and write failures preserve an existing manifest.
+- The compiler supplies consumed input paths separately from the manifest; the
+  CLI rejects a destination matching any of them before materialization. This
+  includes project/feature contracts and configured indexes without rereading
+  or reparsing those files in the CLI.
 - JSON mode writes the same canonical bytes to stdout only after the filesystem
   replacement succeeds.
 

@@ -735,6 +735,36 @@ test("index commands cannot replace the source they just analyzed", async (conte
   }
 });
 
+test("compile cannot replace the project contract or discovered inputs", async (context) => {
+  for (const output of [
+    "mensor.project.jsonc",
+    "src/features/tasks/feature.mensor.jsonc",
+    "src/features/tasks/server/create-task.ts",
+    "src/features/tasks/views/index.html",
+  ]) {
+    const root = await temporaryFixture(context, "valid/tiny-tasks");
+    const original = await readFile(path.join(root, output));
+    const result = await runCli(["compile", root, "--out", output, "--json"]);
+    assert.equal(result.code, 2, output);
+    assert.equal(JSON.parse(result.stdout).failure.code, "cli.usage_invalid");
+    assert.deepEqual(await readFile(path.join(root, output)), original);
+  }
+});
+
+test("compile preserves its configured RouteIndex and permits normal repeat output", async (context) => {
+  const root = await temporaryFixture(context, "valid/hono-static-tasks");
+  const index = "mensor.route-index.json";
+  const original = await readFile(path.join(root, index));
+  const refused = await runCli(["compile", root, "--out", index, "--json"]);
+  assert.equal(refused.code, 2);
+  assert.deepEqual(await readFile(path.join(root, index)), original);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const result = await runCli(["compile", root, "--json"]);
+    assert.equal(result.code, 0);
+    assert.equal(JSON.parse(result.stdout).manifestVersion, 1);
+  }
+});
+
 test("rejects non-canonical and escaping compile outputs without writing", async () => {
   for (const output of [
     "../manifest.json",

@@ -109,6 +109,10 @@ directory, flushes it, and renames it over the target. Compilation diagnostics,
 invalid output paths, and write failures do not replace an existing artifact.
 The destination parent must resolve inside `root`; directory and symbolic-link
 targets are rejected.
+The output must not replace a project/feature contract, configured index, or
+source file consumed by compilation. Such a collision is a usage failure
+(exit 2) and leaves the input untouched. The compiler supplies this input list;
+the CLI does not rescan the project or reparse contracts to check it.
 
 On a clean `index-hono-routes`, human mode names the root-relative RouteIndex
 path and JSON mode writes the canonical RouteIndex v1 bytes after the same
