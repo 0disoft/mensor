@@ -9,3 +9,8 @@ The root test suite proves both the clean compiler report and application
 semantics. The mutation benchmark also uses this application as a pinned
 baseline. It is evidence for the current static HTML and Node.js boundary, not
 a framework adapter or production runtime.
+
+Form submission accepts the exact `application/x-www-form-urlencoded` media
+type, including optional parameters and case-insensitive spelling. Prefix
+lookalikes, comma-separated media types and other content types return 400
+without creating a task.

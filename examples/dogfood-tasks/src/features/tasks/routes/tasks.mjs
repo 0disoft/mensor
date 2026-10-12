@@ -27,8 +27,8 @@ export async function handleTasksRequest(request, dependencies) {
 }
 
 async function decodeCreateTask(request) {
-  const contentType = request.headers.get("content-type") ?? "";
-  if (!contentType.toLowerCase().startsWith("application/x-www-form-urlencoded")) {
+  const mediaType = request.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();
+  if (mediaType !== "application/x-www-form-urlencoded") {
     return { ok: false, message: "Expected URL-encoded form data." };
   }
   const form = new URLSearchParams(await request.text());
