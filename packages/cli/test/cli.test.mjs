@@ -718,6 +718,23 @@ test("preserves an existing manifest when compile diagnostics fail", async (cont
   assert.equal(await readFile(output, "utf8"), "preserve-me\n");
 });
 
+test("index commands cannot replace the source they just analyzed", async (context) => {
+  const root = await temporaryFixture(context, "valid/hono-static-tasks");
+  const route = "src/features/tasks/routes/tasks.mjs";
+  const template = "template.ts";
+  await writeFile(path.join(root, template), 'export const view = html`<form id="sample" method="post" action="/sample"></form>`;\n');
+  for (const [command, source, selector] of [
+    ["index-hono-routes", route, ["--receiver", "app"]],
+    ["index-ts-forms", template, ["--tag", "html"]],
+  ]) {
+    const original = await readFile(path.join(root, source));
+    const result = await runCli([command, root, "--source", source, ...selector, "--out", source, "--json"]);
+    assert.equal(result.code, 2);
+    assert.equal(JSON.parse(result.stdout).failure.code, "cli.usage_invalid");
+    assert.deepEqual(await readFile(path.join(root, source)), original);
+  }
+});
+
 test("rejects non-canonical and escaping compile outputs without writing", async () => {
   for (const output of [
     "../manifest.json",

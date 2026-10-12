@@ -319,6 +319,9 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         receivers,
         producerVersion: cliVersion,
       });
+      if (outputOverlapsInputs(root, output, sources)) {
+        return writeUsageFailure(options, "--out must not replace an indexing input. Choose a separate artifact path.", json, reportVersion);
+      }
       await writeCanonicalArtifactAtomic(root, output, produced.text);
       options.stdout(json ? produced.text : `Wrote Hono RouteIndex to ${output}.\n`);
       return 0;
@@ -390,6 +393,12 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         tags,
         producerVersion: cliVersion,
       });
+      const inputFiles = command === "index-hono-jsx-forms"
+        ? produced.value.documents.map((document) => document.path)
+        : sources;
+      if (outputOverlapsInputs(root, output, inputFiles)) {
+        return writeUsageFailure(options, "--out must not replace an indexing input. Choose a separate artifact path.", json, reportVersion);
+      }
       await writeCanonicalArtifactAtomic(root, output, produced.text);
       options.stdout(json ? produced.text : `Wrote ${command === "index-hono-jsx-forms" ? "Hono JSX" : "TypeScript"} FormIndex to ${output}.\n`);
       return 0;
@@ -521,6 +530,11 @@ function writeReport(
       `${diagnostic.file}:${diagnostic.range.start.line + 1}:${diagnostic.range.start.character + 1} ${diagnostic.code} ${diagnostic.message}\n`,
     );
   }
+}
+
+function outputOverlapsInputs(root: string, output: string, inputs: readonly string[]): boolean {
+  const destination = path.resolve(root, output);
+  return inputs.some((input) => path.relative(path.resolve(root, input.replaceAll("\\", "/")), destination) === "");
 }
 
 function normalizeRelativeOutput(value: string): string | undefined {

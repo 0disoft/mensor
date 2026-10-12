@@ -37,6 +37,10 @@ mensor index-hono-jsx-forms [root] --source <path> --jsx-config <path> --build-c
 - `--jsx-config`, `--build-config` and `--renderer` are required only for
   `index-hono-jsx-forms` and rejected by other commands.
 - Paths supplied through flags must resolve inside `root`.
+- Index output paths must be distinct from every selected source and activation
+  input. Selecting an input as `--out` is a usage failure (exit 2) before any
+  artifact write; the input bytes are preserved. Path equality follows the host
+  filesystem path rules, including case-insensitive Windows paths.
 - Environment variables do not alter contract or rule behavior in the MVP.
 - The CLI applies compiler defaults of 10,000 discovered files, 1 MiB per
   source file, 64 MiB across the discovered source tree, and 64 directory
