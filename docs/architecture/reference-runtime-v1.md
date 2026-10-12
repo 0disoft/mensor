@@ -19,6 +19,9 @@ the first request.
 - Exact manifest POST paths accept only URL-encoded bodies.
 - Other paths return 404; known paths with another method return 405 and `Allow`.
 - Body bytes, field count, field-name bytes, and value bytes are bounded.
+- A body-size violation returns 413 without waiting for stream-source cleanup.
+  Cancellation is requested once, its rejection is contained, and the reader
+  lock is released. Transport cleanup and request timeouts remain host-owned.
 - Unknown fields, duplicate scalar values, unsafe property names, malformed
   scalar values, and schema violations return generic client errors.
 - Every Feature Contract v1 codec is decoded without schema coercion magic.

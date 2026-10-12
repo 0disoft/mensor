@@ -184,6 +184,83 @@ test("enforces body and field limits before handler execution", async () => {
   assert.equal((await runtime.handle(request("a=1&b=2&c=3"))).status, 413);
 });
 
+test("reports oversized bodies without waiting for source cancellation", async () => {
+  let finishCancellation;
+  let cancellationStarted = false;
+  let guardCalls = 0;
+  let handlerCalls = 0;
+  const runtime = createReferenceRuntime({
+    manifest: manifest(),
+    actionGuard: () => { guardCalls += 1; return { allowed: true }; },
+    handlers: {
+      "tasks.create": () => { handlerCalls += 1; return { kind: "html", body: "ok" }; },
+    },
+    limits: { maxBodyBytes: 16 },
+  });
+  const body = new ReadableStream({
+    start(controller) { controller.enqueue(new Uint8Array(32)); },
+    cancel() {
+      cancellationStarted = true;
+      return new Promise((resolve) => { finishCancellation = resolve; });
+    },
+  });
+  const incoming = new Request("https://example.test/tasks", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body,
+    duplex: "half",
+  });
+  const operation = runtime.handle(incoming);
+  let timer;
+  try {
+    const result = await Promise.race([
+      operation,
+      new Promise((resolve) => { timer = setTimeout(() => resolve(undefined), 1000); }),
+    ]);
+    assert.ok(result, "oversize rejection waited for the unfinished cancellation");
+    assert.equal(result.status, 413);
+    assert.equal(await result.text(), "Request body too large.\n");
+    assert.equal(cancellationStarted, true);
+    assert.equal(body.locked, false);
+    assert.equal(guardCalls, 0);
+    assert.equal(handlerCalls, 0);
+  } finally {
+    clearTimeout(timer);
+    finishCancellation?.();
+    await operation;
+  }
+});
+
+test("retains oversized-body rejection when source cancellation fails", async () => {
+  let cancellationCalls = 0;
+  let guardCalls = 0;
+  let handlerCalls = 0;
+  const runtime = createReferenceRuntime({
+    manifest: manifest(),
+    actionGuard: () => { guardCalls += 1; return { allowed: true }; },
+    handlers: {
+      "tasks.create": () => { handlerCalls += 1; return { kind: "html", body: "ok" }; },
+    },
+    limits: { maxBodyBytes: 16 },
+  });
+  const body = new ReadableStream({
+    start(controller) { controller.enqueue(new Uint8Array(32)); },
+    cancel() { cancellationCalls += 1; throw new Error("private source cancellation failure"); },
+  });
+  const result = await runtime.handle(new Request("https://example.test/tasks", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body,
+    duplex: "half",
+  }));
+  assert.equal(result.status, 413);
+  assert.equal(await result.text(), "Request body too large.\n");
+  assert.equal(cancellationCalls, 1);
+  assert.equal(body.locked, false);
+  assert.equal(guardCalls, 0);
+  assert.equal(handlerCalls, 0);
+});
+
 test("requires an exact registry and an action guard", () => {
   assert.throws(
     () => createReferenceRuntime({ manifest: manifest(), handlers: {} }),

@@ -33,3 +33,7 @@ The runtime accepts only `application/x-www-form-urlencoded` action bodies,
 enforces bounded body and field sizes, rejects unknown and duplicate scalar
 fields, decodes every Feature Contract v1 codec, validates the decoded schema,
 and returns generic client errors without source or exception details.
+An oversized body returns 413 even if its stream's cancellation is slow or
+fails; source cancellation is requested without delaying that response and the
+reader lock is released. This does not replace the host's transport cleanup or
+request timeout policy.

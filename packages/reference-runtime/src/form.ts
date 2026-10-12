@@ -264,7 +264,8 @@ async function readBoundedBody(request: Request, maximum: number): Promise<Uint8
       }
       total += item.value.byteLength;
       if (total > maximum) {
-        await reader.cancel();
+        // A source's cleanup must not delay or replace the known client error.
+        void reader.cancel().catch(() => undefined);
         throw new RequestFailure(413, "Request body too large.");
       }
       chunks.push(item.value);

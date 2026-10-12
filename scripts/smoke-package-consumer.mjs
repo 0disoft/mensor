@@ -202,6 +202,50 @@ if (compiled.ok) {
   }));
   assert.equal(action.status, 200);
   assert.equal(await action.text(), "Package smoke");
+  for (const failCancellation of [false, true]) {
+    let finishCancellation;
+    let cancellationCalls = 0;
+    let dispatchCalls = 0;
+    const limited = createReferenceRuntime({
+      manifest: compiled.manifest,
+      actionGuard: () => { dispatchCalls += 1; return { allowed: true }; },
+      handlers: {
+        "tasks.create": () => { dispatchCalls += 1; return { kind: "html", body: "ok" }; }
+      },
+      limits: { maxBodyBytes: 16 }
+    });
+    const body = new ReadableStream({
+      start(controller) { controller.enqueue(new Uint8Array(32)); },
+      cancel() {
+        cancellationCalls += 1;
+        if (failCancellation) throw new Error("private cancellation failure");
+        return new Promise((resolve) => { finishCancellation = resolve; });
+      }
+    });
+    const operation = limited.handle(new Request("https://example.test/tasks", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body,
+      duplex: "half"
+    }));
+    let timer;
+    try {
+      const response = await Promise.race([
+        operation,
+        new Promise((resolve) => { timer = setTimeout(() => resolve(undefined), 1000); })
+      ]);
+      assert.ok(response, "oversized body waited for cancellation");
+      assert.equal(response.status, 413);
+      assert.equal((await response.text()).trim(), "Request body too large.");
+      assert.equal(cancellationCalls, 1);
+      assert.equal(body.locked, false);
+      assert.equal(dispatchCalls, 0);
+    } finally {
+      clearTimeout(timer);
+      finishCancellation?.();
+      await operation;
+    }
+  }
 }
 `,
     "utf8",

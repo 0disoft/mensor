@@ -63,6 +63,12 @@ refusal must exit 2 and preserve the original input bytes. The source suite also
 covers a configured RouteIndex and repeated writes to the normal manifest path.
 This does not attest to concurrent hostile filesystem changes or every platform.
 
+Reference-runtime source and installed-consumer checks submit oversized Web
+Request streams whose cancellation stays unresolved or rejects. They require
+413 without waiting for source cleanup, a released reader lock, one cancellation
+request and no guard/handler calls. No network transport timeout or framework
+cleanup behavior is inferred from these in-process Web API checks.
+
 The same isolated consumer checks an invalid enum decoder through the installed
 CLI: human stderr must contain the decoder path and allowed properties, while
 JSON revisions 1 and 2 preserve the configuration failure without hints. Both
